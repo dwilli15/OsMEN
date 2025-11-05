@@ -9,10 +9,16 @@ on:
 env:
   PYTHON_VERSION: '3.12'
 
+# Restrict permissions by default
+permissions:
+  contents: read
+
 jobs:
   security-validation:
     name: Security Validation
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
     - name: Checkout code
@@ -40,6 +46,8 @@ jobs:
   code-quality:
     name: Code Quality
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
     - name: Checkout code
@@ -72,6 +80,8 @@ jobs:
   agent-tests:
     name: Agent Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
     - name: Checkout code
@@ -102,6 +112,8 @@ jobs:
   operational-check:
     name: Operational Check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
     - name: Checkout code
@@ -125,6 +137,8 @@ jobs:
   docker-build:
     name: Docker Build Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
     - name: Checkout code
@@ -156,6 +170,8 @@ jobs:
   documentation-check:
     name: Documentation Check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
     - name: Checkout code
@@ -204,6 +220,8 @@ jobs:
   integration-readiness:
     name: Integration Readiness
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: [security-validation, agent-tests, docker-build]
     
     steps:
@@ -259,6 +277,8 @@ jobs:
   summary:
     name: Build Summary
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: [security-validation, code-quality, agent-tests, operational-check, docker-build, documentation-check, integration-readiness]
     if: always()
     
