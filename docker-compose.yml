@@ -76,6 +76,26 @@ services:
     #           count: all
     #           capabilities: [gpu]
   
+  # MCP Server - Model Context Protocol for tool integration
+  mcp-server:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile.mcp
+    container_name: osmen-mcp-server
+    ports:
+      - "8081:8081"
+    environment:
+      - OBSIDIAN_VAULT_PATH=${OBSIDIAN_VAULT_PATH:-}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ${OBSIDIAN_VAULT_PATH:-./obsidian-vault}:/vault
+      - ./tools:/app/tools
+    restart: unless-stopped
+    networks:
+      - osmen-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   # Agent Gateway - Central API gateway for production LLM agents
   agent-gateway:
     build: ./gateway

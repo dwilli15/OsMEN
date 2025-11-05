@@ -62,10 +62,32 @@ See [docs/SETUP.md](docs/SETUP.md) for detailed setup instructions.
 
 - **[Setup Guide](docs/SETUP.md)** - Installation and configuration
 - **[LLM Agents](docs/LLM_AGENTS.md)** - Configure OpenAI, Copilot, Amazon Q, Claude, LM Studio, Ollama
+- **[Obsidian Integration](docs/OBSIDIAN_INTEGRATION.md)** - Knowledge management with Obsidian
 - **[Architecture](docs/ARCHITECTURE.md)** - System design and components
 - **[Usage Guide](docs/USAGE.md)** - How to use OsMEN features
 
+## 🔧 Key Features
+
+### Model Context Protocol (MCP)
+- **Standardized tool integration** for LLM agents
+- **Tool discovery and execution** via REST API
+- **Built-in tools**: Obsidian, Simplewall, Sysinternals, FFmpeg
+- **MCP Server**: http://localhost:8081
+
+### Obsidian Integration
+- **Knowledge management** with full Obsidian vault access
+- **Note operations**: Create, read, search, update
+- **Graph analysis**: Export knowledge graph and find backlinks
+- **Agent integration**: Knowledge Management Specialist
+- **Automated workflows**: n8n webhook for note capture
+
 ## 🎯 MVP Features
+
+### Knowledge Management Agent
+- Create and organize notes in Obsidian
+- Search and retrieve knowledge
+- Find connections between notes
+- Generate summaries and insights
 
 ### Boot Hardening Agent
 - Automated daily security checks
