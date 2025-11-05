@@ -25,8 +25,10 @@ class SimplewallIntegration:
             'status': 'success'
         }
         
-        # Command would be executed here
+        # TODO: Implement actual Simplewall command execution
+        # Requires Simplewall CLI or programmatic interface
         # Example: subprocess.run([self.executable, '-block', app_path])
+        # For now, returns simulated result for testing
         
         return result
     

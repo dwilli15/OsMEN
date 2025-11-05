@@ -114,10 +114,12 @@ class AgentGateway:
         if not self.github_token:
             raise HTTPException(status_code=401, detail="GitHub token not configured")
         
-        # GitHub Copilot API integration would go here
-        # This is a placeholder for the actual implementation
+        # TODO: Implement GitHub Copilot API integration
+        # GitHub Copilot is primarily used via VSCode extension (see docs/LLM_AGENTS.md)
+        # API access requires special GitHub Copilot for Business subscription
+        # For now, use VSCode extension or CLI: gh copilot suggest/explain
         return CompletionResponse(
-            content="GitHub Copilot integration placeholder",
+            content="GitHub Copilot is best used via VSCode extension or 'gh copilot' CLI. See docs/LLM_AGENTS.md for setup.",
             agent="copilot",
             model="copilot"
         )
@@ -127,10 +129,12 @@ class AgentGateway:
         if not self.aws_key:
             raise HTTPException(status_code=401, detail="AWS credentials not configured")
         
-        # Amazon Q API integration would go here
-        # This is a placeholder for the actual implementation
+        # TODO: Implement Amazon Q API integration via AWS SDK
+        # Amazon Q is primarily used via AWS Console, VSCode extension, or CLI
+        # API integration requires AWS SDK for Python (boto3) with Q service
+        # For now, use AWS Console, VSCode AWS Toolkit, or CLI: aws q chat
         return CompletionResponse(
-            content="Amazon Q integration placeholder",
+            content="Amazon Q is best used via AWS Console, VSCode AWS Toolkit, or 'aws q chat' CLI. See docs/LLM_AGENTS.md for setup.",
             agent="amazonq",
             model="amazonq"
         )

@@ -28,8 +28,10 @@ class SysinternalsIntegration:
             'findings': []
         }
         
-        # Would execute: Autoruns.exe -accepteula -a * -c -h -s -v
-        # Parse the output for unsigned or suspicious entries
+        # TODO: Implement actual Autoruns execution
+        # Command: Autoruns.exe -accepteula -a * -c -h -s -v
+        # Requires Windows environment with Sysinternals Suite installed
+        # For cross-platform testing, returns simulated result
         
         return result
     
