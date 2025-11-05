@@ -7,6 +7,7 @@ Comprehensive system health check for all OsMEN components
 import sys
 import subprocess
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -69,7 +70,7 @@ def check_docker():
             timeout=5
         )
         return result.returncode == 0
-    except Exception:
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError, OSError):
         return False
 
 
@@ -82,7 +83,7 @@ def check_docker_compose():
             timeout=5
         )
         return result.returncode == 0
-    except Exception:
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError, OSError):
         return False
 
 
@@ -98,7 +99,7 @@ def check_python():
             version = result.stdout.decode().strip()
             return True, version
         return False, ""
-    except Exception:
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError, OSError):
         return False, ""
 
 
@@ -115,25 +116,29 @@ def check_directory_exists(dirpath):
 def check_agent_tests():
     """Run agent test suite"""
     try:
+        # Use current working directory
+        project_root = Path(__file__).parent
         result = subprocess.run(
             ["python3", "test_agents.py"],
             capture_output=True,
             timeout=60,
-            cwd="/home/runner/work/OsMEN/OsMEN"
+            cwd=str(project_root)
         )
         return result.returncode == 0, result.stdout.decode()
-    except Exception as e:
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError, OSError) as e:
         return False, str(e)
 
 
 def check_docker_services():
     """Check if Docker services are running"""
     try:
+        # Use current working directory
+        project_root = Path(__file__).parent
         result = subprocess.run(
             ["docker", "compose", "ps", "--format", "json"],
             capture_output=True,
             timeout=10,
-            cwd="/home/runner/work/OsMEN/OsMEN"
+            cwd=str(project_root)
         )
         if result.returncode != 0:
             return False, []
@@ -153,7 +158,7 @@ def check_docker_services():
                     pass
         
         return len(services) > 0, services
-    except Exception as e:
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError, OSError):
         return False, []
 
 
@@ -161,6 +166,9 @@ def main():
     """Run all operational checks"""
     checker = OperationalCheck()
     checker.print_header()
+    
+    # Use current working directory as project root
+    project_root = Path(__file__).parent
     
     print("🔍 Checking system prerequisites...\n")
     
@@ -201,7 +209,7 @@ def main():
     ]
     
     for file in critical_files:
-        exists = check_file_exists(f"/home/runner/work/OsMEN/OsMEN/{file}")
+        exists = check_file_exists(project_root / file)
         checker.add_check(
             f"File: {file}",
             exists,
@@ -221,7 +229,7 @@ def main():
     ]
     
     for dir_name in critical_dirs:
-        exists = check_directory_exists(f"/home/runner/work/OsMEN/OsMEN/{dir_name}")
+        exists = check_directory_exists(project_root / dir_name)
         checker.add_check(
             f"Directory: {dir_name}/",
             exists,
@@ -238,8 +246,9 @@ def main():
     ]
     
     for agent_file in agent_files:
-        exists = check_file_exists(f"/home/runner/work/OsMEN/OsMEN/{agent_file}")
-        agent_name = agent_file.split('/')[1].replace('_', ' ').title()
+        exists = check_file_exists(project_root / agent_file)
+        # Extract agent name more robustly
+        agent_name = Path(agent_file).parts[1].replace('_', ' ').title()
         checker.add_check(
             f"Agent: {agent_name}",
             exists,
