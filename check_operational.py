@@ -11,6 +11,9 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+# Common subprocess exceptions
+SUBPROCESS_EXCEPTIONS = (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError, OSError)
+
 
 class OperationalCheck:
     def __init__(self):
@@ -70,7 +73,7 @@ def check_docker():
             timeout=5
         )
         return result.returncode == 0
-    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError, OSError):
+    except SUBPROCESS_EXCEPTIONS:
         return False
 
 
@@ -83,7 +86,7 @@ def check_docker_compose():
             timeout=5
         )
         return result.returncode == 0
-    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError, OSError):
+    except SUBPROCESS_EXCEPTIONS:
         return False
 
 
@@ -99,7 +102,7 @@ def check_python():
             version = result.stdout.decode().strip()
             return True, version
         return False, ""
-    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError, OSError):
+    except SUBPROCESS_EXCEPTIONS:
         return False, ""
 
 
@@ -125,7 +128,7 @@ def check_agent_tests():
             cwd=str(project_root)
         )
         return result.returncode == 0, result.stdout.decode()
-    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError, OSError) as e:
+    except SUBPROCESS_EXCEPTIONS as e:
         return False, str(e)
 
 
@@ -158,7 +161,7 @@ def check_docker_services():
                     pass
         
         return len(services) > 0, services
-    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError, OSError):
+    except SUBPROCESS_EXCEPTIONS:
         return False, []
 
 
@@ -245,10 +248,18 @@ def main():
         "agents/focus_guardrails/focus_guardrails_agent.py",
     ]
     
+    # Agent name mapping for display
+    agent_names = {
+        "boot_hardening": "Boot Hardening",
+        "daily_brief": "Daily Brief",
+        "focus_guardrails": "Focus Guardrails"
+    }
+    
     for agent_file in agent_files:
         exists = check_file_exists(project_root / agent_file)
-        # Extract agent name more robustly
-        agent_name = Path(agent_file).parts[1].replace('_', ' ').title()
+        # Extract agent directory name and get display name from mapping
+        agent_dir = Path(agent_file).parts[1]
+        agent_name = agent_names.get(agent_dir, agent_dir.replace('_', ' ').title())
         checker.add_check(
             f"Agent: {agent_name}",
             exists,
