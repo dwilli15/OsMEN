@@ -8,6 +8,7 @@ import os
 import subprocess
 import json
 from typing import Dict, List
+from datetime import datetime
 
 
 class SysinternalsIntegration:
@@ -98,7 +99,6 @@ class SysinternalsIntegration:
     @staticmethod
     def _get_timestamp() -> str:
         """Get current timestamp"""
-        from datetime import datetime
         return datetime.now().isoformat()
 
 

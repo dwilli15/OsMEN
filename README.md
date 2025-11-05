@@ -16,11 +16,11 @@ OsMEN provides a complete agent orchestration platform for:
 **Core Components:**
 - **Langflow**: Visual reasoning graph builder with coordinator + specialist agents
 - **n8n**: Workflow automation with triggers and subflows
-- **Ollama**: Local LLM inference (privacy-first, no cloud required)
+- **LLM Agents**: Production agents (OpenAI, Copilot, Amazon Q, Claude) + Local (LM Studio, Ollama)
 - **Qdrant**: Vector database for agent memory
 - **Tool Layer**: Simplewall, Sysinternals, FFmpeg integrations
 
-**All processing happens locally** - your data never leaves your machine.
+**Flexible deployment** - Use production cloud agents or run locally for privacy.
 
 ## 🚀 Quick Start
 
@@ -44,12 +44,15 @@ cp .env.example .env
 # Start all services
 docker-compose up -d
 
-# Pull LLM models
-docker exec -it osmen-ollama ollama pull llama2
+# Configure LLM agents (see docs/LLM_AGENTS.md)
+# Option 1: Use production agents (OpenAI, Copilot, etc.)
+# Option 2: Use LM Studio (download from lmstudio.ai)
+# Option 3: Use Ollama (docker-compose --profile ollama up -d)
 
 # Access the interfaces
 # Langflow: http://localhost:7860
 # n8n: http://localhost:5678 (admin/changeme)
+# Agent Gateway: http://localhost:8080/docs
 # Qdrant: http://localhost:6333/dashboard
 ```
 
@@ -58,6 +61,7 @@ See [docs/SETUP.md](docs/SETUP.md) for detailed setup instructions.
 ## 📖 Documentation
 
 - **[Setup Guide](docs/SETUP.md)** - Installation and configuration
+- **[LLM Agents](docs/LLM_AGENTS.md)** - Configure OpenAI, Copilot, Amazon Q, Claude, LM Studio, Ollama
 - **[Architecture](docs/ARCHITECTURE.md)** - System design and components
 - **[Usage Guide](docs/USAGE.md)** - How to use OsMEN features
 
@@ -155,7 +159,12 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 Built with:
 - [Langflow](https://github.com/logspace-ai/langflow) - Visual LLM flow builder
 - [n8n](https://github.com/n8n-io/n8n) - Workflow automation
-- [Ollama](https://github.com/ollama/ollama) - Local LLM runtime
+- [OpenAI](https://openai.com/) - Production LLM (GPT-4, Codex)
+- [GitHub Copilot](https://github.com/features/copilot) - AI pair programmer
+- [Amazon Q](https://aws.amazon.com/q/) - AWS AI assistant
+- [Anthropic Claude](https://www.anthropic.com/) - Advanced reasoning
+- [LM Studio](https://lmstudio.ai/) - Local LLM runtime (primary local option)
+- [Ollama](https://github.com/ollama/ollama) - Local LLM runtime (secondary local option)
 - [Qdrant](https://github.com/qdrant/qdrant) - Vector database
 - [Simplewall](https://www.henrypp.org/product/simplewall) - Firewall tool
 - [Sysinternals](https://docs.microsoft.com/sysinternals) - System utilities

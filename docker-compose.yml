@@ -50,7 +50,11 @@ services:
     networks:
       - osmen-network
 
-  # Ollama - Local LLM inference
+  # LM Studio - Primary local LLM (run externally on host)
+  # Access at: http://host.docker.internal:1234
+  # Instructions: Install LM Studio on host and enable API server
+  
+  # Ollama - Secondary local LLM option (optional)
   ollama:
     image: ollama/ollama:latest
     container_name: osmen-ollama
@@ -61,13 +65,55 @@ services:
     restart: unless-stopped
     networks:
       - osmen-network
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+    profiles:
+      - ollama
+    # Uncomment the following section if you have an NVIDIA GPU
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+  
+  # Agent Gateway - Central API gateway for production LLM agents
+  agent-gateway:
+    build: ./gateway
+    container_name: osmen-agent-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      # OpenAI Configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      
+      # GitHub Copilot Configuration
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - COPILOT_API_URL=${COPILOT_API_URL:-}
+      
+      # Amazon Q Configuration
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      
+      # Anthropic Claude Configuration
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      
+      # LM Studio Configuration (host)
+      - LM_STUDIO_URL=${LM_STUDIO_URL:-http://host.docker.internal:1234/v1}
+      
+      # Ollama Configuration (optional)
+      - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
+      
+      # Gateway settings
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./gateway/config:/app/config
+    restart: unless-stopped
+    networks:
+      - osmen-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # Qdrant - Vector database for memory storage
   qdrant:

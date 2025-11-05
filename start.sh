@@ -26,7 +26,13 @@ fi
 
 # Create necessary directories
 echo "📁 Creating directories..."
-mkdir -p langflow/{flows,config} n8n/workflows postgres/init agents/{boot_hardening,daily_brief,focus_guardrails,content_editing,research_intel} tools/{simplewall,sysinternals,ffmpeg} docs logs
+mkdir -p langflow/flows langflow/config
+mkdir -p n8n/workflows
+mkdir -p postgres/init
+mkdir -p agents/boot_hardening agents/daily_brief agents/focus_guardrails
+mkdir -p agents/content_editing agents/research_intel
+mkdir -p tools/simplewall tools/sysinternals tools/ffmpeg
+mkdir -p docs logs
 
 # Start services
 echo "🚀 Starting OsMEN services..."

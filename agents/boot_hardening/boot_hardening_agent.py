@@ -8,6 +8,7 @@ import os
 import subprocess
 import json
 from typing import Dict, List, Optional
+from datetime import datetime
 
 
 class BootHardeningAgent:
@@ -95,7 +96,6 @@ class BootHardeningAgent:
     @staticmethod
     def _get_timestamp() -> str:
         """Get current timestamp"""
-        from datetime import datetime
         return datetime.now().isoformat()
 
 
