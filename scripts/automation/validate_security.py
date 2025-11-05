@@ -107,19 +107,22 @@ class SecurityValidator:
             content = f.read()
             
         # Check for hardcoded passwords (excluding environment variable references)
-        # Look for PASSWORD= followed by a literal value, not ${VAR} syntax
-        password_patterns = [
-            r"PASSWORD=['\"]?\w+['\"]?\s*$",  # PASSWORD=literal at end of line
-        ]
+        # Pattern matches Docker Compose environment variable syntax: ${VAR}, ${VAR:-default}, ${VAR:?error}
+        env_var_pattern = r'\$\{[^}]+\}'
         
         has_hardcoded_password = False
         for line in content.split('\n'):
-            # Skip lines that use environment variable syntax
-            if 'PASSWORD=' in line and '${' not in line and 'PASSWORD:-' not in line:
-                # Check if it's a direct password assignment
-                if re.search(r"PASSWORD=['\"]?[a-zA-Z0-9_-]+['\"]?\s*(?:#|$)", line):
-                    has_hardcoded_password = True
-                    break
+            # Check if line contains a PASSWORD assignment
+            if 'PASSWORD=' in line:
+                # Extract the value after PASSWORD=
+                match = re.search(r'PASSWORD=(.+?)(?:\s|$)', line)
+                if match:
+                    value = match.group(1).strip()
+                    # Check if value is NOT an environment variable reference
+                    if not re.match(env_var_pattern, value):
+                        # This is a hardcoded password
+                        has_hardcoded_password = True
+                        break
         
         if has_hardcoded_password:
             self.add_issue("Hardcoded password found in docker-compose.yml")
