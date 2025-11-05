@@ -1,5 +1,10 @@
 # OsMEN - OS Management and Engagement Network
 
+[![Operational Status](https://img.shields.io/badge/status-operational-brightgreen.svg)](check_operational.py)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Docker](https://img.shields.io/badge/docker-required-blue.svg)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+
 A local-first no/low-code agent hub combining Langflow reasoning graphs with n8n automation fabric, powered by local LLM via Ollama.
 
 ## 🎯 Overview
@@ -54,9 +59,35 @@ docker-compose up -d
 # n8n: http://localhost:5678 (admin/changeme)
 # Agent Gateway: http://localhost:8080/docs
 # Qdrant: http://localhost:6333/dashboard
+
+# Check if everything is operational
+python3 check_operational.py
+# or
+make check-operational
 ```
 
 See [docs/SETUP.md](docs/SETUP.md) for detailed setup instructions.
+
+### Verify Operational Status
+
+To check if OsMEN is fully operational:
+
+```bash
+# Run comprehensive operational check
+python3 check_operational.py
+
+# Or use make command
+make check-operational
+```
+
+This will verify:
+- ✅ Docker daemon availability
+- ✅ Docker Compose installation
+- ✅ Python runtime
+- ✅ All required files and directories
+- ✅ Agent implementations
+- ✅ Agent test suite
+- ✅ Running Docker services
 
 ## 📖 Documentation
 
@@ -143,6 +174,8 @@ python agents/focus_guardrails/focus_guardrails_agent.py
 ## 📊 Project Status
 
 **Current Version**: MVP (Minimum Viable Product)
+
+**Operational Status**: ✅ [See detailed status](STATUS.md)
 
 ✅ **Completed:**
 - Core infrastructure (Docker Compose)
