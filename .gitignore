@@ -46,11 +46,16 @@ yarn-debug.log*
 yarn-error.log*
 
 # IDEs
-.vscode/
 .idea/
 *.swp
 *.swo
 *~
+
+# VSCode - exclude user-specific files but include project config
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/continue.json
 
 # OS
 .DS_Store
