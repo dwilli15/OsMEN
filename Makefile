@@ -1,17 +1,18 @@
-.PHONY: help start stop restart logs status pull-models setup clean
+.PHONY: help start stop restart logs status pull-models setup clean check-operational
 
 help:
 	@echo "OsMEN - Management Commands"
 	@echo ""
 	@echo "Available commands:"
-	@echo "  make setup        - Initial setup (copy .env, create dirs)"
-	@echo "  make start        - Start all services"
-	@echo "  make stop         - Stop all services"
-	@echo "  make restart      - Restart all services"
-	@echo "  make logs         - View all logs"
-	@echo "  make status       - Check service status"
-	@echo "  make pull-models  - Pull Ollama models"
-	@echo "  make clean        - Remove all containers and volumes"
+	@echo "  make setup             - Initial setup (copy .env, create dirs)"
+	@echo "  make start             - Start all services"
+	@echo "  make stop              - Stop all services"
+	@echo "  make restart           - Restart all services"
+	@echo "  make logs              - View all logs"
+	@echo "  make status            - Check service status"
+	@echo "  make check-operational - Run comprehensive operational check"
+	@echo "  make pull-models       - Pull Ollama models"
+	@echo "  make clean             - Remove all containers and volumes"
 	@echo ""
 
 setup:
@@ -72,3 +73,7 @@ backup:
 	docker exec osmen-postgres pg_dumpall -U postgres > backups/postgres-$(shell date +%Y%m%d-%H%M%S).sql
 	tar czf backups/config-$(shell date +%Y%m%d-%H%M%S).tar.gz n8n/workflows langflow/flows .env
 	@echo "Backup complete!"
+
+check-operational:
+	@echo "Running operational status check..."
+	@python3 check_operational.py
