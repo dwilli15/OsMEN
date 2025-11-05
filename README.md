@@ -1,11 +1,12 @@
 # OsMEN - OS Management and Engagement Network
 
-[![Operational Status](https://img.shields.io/badge/status-operational-brightgreen.svg)](check_operational.py)
+[![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen.svg)](check_operational.py)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Docker](https://img.shields.io/badge/docker-required-blue.svg)](https://www.docker.com/)
+[![Security Validated](https://img.shields.io/badge/security-validated-success.svg)](scripts/automation/validate_security.py)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-A local-first no/low-code agent hub combining Langflow reasoning graphs with n8n automation fabric, powered by local LLM via Ollama.
+A **production-ready** local-first no/low-code agent hub combining Langflow reasoning graphs with n8n automation fabric, powered by local LLM via Ollama or cloud providers.
 
 ## 🎯 Overview
 
@@ -89,13 +90,37 @@ This will verify:
 - ✅ Agent test suite
 - ✅ Running Docker services
 
+### Production Readiness Validation
+
+Before deploying to production, run complete validation:
+
+```bash
+# Run all validation checks
+make validate
+
+# Or run individually:
+make security-check    # Security validation
+make test              # Agent tests
+make check-operational # System health check
+```
+
+See **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)** for complete checklist.
+
 ## 📖 Documentation
 
+### Getting Started
 - **[Setup Guide](docs/SETUP.md)** - Installation and configuration
+- **[Production Deployment](docs/PRODUCTION_DEPLOYMENT.md)** - Complete production deployment checklist
 - **[LLM Agents](docs/LLM_AGENTS.md)** - Configure OpenAI, Copilot, Amazon Q, Claude, LM Studio, Ollama
-- **[Obsidian Integration](docs/OBSIDIAN_INTEGRATION.md)** - Knowledge management with Obsidian
-- **[Architecture](docs/ARCHITECTURE.md)** - System design and components
+
+### Operations
 - **[Usage Guide](docs/USAGE.md)** - How to use OsMEN features
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Runbooks](docs/runbooks/)** - Operational runbooks for each workflow
+
+### Technical
+- **[Architecture](docs/ARCHITECTURE.md)** - System design and components
+- **[Obsidian Integration](docs/OBSIDIAN_INTEGRATION.md)** - Knowledge management with Obsidian
 
 ## 🔧 Key Features
 

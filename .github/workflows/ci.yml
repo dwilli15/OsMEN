@@ -1,0 +1,287 @@
+name: OsMEN CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  security-validation:
+    name: Security Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run security validation
+      run: |
+        python scripts/automation/validate_security.py
+        
+    - name: Check for secrets in code
+      uses: trufflesecurity/trufflehog@main
+      with:
+        extra_args: --only-verified
+
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pylint black flake8
+        
+    - name: Lint with flake8
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      continue-on-error: true
+      
+    - name: Check code formatting with black
+      run: |
+        black --check --diff agents/ tools/ gateway/ scripts/
+      continue-on-error: true
+
+  agent-tests:
+    name: Agent Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run agent tests
+      run: |
+        python test_agents.py
+        
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: logs/test_results.log
+        if-no-files-found: ignore
+
+  operational-check:
+    name: Operational Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run operational check (without Docker)
+      run: |
+        python check_operational.py || true
+        # Note: Docker services won't be running in CI, so this will show degraded status
+
+  docker-build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build Agent Gateway
+      uses: docker/build-push-action@v5
+      with:
+        context: ./gateway
+        file: ./gateway/Dockerfile
+        push: false
+        tags: osmen-agent-gateway:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        
+    - name: Build MCP Server
+      uses: docker/build-push-action@v5
+      with:
+        context: ./gateway
+        file: ./gateway/Dockerfile.mcp
+        push: false
+        tags: osmen-mcp-server:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  documentation-check:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check required documentation
+      run: |
+        echo "Checking for required documentation files..."
+        
+        required_files=(
+          "README.md"
+          "docs/SETUP.md"
+          "docs/ARCHITECTURE.md"
+          "docs/USAGE.md"
+          "docs/runbooks/boot_hardening.md"
+          "docs/runbooks/daily_brief.md"
+          "docs/runbooks/focus_guardrails.md"
+          "CONTRIBUTING.md"
+        )
+        
+        missing=0
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Missing: $file"
+            missing=$((missing + 1))
+          else
+            echo "✅ Found: $file"
+          fi
+        done
+        
+        if [ $missing -gt 0 ]; then
+          echo "❌ $missing required documentation files are missing"
+          exit 1
+        else
+          echo "✅ All required documentation files present"
+        fi
+        
+    - name: Check for broken links (markdown)
+      run: |
+        # Install markdown link checker
+        npm install -g markdown-link-check
+        # Check all markdown files
+        find . -name "*.md" -not -path "./node_modules/*" -exec markdown-link-check {} \; || true
+      continue-on-error: true
+
+  integration-readiness:
+    name: Integration Readiness
+    runs-on: ubuntu-latest
+    needs: [security-validation, agent-tests, docker-build]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check docker-compose configuration
+      run: |
+        docker compose config > /dev/null
+        echo "✅ docker-compose.yml is valid"
+        
+    - name: Verify required directories
+      run: |
+        dirs=(
+          "agents"
+          "tools"
+          "gateway"
+          "langflow"
+          "n8n"
+          "docs"
+          "config"
+          "scripts/automation"
+          "content/inbox"
+          "content/output"
+        )
+        
+        for dir in "${dirs[@]}"; do
+          if [ -d "$dir" ]; then
+            echo "✅ Directory exists: $dir"
+          else
+            echo "❌ Directory missing: $dir"
+            exit 1
+          fi
+        done
+        
+    - name: Verify configuration files
+      run: |
+        configs=(
+          ".env.example"
+          "config/firewall_baseline.yaml"
+          "config/boot_hardening_settings.yaml"
+        )
+        
+        for config in "${configs[@]}"; do
+          if [ -f "$config" ]; then
+            echo "✅ Config exists: $config"
+          else
+            echo "❌ Config missing: $config"
+            exit 1
+          fi
+        done
+
+  summary:
+    name: Build Summary
+    runs-on: ubuntu-latest
+    needs: [security-validation, code-quality, agent-tests, operational-check, docker-build, documentation-check, integration-readiness]
+    if: always()
+    
+    steps:
+    - name: Check build status
+      run: |
+        echo "Build Summary:"
+        echo "- Security Validation: ${{ needs.security-validation.result }}"
+        echo "- Code Quality: ${{ needs.code-quality.result }}"
+        echo "- Agent Tests: ${{ needs.agent-tests.result }}"
+        echo "- Operational Check: ${{ needs.operational-check.result }}"
+        echo "- Docker Build: ${{ needs.docker-build.result }}"
+        echo "- Documentation Check: ${{ needs.documentation-check.result }}"
+        echo "- Integration Readiness: ${{ needs.integration-readiness.result }}"
+        
+        if [ "${{ needs.security-validation.result }}" != "success" ]; then
+          echo "❌ Critical: Security validation failed"
+          exit 1
+        fi
+        
+        if [ "${{ needs.agent-tests.result }}" != "success" ]; then
+          echo "❌ Critical: Agent tests failed"
+          exit 1
+        fi
+        
+        echo "✅ Build completed successfully"

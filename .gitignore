@@ -1,6 +1,19 @@
 # Environment files
 .env
 *.env.local
+.env.*
+!.env.example
+
+# Secrets and credentials
+*.key
+*.pem
+*.p12
+*.pfx
+credentials/
+secrets/
+*.secret
+*.crt
+!*.crt.example
 
 # Logs
 logs/
@@ -68,3 +81,19 @@ docker-compose.override.yml
 tmp/
 temp/
 *.tmp
+
+# Content directories (user data)
+content/inbox/*
+!content/inbox/.gitkeep
+content/output/*
+!content/output/.gitkeep
+
+# Backups
+*.bak
+*.backup
+backup/
+backups/
+
+# Security and audit
+security_audit/
+vulnerability_reports/
