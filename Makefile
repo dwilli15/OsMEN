@@ -17,8 +17,10 @@ help:
 	@echo ""
 	@echo "Testing & Validation:"
 	@echo "  make test              - Run agent tests"
+	@echo "  make test-llm          - Test LLM provider connectivity"
 	@echo "  make check-operational - Run comprehensive operational check"
 	@echo "  make security-check    - Run security validation"
+	@echo "  make validate          - Run all validation checks"
 	@echo ""
 	@echo "Maintenance:"
 	@echo "  make pull-models       - Pull Ollama models"
@@ -104,12 +106,18 @@ test:
 	@echo "Running agent tests..."
 	@python3 test_agents.py
 
+test-llm:
+	@echo "Testing LLM provider connectivity..."
+	@python3 scripts/automation/test_llm_providers.py
+
 validate: security-check test check-operational
 	@echo ""
 	@echo "==================================================="
 	@echo "Full validation complete!"
 	@echo "==================================================="
 	@echo "If all checks passed, OsMEN is production ready!"
+	@echo ""
+	@echo "Optional: Run 'make test-llm' to test LLM providers"
 	@echo ""
 
 pre-commit-install:
