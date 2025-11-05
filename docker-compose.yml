@@ -1,0 +1,126 @@
+version: '3.8'
+
+services:
+  # Langflow - Visual flow builder for LLM agents
+  langflow:
+    image: langflowai/langflow:latest
+    container_name: osmen-langflow
+    ports:
+      - "7860:7860"
+    environment:
+      - LANGFLOW_DATABASE_URL=postgresql://langflow:langflow@postgres:5432/langflow
+      - LANGFLOW_CONFIG_DIR=/app/config
+    volumes:
+      - ./langflow/flows:/app/flows
+      - ./langflow/config:/app/config
+      - langflow-data:/app/data
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - osmen-network
+
+  # n8n - Workflow automation
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: osmen-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=changeme
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n
+      - DB_POSTGRESDB_PASSWORD=n8n
+      - EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
+      - GENERIC_TIMEZONE=UTC
+    volumes:
+      - ./n8n/workflows:/home/node/.n8n
+      - n8n-data:/home/node/.n8n
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - osmen-network
+
+  # Ollama - Local LLM inference
+  ollama:
+    image: ollama/ollama:latest
+    container_name: osmen-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - osmen-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # Qdrant - Vector database for memory storage
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: osmen-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    restart: unless-stopped
+    networks:
+      - osmen-network
+
+  # PostgreSQL - Shared database for Langflow and n8n
+  postgres:
+    image: postgres:15-alpine
+    container_name: osmen-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - osmen-network
+
+  # Redis - Caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: osmen-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - osmen-network
+
+volumes:
+  langflow-data:
+  n8n-data:
+  ollama-data:
+  qdrant-data:
+  postgres-data:
+  redis-data:
+
+networks:
+  osmen-network:
+    driver: bridge
