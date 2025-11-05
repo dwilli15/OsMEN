@@ -200,3 +200,19 @@ Provide README outlining local deployment via Docker Compose (n8n + Langflow + v
 
 ---
 This spec guides the private repository setup and subsequent Copilot-assisted scaffolding for OsMEN.
+
+However, the project does not seem to meet the specifications.
+What concrete requirements or success criteria remain unimplemented from spec.md—especially around Langflow/n8n orchestration, real tool execution, and runbook documentation—and who owns each gap?
+Which production LLM providers (OpenAI, Copilot, Amazon Q, Claude) must be operational on day one, and do we have working API credentials plus automated smoke tests for each?
+How do we want to structure the repository so it matches the spec’s scaffold (spec.md, docs/runbooks/, flows/{n8n,langflow}/, config/, scripts/automation/), and what subtasks does Copilot need to perform to create those directories and seed templates?
+For each MVP workflow (Boot Hardening, Daily Brief, Focus Guardrails), what OS-level commands, PowerShell scripts, or n8n nodes should Copilot wire in so outputs come from real telemetry instead of placeholders?
+Which security hardening steps are mandatory before release (e.g., .env handling, secrets rotation, firewall defaults), and how should Copilot validate them—linting rules, pre-commit hooks, or CI gates?
+Are there integration tests that must pass in CI (docker-compose health checks, agent end-to-end flows, gateway API contract tests), and should Copilot author GitHub Actions to enforce them?
+What documentation updates are still needed (runbooks, troubleshooting, onboarding), and can Copilot auto-generate the missing Markdown files from the spec outline?
+Suggestions:
+
+Assign Copilot focused tickets: scaffold missing directories/files, replace stub agent logic with actual tool calls, and implement Langflow/n8n exports that align with the spec.
+Have Copilot draft CI workflows (GitHub Actions) that spin up the docker stack, run test_agents.py, and hit the FastAPI gateway endpoints to guarantee production readiness.
+Ask Copilot to build a security checklist script that verifies .env completeness, warns about default credentials, and confirms secrets aren’t committed.
+Let Copilot generate templated runbooks in docs/runbooks/ covering each workflow’s trigger path, failure handling, and rollback.
+Use Copilot to document operational metrics and logging expectations inside spec.md and ensure STATUS/README accurately reflect implemented functionality.
