@@ -16,7 +16,8 @@ secrets/
 !*.crt.example
 
 # Logs
-logs/
+logs/*
+!logs/.gitkeep
 *.log
 
 # Data directories
