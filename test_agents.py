@@ -21,6 +21,16 @@ def test_boot_hardening():
         agent = BootHardeningAgent()
         report = agent.get_hardening_report()
         
+        # Validate report structure
+        required_keys = ['boot_integrity', 'startup_analysis', 'timestamp', 'overall_status']
+        for key in required_keys:
+            if key not in report:
+                raise ValueError(f"Missing required key in report: {key}")
+        
+        # Validate boot_integrity structure
+        if 'issues' not in report['boot_integrity']:
+            raise ValueError("Missing 'issues' in boot_integrity")
+        
         print("✅ Boot Hardening Agent: PASS")
         print(f"Status: {report['overall_status']}")
         print(f"Issues: {len(report['boot_integrity']['issues'])}")
@@ -43,6 +53,17 @@ def test_daily_brief():
         agent = DailyBriefAgent()
         brief = agent.generate_brief()
         
+        # Validate brief structure
+        required_keys = ['date', 'time', 'greeting', 'system_status', 'scheduled_tasks', 
+                        'pending_updates', 'resource_analysis', 'recommendations']
+        for key in required_keys:
+            if key not in brief:
+                raise ValueError(f"Missing required key in brief: {key}")
+        
+        # Validate scheduled_tasks is a list
+        if not isinstance(brief['scheduled_tasks'], list):
+            raise ValueError("scheduled_tasks should be a list")
+        
         print("✅ Daily Brief Agent: PASS")
         print(f"Date: {brief['date']}")
         print(f"Tasks: {len(brief['scheduled_tasks'])}")
@@ -64,11 +85,37 @@ def test_focus_guardrails():
         
         agent = FocusGuardrailsAgent()
         session = agent.start_focus_session(25)
+        
+        # Validate session structure
+        required_keys = ['start_time', 'duration_minutes', 'end_time', 'status']
+        for key in required_keys:
+            if key not in session:
+                raise ValueError(f"Missing required key in session: {key}")
+        
+        # Validate status is 'active'
+        if session['status'] != 'active':
+            raise ValueError(f"Expected status 'active', got '{session['status']}'")
+        
+        # Get focus report
         report = agent.get_focus_report()
-        agent.end_focus_session()
+        
+        # Validate report structure
+        report_keys = ['total_sessions', 'completed_sessions', 'active_session', 'blocked_sites', 'timestamp']
+        for key in report_keys:
+            if key not in report:
+                raise ValueError(f"Missing required key in report: {key}")
+        
+        # End the session
+        end_result = agent.end_focus_session()
+        
+        # Validate end result
+        if not end_result or 'status' not in end_result:
+            raise ValueError("end_focus_session() returned invalid result")
+        if end_result['status'] != 'completed':
+            raise ValueError(f"Expected status 'completed' after ending session, got '{end_result.get('status')}'")
         
         print("✅ Focus Guardrails Agent: PASS")
-        print(f"Session Status: {session['status']}")
+        print(f"Session Status: {end_result['status']}")
         print(f"Duration: {session['duration_minutes']} minutes")
         
         return True
@@ -90,6 +137,11 @@ def test_tool_integrations():
         from tools.simplewall.simplewall_integration import SimplewallIntegration
         simplewall = SimplewallIntegration()
         rules = simplewall.get_rules()
+        
+        # Validate rules structure
+        if not isinstance(rules, list):
+            raise ValueError("get_rules() should return a list")
+        
         print("✅ Simplewall Integration: PASS")
         results.append(True)
     except Exception as e:
@@ -101,6 +153,15 @@ def test_tool_integrations():
         from tools.sysinternals.sysinternals_integration import SysinternalsIntegration
         sysinternals = SysinternalsIntegration()
         analysis = sysinternals.analyze_system_health()
+        
+        # Validate analysis structure
+        if not isinstance(analysis, dict):
+            raise ValueError("analyze_system_health() should return a dict")
+        if 'autoruns' not in analysis:
+            raise ValueError("Missing 'autoruns' in analysis")
+        if 'timestamp' not in analysis:
+            raise ValueError("Missing 'timestamp' in analysis")
+        
         print("✅ Sysinternals Integration: PASS")
         results.append(True)
     except Exception as e:
@@ -112,6 +173,15 @@ def test_tool_integrations():
         from tools.ffmpeg.ffmpeg_integration import FFmpegIntegration
         ffmpeg = FFmpegIntegration()
         info = ffmpeg.get_media_info('test.mp4')
+        
+        # Validate info structure
+        if not isinstance(info, dict):
+            raise ValueError("get_media_info() should return a dict")
+        required_keys = ['file', 'format', 'duration', 'video_codec', 'audio_codec', 'resolution']
+        for key in required_keys:
+            if key not in info:
+                raise ValueError(f"Missing required key in media info: {key}")
+        
         print("✅ FFmpeg Integration: PASS")
         results.append(True)
     except Exception as e:

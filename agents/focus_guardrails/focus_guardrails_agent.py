@@ -39,6 +39,11 @@ class FocusGuardrailsAgent:
             return {'status': 'no_active_session'}
         
         current_session = self.focus_sessions[-1]
+        
+        # Check if session is already completed
+        if current_session.get('status') == 'completed':
+            return {'status': 'no_active_session'}
+        
         current_session['status'] = 'completed'
         current_session['actual_end_time'] = datetime.now().isoformat()
         

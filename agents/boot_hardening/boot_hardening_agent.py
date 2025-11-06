@@ -62,16 +62,38 @@ class BootHardeningAgent:
         """Configure firewall rules using Simplewall"""
         results = {
             'configured_rules': [],
-            'status': 'success'
+            'status': 'success',
+            'errors': []
         }
+        
+        # Handle None or empty rules list
+        if rules is None:
+            results['errors'].append('Rules parameter cannot be None')
+            results['status'] = 'failed'
+            return results
+        
+        if not rules:  # Empty list
+            return results
         
         # This would integrate with Simplewall API/CLI
         for rule in rules:
+            if not isinstance(rule, dict):
+                results['errors'].append(f'Invalid rule type: {type(rule)}')
+                continue
+                
+            # Validate required fields
+            if 'name' not in rule or not rule['name']:
+                results['errors'].append('Rule missing required field: name')
+                continue
+            
             results['configured_rules'].append({
                 'name': rule.get('name'),
                 'action': rule.get('action', 'block'),
                 'applied': True
             })
+        
+        if results['errors']:
+            results['status'] = 'partial_success' if results['configured_rules'] else 'failed'
             
         return results
     
