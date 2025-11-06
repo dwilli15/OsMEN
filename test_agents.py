@@ -109,7 +109,9 @@ def test_focus_guardrails():
         end_result = agent.end_focus_session()
         
         # Validate end result
-        if end_result.get('status') != 'completed':
+        if not end_result or 'status' not in end_result:
+            raise ValueError("end_focus_session() returned invalid result")
+        if end_result['status'] != 'completed':
             raise ValueError(f"Expected status 'completed' after ending session, got '{end_result.get('status')}'")
         
         print("✅ Focus Guardrails Agent: PASS")

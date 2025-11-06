@@ -66,7 +66,13 @@ class BootHardeningAgent:
             'errors': []
         }
         
-        if not rules:
+        # Handle None or empty rules list
+        if rules is None:
+            results['errors'].append('Rules parameter cannot be None')
+            results['status'] = 'failed'
+            return results
+        
+        if not rules:  # Empty list
             return results
         
         # This would integrate with Simplewall API/CLI
