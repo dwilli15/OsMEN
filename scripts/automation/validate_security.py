@@ -12,11 +12,12 @@ import re
 
 
 class SecurityValidator:
-    def __init__(self):
+    def __init__(self, ci_mode=False):
         self.issues = []
         self.warnings = []
         self.passed = []
         self.project_root = Path(__file__).parent.parent.parent
+        self.ci_mode = ci_mode
         
     def add_issue(self, message: str):
         """Add a security issue (critical)"""
@@ -36,7 +37,11 @@ class SecurityValidator:
         env_example = self.project_root / ".env.example"
         
         if not env_file.exists():
-            self.add_issue(".env file not found. Copy .env.example to .env")
+            # In CI mode, missing .env is expected (not a critical issue)
+            if self.ci_mode:
+                self.add_warning(".env file not found (expected in CI - users create from .env.example)")
+            else:
+                self.add_issue(".env file not found. Copy .env.example to .env")
             return False
             
         self.add_passed(".env file exists")
@@ -275,9 +280,15 @@ class SecurityValidator:
 
 def main():
     """Run all security validation checks"""
-    validator = SecurityValidator()
+    # Check if running in CI environment
+    ci_mode = os.getenv('CI', '').lower() in ('true', '1', 'yes')
     
-    print("🔒 Running OsMEN Security Validation...\n")
+    validator = SecurityValidator(ci_mode=ci_mode)
+    
+    if ci_mode:
+        print("🔒 Running OsMEN Security Validation (CI Mode)...\n")
+    else:
+        print("🔒 Running OsMEN Security Validation...\n")
     
     # Run all checks
     validator.check_env_file()
