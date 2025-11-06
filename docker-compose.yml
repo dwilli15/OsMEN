@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Langflow - Visual flow builder for LLM agents
   langflow:
@@ -79,8 +77,8 @@ services:
   # MCP Server - Model Context Protocol for tool integration
   mcp-server:
     build:
-      context: ./gateway
-      dockerfile: Dockerfile.mcp
+      context: .
+      dockerfile: gateway/Dockerfile.mcp
     container_name: osmen-mcp-server
     ports:
       - "8081:8081"
