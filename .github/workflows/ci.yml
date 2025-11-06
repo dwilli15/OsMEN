@@ -150,7 +150,7 @@ jobs:
     - name: Build Agent Gateway
       uses: docker/build-push-action@v5
       with:
-        context: ./gateway
+        context: .
         file: ./gateway/Dockerfile
         push: false
         tags: osmen-agent-gateway:test
@@ -160,7 +160,7 @@ jobs:
     - name: Build MCP Server
       uses: docker/build-push-action@v5
       with:
-        context: ./gateway
+        context: .
         file: ./gateway/Dockerfile.mcp
         push: false
         tags: osmen-mcp-server:test
