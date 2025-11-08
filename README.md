@@ -109,6 +109,7 @@ See **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)** for complet
 ## 📖 Documentation
 
 ### Getting Started
+- **[AI Agent Setup](1stsetup.md)** - Automated first-use setup instructions for AI agents
 - **[Setup Guide](docs/SETUP.md)** - Installation and configuration
 - **[Production Deployment](docs/PRODUCTION_DEPLOYMENT.md)** - Complete production deployment checklist
 - **[LLM Agents](docs/LLM_AGENTS.md)** - Configure OpenAI, Copilot, Amazon Q, Claude, LM Studio, Ollama
