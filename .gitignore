@@ -98,3 +98,8 @@ backups/
 # Security and audit
 security_audit/
 vulnerability_reports/
+
+# Memory system - conversation database (privacy)
+.copilot/conversations.db
+.copilot/conversations.db-journal
+.copilot/daily_summaries/

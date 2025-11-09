@@ -14,6 +14,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import httpx
 
+from resilience import retryable_llm_call
+
 # Configure logging
 logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO"),
@@ -73,6 +75,7 @@ class AgentGateway:
         else:
             raise HTTPException(status_code=400, detail=f"Unknown agent: {agent}")
     
+    @retryable_llm_call(max_attempts=3)
     async def _openai_completion(self, request: CompletionRequest) -> CompletionResponse:
         """OpenAI completion"""
         if not self.openai_key:
@@ -98,8 +101,7 @@ class AgentGateway:
             headers=headers
         )
         
-        if response.status_code != 200:
-            raise HTTPException(status_code=response.status_code, detail=response.text)
+        response.raise_for_status()
         
         data = response.json()
         return CompletionResponse(
@@ -139,6 +141,7 @@ class AgentGateway:
             model="amazonq"
         )
     
+    @retryable_llm_call(max_attempts=3)
     async def _claude_completion(self, request: CompletionRequest) -> CompletionResponse:
         """Anthropic Claude completion"""
         if not self.anthropic_key:
@@ -165,8 +168,7 @@ class AgentGateway:
             headers=headers
         )
         
-        if response.status_code != 200:
-            raise HTTPException(status_code=response.status_code, detail=response.text)
+        response.raise_for_status()
         
         data = response.json()
         return CompletionResponse(
@@ -176,6 +178,7 @@ class AgentGateway:
             usage=data.get("usage")
         )
     
+    @retryable_llm_call(max_attempts=3)
     async def _lmstudio_completion(self, request: CompletionRequest) -> CompletionResponse:
         """LM Studio completion (OpenAI-compatible API)"""
         model = request.model or os.getenv("LM_STUDIO_MODEL", "local-model")
@@ -193,8 +196,7 @@ class AgentGateway:
                 json=payload
             )
             
-            if response.status_code != 200:
-                raise HTTPException(status_code=response.status_code, detail=response.text)
+            response.raise_for_status()
             
             data = response.json()
             return CompletionResponse(
@@ -209,6 +211,7 @@ class AgentGateway:
                 detail="LM Studio not reachable. Please start LM Studio on host and enable API server."
             )
     
+    @retryable_llm_call(max_attempts=3)
     async def _ollama_completion(self, request: CompletionRequest) -> CompletionResponse:
         """Ollama completion"""
         model = request.model or os.getenv("OLLAMA_MODEL", "llama2")
@@ -225,8 +228,7 @@ class AgentGateway:
                 json=payload
             )
             
-            if response.status_code != 200:
-                raise HTTPException(status_code=response.status_code, detail=response.text)
+            response.raise_for_status()
             
             data = response.json()
             return CompletionResponse(
