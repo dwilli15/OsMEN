@@ -8,3 +8,4 @@ anthropic==0.7.8
 boto3==1.34.10
 aiohttp==3.9.1
 pydantic-settings==2.1.0
+tenacity==8.2.3
