@@ -7,27 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+- Innovation Agent Framework (v1.3.0)
+- Weekly monitoring automation
+- Evaluation framework for suggestions
+- Pre-approved task execution
+- Approval workflow UI
+
+## [1.2.0] - 2025-11-09
+
 ### Added
-- Memory and context continuity system
+- Memory and context continuity system (Phase 1+)
 - `.copilot/memory.json` for persistent system state
+- `.copilot/conversation_store.py` - SQLite-based conversation storage
+- `.copilot/daily_summary.py` - Automated daily summary generator
 - `docs/CONTEXT.md` for human-readable current state
 - `docs/DECISION_LOG.md` for architectural decision tracking
 - `docs/ROADMAP.md` with 6-month development plan
+- `docs/MASTER_PLAN.md` with complete multi-phase implementation plan
 - `PROGRESS.md` with timestamped task tracking
 - `.copilot/innovation_guidelines.md` for autonomous innovation agent
 - `CHANGELOG.md` (this file) for version history
 - Innovation backlog system for proactive improvements
-- Conversation history storage (45-day retention)
-- Daily summary generation (permanent storage)
-- Auto-update hooks for PR merges
+- Conversation history storage (45-day retention + permanent summaries)
+- Daily summary generation (JSON, HTML, text formats)
+- Auto-update hooks for PR merges (.github/workflows/auto-update-memory.yml)
+- Daily summary workflow (.github/workflows/daily-summary.yml)
 - Weekly automation monitoring framework
 - Pre-approved task system for controlled autonomy
+- Comprehensive test suite (test_memory_system.py)
 
 ### Changed
-- PR description updated with multi-phase plan
+- Updated to timezone-aware datetimes (Python 3.12 compatibility)
+- Fixed all `datetime.utcnow()` deprecation warnings
+- Enhanced PR description with multi-phase plan tracking
 - User profile captured in memory system
 - Tool integration list expanded
 - Development priorities formalized
+
+### Fixed
+- Python 3.12 deprecation warnings in conversation_store.py
+- Python 3.12 deprecation warnings in daily_summary.py
+- Python 3.12 deprecation warnings in GitHub workflows
+
+### Testing
+- 4/4 test suites passing (100%)
+- Conversation storage and retrieval tested
+- Daily summary generation tested
+- Memory persistence validated
+- Cross-component integration verified
 
 ## [1.1.0] - 2025-11-09
 

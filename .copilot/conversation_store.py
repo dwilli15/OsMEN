@@ -6,7 +6,7 @@ Stores AI agent conversations with 45-day retention and permanent summaries
 
 import json
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Dict, Optional, Any
 import hashlib
@@ -75,7 +75,7 @@ class ConversationStore:
         metadata: Optional[Dict] = None
     ) -> str:
         """Add a conversation to storage"""
-        timestamp = datetime.utcnow()
+        timestamp = datetime.now(timezone.utc)
         conv_id = self._generate_id(user_message, timestamp)
         
         with sqlite3.connect(self.db_path) as conn:
@@ -129,7 +129,7 @@ class ConversationStore:
     
     def cleanup_old_conversations(self, days: int = 45) -> int:
         """Archive conversations older than specified days and create summaries"""
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
@@ -193,7 +193,7 @@ class ConversationStore:
         # Create summary text
         summary_text = self._generate_summary_text(conversations, topics)
         
-        summary_id = self._generate_id(summary_text, datetime.utcnow())
+        summary_id = self._generate_id(summary_text, datetime.now(timezone.utc))
         
         cursor = conn.cursor()
         cursor.execute("""
