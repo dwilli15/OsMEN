@@ -28,7 +28,7 @@ jobs:
         run: |
           python3 << 'EOF'
           import json
-          from datetime import datetime
+          from datetime import datetime, timezone
           from pathlib import Path
           import os
           
@@ -38,7 +38,7 @@ jobs:
               memory = json.load(f)
           
           # Update last_updated
-          memory["last_updated"] = datetime.utcnow().isoformat() + "Z"
+          memory["last_updated"] = datetime.now(timezone.utc).isoformat()
           
           # Get PR information from environment
           pr_title = os.getenv("PR_TITLE", "Unknown PR")
@@ -50,7 +50,7 @@ jobs:
               memory["conversation_history"] = []
           
           memory["conversation_history"].append({
-              "timestamp": datetime.utcnow().isoformat() + "Z",
+              "timestamp": datetime.now(timezone.utc).isoformat(),
               "type": "pr_merged",
               "pr_number": pr_number,
               "pr_title": pr_title,
@@ -82,7 +82,7 @@ jobs:
       - name: Update CONTEXT.md
         run: |
           python3 << 'EOF'
-          from datetime import datetime
+          from datetime import datetime, timezone
           from pathlib import Path
           import os
           
@@ -97,7 +97,7 @@ jobs:
           lines = content.split('\n')
           for i, line in enumerate(lines):
               if line.startswith("**Last Updated:**"):
-                  lines[i] = f"**Last Updated:** {datetime.utcnow().strftime('%Y-%m-%d')}"
+                  lines[i] = f"**Last Updated:** {datetime.now(timezone.utc).strftime('%Y-%m-%d')}"
                   break
           
           # Add recent accomplishment
@@ -109,7 +109,7 @@ jobs:
           
           if recent_section_idx:
               # Insert new accomplishment after the header
-              new_accomplishment = f"- ✅ PR #{pr_number}: {pr_title} (merged {datetime.utcnow().strftime('%Y-%m-%d')})"
+              new_accomplishment = f"- ✅ PR #{pr_number}: {pr_title} (merged {datetime.now(timezone.utc).strftime('%Y-%m-%d')})"
               lines.insert(recent_section_idx + 1, new_accomplishment)
           
           # Write back
@@ -124,7 +124,7 @@ jobs:
       - name: Update PROGRESS.md
         run: |
           python3 << 'EOF'
-          from datetime import datetime
+          from datetime import datetime, timezone
           from pathlib import Path
           import os
           
@@ -139,11 +139,11 @@ jobs:
               lines = content.split('\n')
               for i, line in enumerate(lines):
                   if line.startswith("**Last Updated:**"):
-                      lines[i] = f"**Last Updated:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+                      lines[i] = f"**Last Updated:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC"
                       break
               
               # Add to daily log
-              today = datetime.utcnow().strftime("%Y-%m-%d")
+              today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
               log_entry = f"\n### {today}\n**Focus:** PR #{pr_number} merged\n\n- Merged: {pr_title}\n"
               
               # Find daily log section and prepend
