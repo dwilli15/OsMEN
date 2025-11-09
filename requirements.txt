@@ -24,6 +24,9 @@ psutil==5.9.6
 # Logging
 loguru==0.7.2
 
+# Resilience and retry logic
+tenacity==8.2.3
+
 # Optional: For enhanced functionality
 # numpy==1.26.2
 # langchain==0.1.0
