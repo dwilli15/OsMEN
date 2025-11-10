@@ -27,6 +27,9 @@ loguru==0.7.2
 # Resilience and retry logic
 tenacity==8.2.3
 
+# RSS feed parsing for innovation monitoring
+feedparser==6.0.10
+
 # Optional: For enhanced functionality
 # numpy==1.26.2
 # langchain==0.1.0
