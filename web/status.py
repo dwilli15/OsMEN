@@ -114,8 +114,8 @@ async def get_memory_system_status() -> Dict:
             "last_update": data.get("last_updated"),
             "user": data.get("user", {}).get("name")
         }
-    except Exception as e:
+    except Exception:
         return {
             "status": "error",
-            "error": str(e)
+            "error": "Failed to read memory system"
         }
