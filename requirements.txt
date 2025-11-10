@@ -40,6 +40,13 @@ google-api-python-client==2.108.0
 google-auth-oauthlib==1.1.0
 google-auth-httplib2==0.1.1
 
+# Health data integrations (v1.6.0)
+# android-health-connect - For Android Health Connect API (Android only)
+# Note: android-health-connect requires Android environment
+
+# Push notifications (v1.6.0)
+firebase-admin==6.3.0
+
 # Optional: For enhanced functionality
 # numpy==1.26.2
 # langchain==0.1.0
