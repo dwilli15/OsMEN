@@ -1,8 +1,50 @@
 # OsMEN Development Progress
 
-**Current Version:** v1.2.0 (Memory System Complete)  
-**Last Updated:** 2025-11-09 09:15:00 UTC  
-**Current Phase:** Ready for Phase 2 (Innovation Agent)
+**Current Version:** v1.4.0 (In Progress)
+**Last Updated:** 2025-11-10 06:58:00 UTC  
+**Current Phase:** Syllabus Parser & Calendar Foundation
+
+## Active Sprint: v1.4.0 - Syllabus Parser & Calendar Foundation 🔄
+
+**Sprint Start:** 2025-11-10  
+**Sprint End:** 2025-12-07 (target)  
+**Progress:** 13/25 tasks complete (52%)
+
+### Completed Tasks (from 25-task batch)
+- [x] 1. PDF syllabus parser infrastructure (PyPDF2/pdfplumber)
+- [x] 2. DOC/DOCX parser (python-docx)
+- [x] 3. Event extraction logic (dates, deadlines, exams)
+- [x] 4. Assignment detection algorithms
+- [x] 5. Conflict validation engine
+- [x] 6. Data normalization framework
+- [x] 7. Manual correction interface (structured output)
+- [x] 8. Google Calendar API integration
+- [x] 9. Outlook Calendar API integration
+- [x] 10. Event creation/update/delete operations
+- [x] 13. Semester boundary detection
+- [x] 14. Due date analysis system (Priority Ranker)
+- [x] 20. Energy pattern learning framework (Schedule Optimizer)
+
+### In Progress
+- [ ] 11. Conflict detection engine enhancement
+- [ ] 12. Multi-calendar sync capability
+- [ ] 15. Effort estimation (heuristic-based)
+- [ ] 16. Dependency detection
+- [ ] 17. Weighted priority scoring
+- [ ] 18. Manual override support
+- [ ] 19. Priority visualization
+- [ ] 21. Optimal time slot selection
+- [ ] 22. Break scheduling algorithm
+- [ ] 23. Buffer time insertion
+- [ ] 24. Procrastination adaptation
+- [ ] 25. Study session suggestions
+
+**Status:** IN PROGRESS (52% complete)  
+**Next Actions:** Complete remaining calendar and scheduling features
+
+---
+
+## Completed Sprints
 
 ## Active Sprint: v1.3.0 Innovation Agent Framework ✅
 
