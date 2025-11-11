@@ -20,9 +20,11 @@ from starlette.middleware.sessions import SessionMiddleware
 from .auth import get_current_user, login_user, logout_user, check_auth
 from .status import get_system_status, get_agent_health, get_service_health
 from .agent_config import AgentConfigManager
+from .digest import DigestGenerator
 
-# Initialize agent config manager
+# Initialize agent config manager and digest generator
 config_manager = AgentConfigManager()
+digest_generator = DigestGenerator()
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -179,6 +181,93 @@ async def update_notification_settings(request: Request, user: dict = Depends(ch
     config_manager.update_notification_settings(settings)
     add_log("INFO", "Notification settings updated", "config")
     return {"success": True}
+
+
+@app.get("/digest", response_class=HTMLResponse)
+async def digest_page(request: Request, user: dict = Depends(check_auth)):
+    """Daily digest page."""
+    date = request.query_params.get('date', datetime.now().strftime('%Y-%m-%d'))
+    data = digest_generator.get_digest_data(date)
+    return templates.TemplateResponse(
+        "digest.html",
+        {
+            "request": request,
+            "user": user,
+            "date": date,
+            "activities": data['activities'],
+            "task_stats": data['task_statistics'],
+            "procrastination": data['procrastination_insights'],
+            "health": data['health_correlations']
+        }
+    )
+
+
+@app.get("/api/digest/data")
+async def get_digest_data_api(request: Request, user: dict = Depends(check_auth)):
+    """Get digest data API."""
+    date = request.query_params.get('date')
+    return digest_generator.get_digest_data(date)
+
+
+@app.post("/api/digest/feedback")
+async def save_digest_feedback(request: Request, user: dict = Depends(check_auth)):
+    """Save daily feedback."""
+    form_data = await request.form()
+    date = form_data.get('date')
+    feedback = {
+        'mood': int(form_data.get('mood', 3)),
+        'productivity': int(form_data.get('productivity', 3)),
+        'challenges': form_data.get('challenges', ''),
+        'wins': form_data.get('wins', ''),
+        'improvements': form_data.get('improvements', '')
+    }
+    success = digest_generator.save_feedback(date, feedback)
+    if success:
+        add_log("INFO", f"Daily reflection saved for {date}", "digest")
+        return HTMLResponse("<div class='text-green-600'>Reflection saved successfully!</div>")
+    return HTMLResponse("<div class='text-red-600'>Failed to save reflection</div>")
+
+
+@app.get("/api/digest/export/pdf")
+async def export_digest_pdf(request: Request, user: dict = Depends(check_auth)):
+    """Export digest as PDF."""
+    import tempfile
+    from fastapi.responses import FileResponse
+    
+    date = request.query_params.get('date', datetime.now().strftime('%Y-%m-%d'))
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+    temp_file.close()
+    
+    success = digest_generator.export_pdf(date, temp_file.name)
+    if success:
+        add_log("INFO", f"Digest PDF exported for {date}", "digest")
+        return FileResponse(
+            temp_file.name,
+            media_type='application/pdf',
+            filename=f'digest_{date}.pdf'
+        )
+    raise HTTPException(status_code=500, detail="Failed to generate PDF")
+
+
+@app.get("/api/digest/export/json")
+async def export_digest_json(request: Request, user: dict = Depends(check_auth)):
+    """Export digest as JSON."""
+    import tempfile
+    from fastapi.responses import FileResponse
+    
+    date = request.query_params.get('date', datetime.now().strftime('%Y-%m-%d'))
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.json')
+    temp_file.close()
+    
+    success = digest_generator.export_json(date, temp_file.name)
+    if success:
+        add_log("INFO", f"Digest JSON exported for {date}", "digest")
+        return FileResponse(
+            temp_file.name,
+            media_type='application/json',
+            filename=f'digest_{date}.json'
+        )
+    raise HTTPException(status_code=500, detail="Failed to generate JSON")
 
 
 @app.get("/logs/stream")
