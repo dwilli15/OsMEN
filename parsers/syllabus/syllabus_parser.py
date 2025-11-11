@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Dict, List, Any
 import json
 
-from pdf_parser import PDFSyllabusParser
-from docx_parser import DOCXSyllabusParser
+from .pdf_parser import PDFSyllabusParser
+from .docx_parser import DOCXSyllabusParser
 
 
 class SyllabusParser:

@@ -3,6 +3,16 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('OsMEN Dashboard loaded');
     
+    // Mobile menu toggle
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    if (mobileMenuButton && mobileMenu) {
+        mobileMenuButton.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+        });
+    }
+    
     // Add any additional client-side interactivity here
     
     // Auto-refresh status every 30 seconds

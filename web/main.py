@@ -18,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from .auth import get_current_user, login_user, logout_user, check_auth
-from .status import get_system_status, get_agent_health, get_service_health
+from .status import get_system_status, get_agent_health, get_service_health, get_memory_system_status
 from .agent_config import AgentConfigManager
 from .digest import DigestGenerator
 
@@ -87,6 +87,73 @@ async def logout(request: Request):
     """Logout and redirect to login page."""
     await logout_user(request)
     return RedirectResponse(url="/login")
+
+
+# Health Check Endpoints (no authentication required for monitoring)
+@app.get("/health")
+async def health_check():
+    """
+    Basic health check endpoint.
+    Returns 200 OK if the service is running.
+    Used by load balancers and monitoring systems.
+    """
+    return {
+        "status": "ok",
+        "service": "OsMEN Dashboard",
+        "version": "1.7.0",
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+@app.get("/ready")
+async def readiness_check():
+    """
+    Readiness check endpoint.
+    Returns 200 OK if the service is ready to accept traffic.
+    Checks critical dependencies.
+    """
+    # Check if critical files/directories exist
+    critical_paths = [
+        Path("/home/runner/work/OsMEN/OsMEN/.copilot/memory.json"),
+        Path("/home/runner/work/OsMEN/OsMEN/agents"),
+        Path("/home/runner/work/OsMEN/OsMEN/web")
+    ]
+    
+    all_ready = all(path.exists() for path in critical_paths)
+    
+    if not all_ready:
+        return {
+            "status": "not_ready",
+            "message": "Critical dependencies not available",
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    # Check memory system
+    memory_status = await get_memory_system_status()
+    memory_ok = memory_status.get("status") in ["healthy", "not_initialized"]
+    
+    if not memory_ok:
+        return {
+            "status": "not_ready",
+            "message": "Memory system error",
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    return {
+        "status": "ready",
+        "service": "OsMEN Dashboard",
+        "version": "1.7.0",
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+@app.get("/healthz")
+async def kubernetes_health():
+    """
+    Kubernetes-style health check endpoint.
+    Alias for /health for Kubernetes compatibility.
+    """
+    return await health_check()
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
