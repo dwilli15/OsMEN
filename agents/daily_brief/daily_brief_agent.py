@@ -6,78 +6,142 @@ Generates comprehensive daily briefings with system status and tasks
 
 import os
 import json
+import logging
 from datetime import datetime
 from typing import Dict, List
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class DailyBriefAgent:
     """Agent for generating daily briefings"""
     
     def __init__(self):
-        self.brief_time = datetime.now()
+        try:
+            self.brief_time = datetime.now()
+            logger.info("DailyBriefAgent initialized successfully")
+        except Exception as e:
+            logger.error(f"Error initializing DailyBriefAgent: {e}")
+            raise
         
     def gather_system_status(self) -> Dict:
         """Gather system health and status information"""
-        status = {
-            'cpu_usage': 'Normal',
-            'memory_usage': 'Normal',
-            'disk_space': 'Adequate',
-            'network_status': 'Connected',
-            'services_running': True
-        }
-        
-        # This would integrate with actual system monitoring
-        return status
+        try:
+            status = {
+                'cpu_usage': 'Normal',
+                'memory_usage': 'Normal',
+                'disk_space': 'Adequate',
+                'network_status': 'Connected',
+                'services_running': True
+            }
+            
+            # This would integrate with actual system monitoring
+            logger.debug("System status gathered successfully")
+            return status
+        except Exception as e:
+            logger.error(f"Error gathering system status: {e}")
+            # Return degraded status on error
+            return {
+                'cpu_usage': 'Unknown',
+                'memory_usage': 'Unknown',
+                'disk_space': 'Unknown',
+                'network_status': 'Unknown',
+                'services_running': False,
+                'error': str(e)
+            }
     
     def get_scheduled_tasks(self) -> List[Dict]:
         """Get scheduled tasks and appointments"""
-        tasks = [
-            {
-                'time': '09:00',
-                'title': 'System backup',
-                'type': 'maintenance'
-            },
-            {
-                'time': '14:00',
-                'title': 'Security scan',
-                'type': 'security'
-            }
-        ]
-        return tasks
+        try:
+            tasks = [
+                {
+                    'time': '09:00',
+                    'title': 'System backup',
+                    'type': 'maintenance'
+                },
+                {
+                    'time': '14:00',
+                    'title': 'Security scan',
+                    'type': 'security'
+                }
+            ]
+            logger.debug(f"Retrieved {len(tasks)} scheduled tasks")
+            return tasks
+        except Exception as e:
+            logger.error(f"Error retrieving scheduled tasks: {e}")
+            return []  # Return empty list on error
     
     def check_updates(self) -> Dict:
         """Check for pending updates"""
-        updates = {
-            'system_updates': 0,
-            'application_updates': 0,
-            'security_patches': 0
-        }
-        
-        # This would check actual update sources
-        return updates
+        try:
+            updates = {
+                'system_updates': 0,
+                'application_updates': 0,
+                'security_patches': 0
+            }
+            
+            # This would check actual update sources
+            logger.debug("Updates checked successfully")
+            return updates
+        except Exception as e:
+            logger.error(f"Error checking updates: {e}")
+            return {
+                'system_updates': -1,
+                'application_updates': -1,
+                'security_patches': -1,
+                'error': str(e)
+            }
     
     def analyze_resource_usage(self) -> Dict:
         """Analyze system resource usage trends"""
-        analysis = {
-            'trending_up': [],
-            'trending_down': [],
-            'stable': ['CPU', 'Memory', 'Disk', 'Network']
-        }
-        return analysis
+        try:
+            analysis = {
+                'trending_up': [],
+                'trending_down': [],
+                'stable': ['CPU', 'Memory', 'Disk', 'Network']
+            }
+            logger.debug("Resource usage analyzed successfully")
+            return analysis
+        except Exception as e:
+            logger.error(f"Error analyzing resource usage: {e}")
+            return {
+                'trending_up': [],
+                'trending_down': [],
+                'stable': [],
+                'error': str(e)
+            }
     
     def generate_brief(self) -> Dict:
         """Generate the complete daily brief"""
-        brief = {
-            'date': self.brief_time.strftime('%Y-%m-%d'),
-            'time': self.brief_time.strftime('%H:%M'),
-            'greeting': self._get_greeting(),
-            'system_status': self.gather_system_status(),
-            'scheduled_tasks': self.get_scheduled_tasks(),
-            'pending_updates': self.check_updates(),
-            'resource_analysis': self.analyze_resource_usage(),
-            'recommendations': self._get_recommendations()
-        }
-        return brief
+        try:
+            brief = {
+                'date': self.brief_time.strftime('%Y-%m-%d'),
+                'time': self.brief_time.strftime('%H:%M'),
+                'greeting': self._get_greeting(),
+                'system_status': self.gather_system_status(),
+                'scheduled_tasks': self.get_scheduled_tasks(),
+                'pending_updates': self.check_updates(),
+                'resource_analysis': self.analyze_resource_usage(),
+                'recommendations': self._get_recommendations()
+            }
+            logger.info("Daily brief generated successfully")
+            return brief
+        except Exception as e:
+            logger.error(f"Error generating daily brief: {e}")
+            # Return minimal brief on error
+            return {
+                'date': datetime.now().strftime('%Y-%m-%d'),
+                'time': datetime.now().strftime('%H:%M'),
+                'greeting': 'Good day',
+                'error': f'Error generating brief: {str(e)}',
+                'system_status': {},
+                'scheduled_tasks': [],
+                'pending_updates': {},
+                'resource_analysis': {},
+                'recommendations': []
+            }
     
     def _get_greeting(self) -> str:
         """Get time-appropriate greeting"""

@@ -6,6 +6,7 @@ Manages knowledge base using Obsidian integration
 
 import os
 import json
+import logging
 from typing import Dict, List
 from datetime import datetime
 import sys
@@ -13,67 +14,131 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
 from tools.obsidian.obsidian_integration import ObsidianIntegration
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 class KnowledgeAgent:
     """Agent for knowledge management with Obsidian"""
     
     def __init__(self):
-        self.obsidian = ObsidianIntegration()
+        try:
+            self.obsidian = ObsidianIntegration()
+            logger.info("KnowledgeAgent initialized successfully")
+        except Exception as e:
+            logger.error(f"Error initializing KnowledgeAgent: {e}")
+            raise
         
     def capture_note(self, title: str, content: str, tags: List[str] = None, 
                     folder: str = '') -> Dict:
         """Capture a new note to the knowledge base"""
-        result = self.obsidian.create_note(
-            title=title,
-            content=content,
-            tags=tags or [],
-            folder=folder,
-            frontmatter={
-                'created': datetime.now().isoformat(),
-                'source': 'osmen'
+        try:
+            result = self.obsidian.create_note(
+                title=title,
+                content=content,
+                tags=tags or [],
+                folder=folder,
+                frontmatter={
+                    'created': datetime.now().isoformat(),
+                    'source': 'osmen'
+                }
+            )
+            logger.info(f"Note '{title}' created successfully")
+            return result
+        except Exception as e:
+            logger.error(f"Error capturing note '{title}': {e}")
+            return {
+                'status': 'error',
+                'error': str(e),
+                'message': f'Failed to create note: {title}'
             }
-        )
-        return result
     
     def search_knowledge(self, query: str) -> List[Dict]:
         """Search the knowledge base"""
-        results = self.obsidian.search_notes(query)
-        return results
+        try:
+            results = self.obsidian.search_notes(query)
+            logger.info(f"Search for '{query}' returned {len(results)} results")
+            return results
+        except Exception as e:
+            logger.error(f"Error searching knowledge base for '{query}': {e}")
+            return []
     
     def get_note(self, note_path: str) -> Dict:
         """Retrieve a specific note"""
-        return self.obsidian.read_note(note_path)
+        try:
+            note = self.obsidian.read_note(note_path)
+            logger.debug(f"Retrieved note: {note_path}")
+            return note
+        except Exception as e:
+            logger.error(f"Error retrieving note '{note_path}': {e}")
+            return {
+                'status': 'error',
+                'error': str(e),
+                'message': f'Failed to retrieve note: {note_path}'
+            }
     
     def update_knowledge(self, note_path: str, new_content: str, append: bool = True) -> Dict:
         """Update existing knowledge"""
-        return self.obsidian.update_note(note_path, new_content, append=append)
+        try:
+            result = self.obsidian.update_note(note_path, new_content, append=append)
+            logger.info(f"Note '{note_path}' updated successfully")
+            return result
+        except Exception as e:
+            logger.error(f"Error updating note '{note_path}': {e}")
+            return {
+                'status': 'error',
+                'error': str(e),
+                'message': f'Failed to update note: {note_path}'
+            }
     
     def find_related(self, note_path: str) -> Dict:
         """Find notes related to the given note"""
-        # Get backlinks
-        backlinks = self.obsidian.get_backlinks(note_path)
-        
-        # Get forward links
-        note = self.obsidian.read_note(note_path)
-        forward_links = note.get('links', [])
-        
-        return {
-            'backlinks': backlinks,
-            'forward_links': forward_links,
-            'note': note_path
-        }
+        try:
+            # Get backlinks
+            backlinks = self.obsidian.get_backlinks(note_path)
+            
+            # Get forward links
+            note = self.obsidian.read_note(note_path)
+            forward_links = note.get('links', [])
+            
+            logger.info(f"Found {len(backlinks)} backlinks and {len(forward_links)} forward links for '{note_path}'")
+            return {
+                'backlinks': backlinks,
+                'forward_links': forward_links,
+                'note': note_path
+            }
+        except Exception as e:
+            logger.error(f"Error finding related notes for '{note_path}': {e}")
+            return {
+                'backlinks': [],
+                'forward_links': [],
+                'note': note_path,
+                'error': str(e)
+            }
     
     def get_knowledge_graph(self) -> Dict:
         """Export the complete knowledge graph"""
-        return self.obsidian.export_graph()
+        try:
+            graph = self.obsidian.export_graph()
+            logger.info("Knowledge graph exported successfully")
+            return graph
+        except Exception as e:
+            logger.error(f"Error exporting knowledge graph: {e}")
+            return {
+                'nodes': [],
+                'edges': [],
+                'error': str(e)
+            }
     
     def create_daily_note(self, content: str = '') -> Dict:
         """Create a daily note for today"""
-        today = datetime.now()
-        title = today.strftime('%Y-%m-%d')
-        folder = 'Daily Notes'
-        
-        daily_content = f"""## Tasks
+        try:
+            today = datetime.now()
+            title = today.strftime('%Y-%m-%d')
+            folder = 'Daily Notes'
+            
+            daily_content = f"""## Tasks
 - [ ] Review daily brief
 - [ ] Check system status
 
