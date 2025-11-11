@@ -40,6 +40,9 @@ google-api-python-client==2.108.0
 google-auth-oauthlib==1.1.0
 google-auth-httplib2==0.1.1
 
+# Microsoft integrations (for Outlook, To-Do, etc.)
+msal==1.25.0
+
 # Health data integrations (v1.6.0)
 # android-health-connect - For Android Health Connect API (Android only)
 # Note: android-health-connect requires Android environment

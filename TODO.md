@@ -38,10 +38,11 @@
 ### 1.1 Syllabus Parser Integration (v1.4.0) - 15% Remaining
 **Files:** `parsers/syllabus/*.py`
 
-- [ ] **1.1.1** Fix import statements in `syllabus_parser.py` (relative imports broken)
+- [x] **1.1.1** Fix import statements in `syllabus_parser.py` (relative imports broken)
   - Location: `/parsers/syllabus/syllabus_parser.py:13-14`
   - Issue: Uses `from pdf_parser import` instead of `from .pdf_parser import`
   - Impact: Parser won't load, blocking all syllabus functionality
+  - **Status:** ✅ COMPLETE - Fixed in Quick Win #1
 
 - [ ] **1.1.2** Add missing dependencies to requirements.txt
   - Required: `PyPDF2`, `pdfplumber`, `python-docx`
@@ -782,17 +783,19 @@
 **Timeline:** 1-2 days each
 
 ### Quick Win #1: Fix Import Errors
-- [ ] Fix relative imports in `parsers/syllabus/syllabus_parser.py`
-- [ ] Fix any other import errors across codebase
-- [ ] Run all tests to verify no regressions
+- [x] Fix relative imports in `parsers/syllabus/syllabus_parser.py`
+- [x] Fix any other import errors across codebase
+- [x] Run all tests to verify no regressions
 - **Impact:** Unblocks syllabus parsing functionality
+- **Status:** ✅ COMPLETE
 
 ### Quick Win #2: Add Missing Dependencies
-- [ ] Add `PyPDF2`, `pdfplumber`, `python-docx` to requirements.txt
-- [ ] Add `google-auth`, `google-api-python-client` for calendar
-- [ ] Add `msal` for Microsoft integrations
-- [ ] Update README with new dependencies
+- [x] Add `PyPDF2`, `pdfplumber`, `python-docx` to requirements.txt (already present)
+- [x] Add `google-auth`, `google-api-python-client` for calendar (already present)
+- [x] Add `msal` for Microsoft integrations
+- [x] Update README with new dependencies
 - **Impact:** Enables new integrations
+- **Status:** ✅ COMPLETE (msal added, others were already present)
 
 ### Quick Win #3: Create Basic Web UI
 - [ ] Add simple Bootstrap templates for dashboard
