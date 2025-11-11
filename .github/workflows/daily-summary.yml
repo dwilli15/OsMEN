@@ -61,9 +61,16 @@ jobs:
           EOF
         continue-on-error: true
       
+      - name: Generate innovation daily digest
+        run: |
+          cd scripts/innovation
+          python3 daily_digest.py
+        continue-on-error: true
+      
       - name: Summary
         run: |
           echo "✅ Daily maintenance complete"
           echo "- Generated daily summary"
+          echo "- Generated innovation digest"
           echo "- Cleaned old conversations (45+ days)"
           echo "- Archived summaries uploaded as artifacts"

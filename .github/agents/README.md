@@ -20,9 +20,31 @@ The main coordinator agent that orchestrates the OsMEN multi-agent ecosystem. Th
 - Max Tokens: 4000
 - Capabilities: Task delegation, workflow orchestration, decision making
 
+### OsMEN Development Assistant (`my-agent.agent.md`)
+
+An expert development assistant for the OsMEN project. This agent:
+
+- **Provides development support** for code changes, architecture decisions, and testing
+- **Enforces best practices** for the local-first, privacy-focused design
+- **Guides implementation** of new agents, tools, and workflow automation
+- **Ensures quality** through code reviews, security scans, and comprehensive testing
+- **Maintains documentation** and tracks decisions using ADR format
+
+**Configuration:**
+- Model: GPT-4
+- Temperature: 0.3 (balanced for consistent guidance)
+- Max Tokens: 8000
+- Capabilities: Code development, architecture design, testing validation, documentation, agent orchestration
+
 ## Using Custom Agents
 
-GitHub Custom Agents defined in this directory can be invoked by GitHub Copilot and other GitHub AI features. The agent definitions follow the GitHub Custom Agent specification with:
+GitHub Custom Agents defined in this directory can be invoked by GitHub Copilot and other GitHub AI features. The agent definitions follow the GitHub Custom Agent specification.
+
+**Format Options:**
+1. **YAML files** (`.yml` or `.yaml`): Pure YAML configuration
+2. **Markdown files with YAML front matter** (`.md` or `.agent.md`): YAML configuration followed by markdown documentation
+
+**Configuration Fields:**
 
 - `name`: Human-readable agent name
 - `description`: Brief overview of the agent's purpose
@@ -68,10 +90,11 @@ All agents operate with:
 
 To modify agents:
 
-1. Edit the `.yml` file in this directory
-2. Validate YAML syntax: `python3 -c "import yaml; yaml.safe_load(open('osmen-coordinator.yml'))"`
-3. Test with GitHub Copilot
-4. Update version in metadata when making changes
+1. Edit the `.yml` or `.md` file in this directory
+2. For YAML files: Validate syntax with `python3 -c "import yaml; yaml.safe_load(open('osmen-coordinator.yml'))"`
+3. For Markdown files with front matter: Ensure YAML is between `---` delimiters at the start
+4. Test with GitHub Copilot
+5. Update version in metadata when making changes
 
 ## References
 
