@@ -55,8 +55,16 @@ python-multipart==0.0.6
 bcrypt==4.1.1
 aiofiles==23.2.1
 
+# Daily digest PDF export (v1.7.0)
+reportlab==4.0.7
+
+# Knowledge and task integrations (v1.8.0)
+notion-client==2.2.1
+todoist-api-python==2.1.5
+watchdog==3.0.0
+python-frontmatter==1.0.1
+
 # Optional: For enhanced functionality
 # numpy==1.26.2
 # langchain==0.1.0
 # chromadb==0.4.18
-reportlab==4.0.7
