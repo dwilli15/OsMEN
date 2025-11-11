@@ -10,8 +10,8 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 import json
 
-from google_calendar import GoogleCalendarIntegration
-from outlook_calendar import OutlookCalendarIntegration
+from .google_calendar import GoogleCalendarIntegration
+from .outlook_calendar import OutlookCalendarIntegration
 
 
 class MultiCalendarSync:
