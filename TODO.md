@@ -504,9 +504,10 @@
   - Library: structlog
   - Format: JSON with context
 
-- [ ] **4.4.4** Add health check endpoints
+- [x] **4.4.4** Add health check endpoints
   - File: `web/main.py`
-  - Checks: Database, Redis, APIs
+  - Checks: Memory system, critical files, service availability
+  - **Status:** ✅ COMPLETE - Added /health, /ready, /healthz endpoints
 
 - [ ] **4.4.5** Create operational runbooks
   - Directory: `docs/runbooks/` (enhance)
@@ -812,11 +813,13 @@
 - **Impact:** Better user experience, easier debugging
 
 ### Quick Win #5: Add Health Checks
-- [ ] Implement /health endpoint
-- [ ] Check database connection
-- [ ] Check external API availability
-- [ ] Return standardized health response
+- [x] Implement /health endpoint
+- [x] Implement /ready endpoint for readiness checks
+- [x] Implement /healthz endpoint for Kubernetes compatibility
+- [x] Check critical dependencies (memory system, files, directories)
+- [x] Return standardized health response
 - **Impact:** Enables monitoring and reliability
+- **Status:** ✅ COMPLETE - Added 3 health check endpoints
 
 ---
 
