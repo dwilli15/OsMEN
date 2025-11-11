@@ -27,6 +27,11 @@ loguru==0.7.2
 # Resilience and retry logic
 tenacity==8.2.3
 
+# Innovation agent dependencies
+feedparser==6.0.10
+beautifulsoup4==4.12.2
+lxml==4.9.3
+
 # Optional: For enhanced functionality
 # numpy==1.26.2
 # langchain==0.1.0
