@@ -5,7 +5,7 @@ Creates and sends daily email summaries of system activity
 """
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Any
 import smtplib
@@ -35,7 +35,7 @@ class DailySummaryGenerator:
     def generate_daily_summary(self, date: datetime = None) -> Dict[str, Any]:
         """Generate summary for specified date (defaults to yesterday)"""
         if date is None:
-            date = datetime.utcnow() - timedelta(days=1)
+            date = datetime.now(timezone.utc) - timedelta(days=1)
         
         start_of_day = date.replace(hour=0, minute=0, second=0, microsecond=0)
         end_of_day = date.replace(hour=23, minute=59, second=59, microsecond=999999)
@@ -58,7 +58,7 @@ class DailySummaryGenerator:
         
         summary = {
             "date": date.strftime("%Y-%m-%d"),
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "conversations": {
                 "count": len(conversations),
                 "highlights": self._extract_highlights(conversations)

@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Agent Configuration - OsMEN{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Agent Configuration</h1>
+        <p class="text-gray-600 mt-2">Configure AI agents without writing code</p>
+    </div>
+
+    <!-- Agent Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {% for agent_name, agent in agents.items() %}
+        <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">{{ agent_name.replace('_', ' ').title() }}</h3>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" class="sr-only peer" 
+                           {% if agent.enabled %}checked{% endif %}
+                           hx-post="/api/agents/{{ agent_name }}/toggle"
+                           hx-swap="none">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <p class="text-sm text-gray-600">Provider</p>
+                    <p class="font-medium">{{ agent.llm_provider }}</p>
+                </div>
+                
+                <div>
+                    <p class="text-sm text-gray-600">Model</p>
+                    <p class="font-medium text-sm">{{ agent.model }}</p>
+                </div>
+                
+                <div>
+                    <p class="text-sm text-gray-600">Personality</p>
+                    <p class="font-medium">{{ agent.personality }}</p>
+                </div>
+                
+                <div>
+                    <p class="text-sm text-gray-600">Temperature</p>
+                    <p class="font-medium">{{ agent.temperature }}</p>
+                </div>
+                
+                <div>
+                    <p class="text-sm text-gray-600">Tools</p>
+                    <div class="flex flex-wrap gap-1 mt-1">
+                        {% for tool in agent.tools %}
+                        <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">{{ tool }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <button 
+                class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+                onclick="editAgent('{{ agent_name }}')">
+                Edit Configuration
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- LangFlow Workflows -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-bold mb-4">LangFlow Workflows</h2>
+        <div class="space-y-3">
+            {% for workflow in langflow_workflows %}
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-md">
+                <div>
+                    <h3 class="font-semibold">{{ workflow.name }}</h3>
+                    <p class="text-sm text-gray-600">{{ workflow.description }}</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" class="sr-only peer" 
+                           {% if workflow.enabled %}checked{% endif %}
+                           hx-post="/api/langflow/{{ workflow.id }}/toggle"
+                           hx-swap="none">
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                </label>
+            </div>
+            {% endfor %}
+            
+            {% if not langflow_workflows %}
+            <p class="text-gray-500 italic">No workflows configured yet</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- n8n Workflows -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-bold mb-4">n8n Automations</h2>
+        <div class="space-y-3">
+            {% for workflow in n8n_workflows %}
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-md">
+                <div>
+                    <h3 class="font-semibold">{{ workflow.name }}</h3>
+                    <p class="text-sm text-gray-600">{{ workflow.description }}</p>
+                </div>
+                <label class="relative inline-flex items-cursor pointer">
+                    <input type="checkbox" class="sr-only peer" 
+                           {% if workflow.enabled %}checked{% endif %}
+                           hx-post="/api/n8n/{{ workflow.id }}/toggle"
+                           hx-swap="none">
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                </label>
+            </div>
+            {% endfor %}
+            
+            {% if not n8n_workflows %}
+            <p class="text-gray-500 italic">No automations configured yet</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Memory Settings -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-bold mb-4">Memory Settings</h2>
+        <form hx-post="/api/memory/settings" hx-swap="none" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Conversation Retention (days)
+                </label>
+                <input type="number" name="conversation_retention_days" 
+                       value="{{ memory.conversation_retention_days }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Summary Retention (months)
+                </label>
+                <input type="number" name="summary_retention_months" 
+                       value="{{ memory.summary_retention_months }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Context Window Size
+                </label>
+                <input type="number" name="context_window_size" 
+                       value="{{ memory.context_window_size }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md">
+            </div>
+            
+            <div class="flex items-center">
+                <input type="checkbox" name="auto_summarize" 
+                       {% if memory.auto_summarize %}checked{% endif %}
+                       class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+                <label class="ml-2 text-sm text-gray-700">Auto-summarize conversations</label>
+            </div>
+            
+            <button type="submit" 
+                    class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">
+                Save Memory Settings
+            </button>
+        </form>
+    </div>
+
+    <!-- Notification Settings -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold mb-4">Notification Settings</h2>
+        <form hx-post="/api/notifications/settings" hx-swap="none" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="flex items-center">
+                    <input type="checkbox" name="email_enabled" 
+                           {% if notifications.email_enabled %}checked{% endif %}
+                           class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+                    <label class="ml-2 text-sm text-gray-700">Email Notifications</label>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" name="push_enabled" 
+                           {% if notifications.push_enabled %}checked{% endif %}
+                           class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+                    <label class="ml-2 text-sm text-gray-700">Push Notifications</label>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" name="dashboard_enabled" 
+                           {% if notifications.dashboard_enabled %}checked{% endif %}
+                           class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+                    <label class="ml-2 text-sm text-gray-700">Dashboard Notifications</label>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Quiet Hours Start
+                    </label>
+                    <input type="time" name="quiet_hours_start" 
+                           value="{{ notifications.quiet_hours.start }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Quiet Hours End
+                    </label>
+                    <input type="time" name="quiet_hours_end" 
+                           value="{{ notifications.quiet_hours.end }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+            </div>
+            
+            <button type="submit" 
+                    class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">
+                Save Notification Settings
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function editAgent(agentName) {
+    // TODO: Implement agent edit modal
+    alert('Edit ' + agentName + ' - Coming soon!');
+}
+</script>
+{% endblock %}
