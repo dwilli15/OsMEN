@@ -12,6 +12,7 @@
 - **Status:** Planning → Implementation
 
 ### Recent Accomplishments
+- ✅ PR #20: Add Copilot instructions for repository context (merged 2025-11-11)
 - ✅ PR #15: Copilot/featurephase1 completion (merged 2025-11-11)
 - ✅ PR #17: [WIP] Resolve conflicts and complete the merge (merged 2025-11-11)
 - ✅ PR #14: Edit my-agent.agent.md for compliance with GitHub Copilot custom agent instructions (merged 2025-11-11)
