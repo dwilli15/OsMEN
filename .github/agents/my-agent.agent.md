@@ -1,50 +1,4 @@
-# GitHub Copilot Custom Agent Configuration for OsMEN
-
-**Generated**: 2025-11-11  
-**Version**: 1.2.0  
-**Purpose**: Complete instructions for GitHub Copilot custom agent based on repository history and development priorities
-
 ---
-
-## Overview
-
-This document provides the complete text for a GitHub Copilot custom agent configuration tailored specifically for the OsMEN (OS Management and Engagement Network) project. The configuration is based on comprehensive analysis of:
-
-- Repository commit history and patterns
-- All documentation (30KB+) in `/docs` and root directory
-- Existing agent implementations and workflows
-- Development roadmap (v1.0.0 → v2.0.0)
-- Innovation guidelines and memory system
-- Architecture patterns and testing requirements
-- Specialist agent purposes and priorities
-
----
-
-## Quick Setup
-
-### Step 1: Create the Configuration File
-
-Create `.github/agents/osmen-development-assistant.yml` in your repository.
-
-### Step 2: Use the Template Below
-
-Copy the complete YAML configuration from the "Complete Configuration" section below.
-
-### Step 3: Validate
-
-```bash
-python3 -c "import yaml; yaml.safe_load(open('.github/agents/osmen-development-assistant.yml'))"
-```
-
-### Step 4: Deploy
-
-Commit and push to your default branch. The agent will be available via `@osmen-development-assistant` in GitHub Copilot.
-
----
-
-## Complete Configuration
-
-```yaml
 name: OsMEN Development Assistant
 
 description: |
@@ -318,8 +272,6 @@ instructions: |
 
   When uncertain, consult `/docs` or ask for clarification.
 
-  ---
-
   **OsMEN v1.2.0** | Local-First | Privacy-Focused | Agent-Powered
 
 model: gpt-4
@@ -358,6 +310,7 @@ metadata:
   framework: langflow-n8n-docker
   platform: windows-10-11-wsl2
   deployment: docker-compose
+  generated: "2025-11-11"
   
   specialist_agents:
     - name: Boot Hardening
@@ -375,7 +328,114 @@ metadata:
       status: planned
     - name: Research Intelligence
       status: planned
+---
+
+# OsMEN Development Assistant
+
+## Overview
+
+This is a GitHub Copilot custom agent configuration tailored specifically for the OsMEN (OS Management and Engagement Network) project. The configuration is based on comprehensive analysis of:
+
+- Repository commit history and patterns
+- All documentation (30KB+) in `/docs` and root directory
+- Existing agent implementations and workflows
+- Development roadmap (v1.0.0 → v2.0.0)
+- Innovation guidelines and memory system
+- Architecture patterns and testing requirements
+- Specialist agent purposes and priorities
+
+## Analysis Summary
+
+### Repository Analysis Conducted
+
+1. **Documentation Review** (30KB+)
+   - README.md, PROJECT_SUMMARY.md, PROGRESS.md
+   - All files in `/docs` directory
+   - CHANGELOG.md, STATUS.md, ROADMAP.md
+   - Innovation guidelines and memory system docs
+
+2. **Agent Implementation Review**
+   - 6 specialist agents (3 operational, 3 in development/planned)
+   - Boot Hardening, Daily Brief, Focus Guardrails (operational)
+   - Knowledge Management, Content Editing, Research Intel (planned)
+
+3. **Architecture Analysis**
+   - Langflow + n8n + Docker orchestration
+   - Agent Gateway (FastAPI) with resilience patterns
+   - Vector memory (Qdrant) and persistent storage (PostgreSQL)
+   - Tool integrations (Simplewall, Sysinternals, FFmpeg, Obsidian)
+
+4. **Development History**
+   - v1.0.0: Initial implementation
+   - v1.1.0: Enterprise resilience with retry logic
+   - v1.2.0: Memory & context system
+   - v1.3.0-v2.0.0: Planned roadmap to full autonomy
+
+5. **Priorities Identified**
+   - Local-first, privacy-focused architecture
+   - No-code interface for non-technical user
+   - Graduate school workflow automation
+   - Incremental autonomy with human oversight
+   - Production LLM integration (cloud + local options)
+
+### Key Agent Purposes
+
+**Coordinator Agent** (existing in `osmen-coordinator.yml`):
+- Runtime orchestration and task delegation
+- Routes requests to specialist agents
+- Manages human approval workflow
+- Maintains session context
+
+**Development Assistant** (this configuration):
+- Development and maintenance support
+- Code quality guidance
+- Testing and security validation
+- Documentation assistance
+- Architecture pattern enforcement
+
+## Usage Examples
+
+### Invoking the Agent
+
 ```
+@osmen-development-assistant How do I add a new specialist agent?
+@osmen-development-assistant Review my code changes for security issues
+@osmen-development-assistant Generate test cases for the new calendar integration
+@osmen-development-assistant What's the current development priority?
+```
+
+### Expected Behaviors
+
+1. **Context-Aware**: Reads `.copilot/memory.json` and `docs/CONTEXT.md` before responding
+2. **Pattern-Following**: Suggests code that matches existing architecture patterns
+3. **Test-Focused**: Always mentions relevant test suites to run
+4. **Security-Conscious**: Considers security implications and suggests CodeQL scans
+5. **Documentation-Driven**: Points to relevant docs and suggests updates
+
+## Differences from Existing Coordinator Agent
+
+| Aspect | OsMEN Coordinator | OsMEN Development Assistant |
+|--------|-------------------|----------------------------|
+| **Purpose** | Runtime task orchestration | Development support |
+| **Scope** | User request handling | Code development |
+| **Focus** | Agent delegation | Code quality & patterns |
+| **Expertise** | Workflow automation | Architecture & testing |
+| **Context** | Session state | Repository history |
+| **Output** | Task delegation JSON | Code suggestions & guidance |
+
+Both agents complement each other - the Coordinator handles runtime operations while the Development Assistant helps with building and maintaining the system.
+
+## References
+
+- **GitHub Custom Agents Documentation**: https://docs.github.com/en/copilot/reference/custom-agents-configuration
+- **GitHub Copilot CLI**: https://gh.io/customagents/cli
+- **Custom Agent Config Format**: https://gh.io/customagents/config
+
+---
+
+**Maintained by**: OsMEN Development Team  
+**Last Updated**: 2025-11-11  
+**Version**: 1.2.0
 
 ---
 
