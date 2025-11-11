@@ -5,6 +5,16 @@ All notable changes to the OsMEN project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
+## [Unreleased]
+
+### Added
+- Memory and context continuity system
+- `.copilot/memory.json` for persistent system state
+- `docs/CONTEXT.md` for human-readable current state
+- `docs/DECISION_LOG.md` for architectural decision tracking
+- `docs/ROADMAP.md` with 6-month development plan
+=======
 ## [1.3.0] - 2025-11-10
 
 ### Added
@@ -96,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Memory persistence validated
 - Cross-component integration verified
 
+>>>>>>> main
 ## [1.1.0] - 2025-11-09
 
 ### Added
