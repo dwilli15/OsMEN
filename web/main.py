@@ -19,6 +19,10 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from .auth import get_current_user, login_user, logout_user, check_auth
 from .status import get_system_status, get_agent_health, get_service_health
+from .agent_config import AgentConfigManager
+
+# Initialize agent config manager
+config_manager = AgentConfigManager()
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -114,6 +118,67 @@ async def agents_api(user: dict = Depends(check_auth)):
 async def services_api(user: dict = Depends(check_auth)):
     """API endpoint for service health."""
     return await get_service_health()
+
+
+@app.get("/agents", response_class=HTMLResponse)
+async def agents_page(request: Request, user: dict = Depends(check_auth)):
+    """Agent configuration page."""
+    return templates.TemplateResponse(
+        "agents.html",
+        {
+            "request": request,
+            "user": user,
+            "agents": config_manager.get_all_agents(),
+            "langflow_workflows": config_manager.get_langflow_workflows(),
+            "n8n_workflows": config_manager.get_n8n_workflows(),
+            "memory": config_manager.get_memory_settings(),
+            "notifications": config_manager.get_notification_settings()
+        }
+    )
+
+
+@app.post("/api/agents/{agent_name}/toggle")
+async def toggle_agent(agent_name: str, user: dict = Depends(check_auth)):
+    """Toggle agent enabled/disabled."""
+    agent = config_manager.get_agent(agent_name)
+    if agent:
+        config_manager.toggle_agent(agent_name, not agent.get("enabled", False))
+        add_log("INFO", f"Agent {agent_name} toggled", "config")
+        return {"success": True, "enabled": config_manager.get_agent(agent_name).get("enabled")}
+    return {"success": False, "error": "Agent not found"}
+
+
+@app.post("/api/memory/settings")
+async def update_memory_settings(request: Request, user: dict = Depends(check_auth)):
+    """Update memory settings."""
+    form_data = await request.form()
+    settings = {
+        "conversation_retention_days": int(form_data.get("conversation_retention_days", 45)),
+        "summary_retention_months": int(form_data.get("summary_retention_months", 12)),
+        "context_window_size": int(form_data.get("context_window_size", 8000)),
+        "auto_summarize": form_data.get("auto_summarize") == "on"
+    }
+    config_manager.update_memory_settings(settings)
+    add_log("INFO", "Memory settings updated", "config")
+    return {"success": True}
+
+
+@app.post("/api/notifications/settings")
+async def update_notification_settings(request: Request, user: dict = Depends(check_auth)):
+    """Update notification settings."""
+    form_data = await request.form()
+    settings = {
+        "email_enabled": form_data.get("email_enabled") == "on",
+        "push_enabled": form_data.get("push_enabled") == "on",
+        "dashboard_enabled": form_data.get("dashboard_enabled") == "on",
+        "quiet_hours": {
+            "start": form_data.get("quiet_hours_start", "22:00"),
+            "end": form_data.get("quiet_hours_end", "08:00")
+        }
+    }
+    config_manager.update_notification_settings(settings)
+    add_log("INFO", "Notification settings updated", "config")
+    return {"success": True}
 
 
 @app.get("/logs/stream")
