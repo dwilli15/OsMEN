@@ -17,6 +17,8 @@ from tools.obsidian.obsidian_integration import ObsidianIntegration
 from tools.simplewall.simplewall_integration import SimplewallIntegration
 from tools.sysinternals.sysinternals_integration import SysinternalsIntegration
 from tools.ffmpeg.ffmpeg_integration import FFmpegIntegration
+from tools.productivity.productivity_monitor import ProductivityMonitor
+from agents.innovation_agent.innovation_agent import InnovationAgent
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +52,8 @@ class MCPServer:
         self.simplewall = SimplewallIntegration()
         self.sysinternals = SysinternalsIntegration()
         self.ffmpeg = FFmpegIntegration()
+        self.productivity = ProductivityMonitor()
+        self.innovation = InnovationAgent()
         
         # Register available tools
         self.tools = self._register_tools()
@@ -143,6 +147,56 @@ class MCPServer:
             }
         )
         
+        # Productivity Monitor tools
+        tools['productivity_start_session'] = ToolDefinition(
+            name='productivity_start_session',
+            description='Start a focus session',
+            parameters={
+                'session_type': {'type': 'string', 'default': 'pomodoro'},
+                'duration': {'type': 'integer', 'default': 25}
+            }
+        )
+        
+        tools['productivity_end_session'] = ToolDefinition(
+            name='productivity_end_session',
+            description='End a focus session',
+            parameters={
+                'session_id': {'type': 'integer', 'required': True},
+                'productivity_score': {'type': 'integer', 'default': 7},
+                'distractions': {'type': 'integer', 'default': 0},
+                'notes': {'type': 'string', 'default': ''}
+            }
+        )
+        
+        tools['productivity_daily_summary'] = ToolDefinition(
+            name='productivity_daily_summary',
+            description='Get daily productivity summary',
+            parameters={
+                'date': {'type': 'string'}
+            }
+        )
+        
+        tools['productivity_weekly_trends'] = ToolDefinition(
+            name='productivity_weekly_trends',
+            description='Get weekly productivity trends',
+            parameters={}
+        )
+        
+        # Innovation Agent tools
+        tools['innovation_weekly_scan'] = ToolDefinition(
+            name='innovation_weekly_scan',
+            description='Run weekly innovation scan',
+            parameters={}
+        )
+        
+        tools['innovation_generate_digest'] = ToolDefinition(
+            name='innovation_generate_digest',
+            description='Generate innovation digest',
+            parameters={
+                'innovations': {'type': 'array'}
+            }
+        )
+        
         return tools
     
     def list_tools(self) -> List[ToolDefinition]:
@@ -182,6 +236,24 @@ class MCPServer:
                 result = self.ffmpeg.get_media_info(**params)
             elif tool_name == 'ffmpeg_convert_video':
                 result = self.ffmpeg.convert_video(**params)
+            
+            # Productivity Monitor tools
+            elif tool_name == 'productivity_start_session':
+                result = self.productivity.start_focus_session(**params)
+            elif tool_name == 'productivity_end_session':
+                result = self.productivity.end_focus_session(**params)
+            elif tool_name == 'productivity_daily_summary':
+                result = self.productivity.get_daily_summary(**params)
+            elif tool_name == 'productivity_weekly_trends':
+                result = self.productivity.get_weekly_trends()
+            
+            # Innovation Agent tools
+            elif tool_name == 'innovation_weekly_scan':
+                import asyncio
+                result = asyncio.run(self.innovation.weekly_scan())
+            elif tool_name == 'innovation_generate_digest':
+                import asyncio
+                result = asyncio.run(self.innovation.generate_weekly_digest(**params))
             
             else:
                 raise ValueError(f"Unknown tool: {tool_name}")

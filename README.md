@@ -14,6 +14,8 @@ OsMEN provides a complete agent orchestration platform for:
 - 🛡️ **Boot Hardening**: System security and boot integrity monitoring
 - 📊 **Daily Briefing**: Comprehensive morning briefs with system status
 - 🎯 **Focus Guardrails**: Productivity management and distraction blocking
+- 🚀 **Innovation Agent**: Automated discovery and evaluation of new tools/frameworks
+- 📈 **Productivity Monitor**: Time tracking, focus sessions, and productivity analytics
 - 📝 **Content Editing**: Media processing and content management (coming soon)
 - 🔍 **Research Intelligence**: Information gathering and analysis (coming soon)
 
@@ -24,7 +26,10 @@ OsMEN provides a complete agent orchestration platform for:
 - **n8n**: Workflow automation with triggers and subflows
 - **LLM Agents**: Production agents (OpenAI, Copilot, Amazon Q, Claude) + Local (LM Studio, Ollama)
 - **Qdrant**: Vector database for agent memory
-- **Tool Layer**: Simplewall, Sysinternals, FFmpeg integrations
+- **MCP Server**: Model Context Protocol with 16 integrated tools
+- **Innovation Agent**: Automated monitoring of GitHub, RSS, and ArXiv for improvements
+- **Productivity Monitor**: SQLite-based time tracking and analytics
+- **Tool Layer**: Simplewall, Sysinternals, FFmpeg, Obsidian integrations
 
 **Flexible deployment** - Use production cloud agents or run locally for privacy.
 
@@ -128,8 +133,25 @@ See **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)** for complet
 ### Model Context Protocol (MCP)
 - **Standardized tool integration** for LLM agents
 - **Tool discovery and execution** via REST API
-- **Built-in tools**: Obsidian, Simplewall, Sysinternals, FFmpeg
+- **16 integrated tools**: Obsidian, Simplewall, Sysinternals, FFmpeg, Productivity, Innovation
 - **MCP Server**: http://localhost:8081
+- **API Documentation**: Auto-generated OpenAPI/Swagger docs
+
+### Innovation Agent (NEW in v1.3.0)
+- **Automated monitoring** of GitHub releases, RSS feeds, ArXiv papers
+- **Smart discovery** using relevance scoring algorithm
+- **Weekly automation** via GitHub Actions
+- **Innovation backlog** tracking and management
+- **Pre-approved tasks** for autonomous implementation
+- See [Innovation Agent Docs](docs/INNOVATION_AGENT.md)
+
+### Productivity Monitor (NEW in v1.3.0)
+- **Focus session tracking** (Pomodoro, deep work, etc.)
+- **Application usage logging** with categorization
+- **Daily summaries** and weekly trend analysis
+- **SQLite database** for historical data
+- **Integration** with Focus Guardrails Agent
+- See [Productivity Monitor Docs](docs/PRODUCTIVITY_MONITOR.md)
 
 ### Obsidian Integration
 - **Knowledge management** with full Obsidian vault access
@@ -178,6 +200,30 @@ python agents/daily_brief/daily_brief_agent.py
 python agents/focus_guardrails/focus_guardrails_agent.py
 ```
 
+### Innovation Agent (v1.3.0)
+- Weekly monitoring of GitHub, RSS, ArXiv
+- Automated discovery scoring
+- Innovation backlog management
+- Pre-approved task execution
+- Weekly digest generation
+
+```bash
+python agents/innovation_agent/innovation_agent.py
+```
+
+### Productivity Monitor (v1.3.0)
+- Focus session tracking
+- Application usage analytics
+- Daily and weekly summaries
+- Productivity trend analysis
+- Integration with all agents
+
+```python
+from tools.productivity.productivity_monitor import ProductivityMonitor
+monitor = ProductivityMonitor()
+monitor.start_focus_session("pomodoro", 25)
+```
+
 ## 🛠️ Tool Integrations
 
 ### Simplewall
@@ -199,7 +245,7 @@ python agents/focus_guardrails/focus_guardrails_agent.py
 
 ## 📊 Project Status
 
-**Current Version**: MVP (Minimum Viable Product)
+**Current Version**: v1.3.0 (Innovation Agent + Productivity Monitor)
 
 **Operational Status**: ✅ [See detailed status](STATUS.md)
 
@@ -212,6 +258,9 @@ python agents/focus_guardrails/focus_guardrails_agent.py
 - Boot hardening agent
 - Daily brief agent
 - Focus guardrails agent
+- **Innovation agent (v1.3.0)** - NEW
+- **Productivity monitor (v1.3.0)** - NEW
+- Enhanced MCP server (16 tools)
 - Tool layer integrations
 - Comprehensive documentation
 
