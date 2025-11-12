@@ -3,25 +3,27 @@
 Main application entry point providing no-code interface for system management.
 """
 
-import os
-import json
 import asyncio
+import json
+import os
 import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, Request, Depends, HTTPException, Form, UploadFile, File
+from fastapi import (Depends, FastAPI, File, Form, HTTPException, Request,
+                     UploadFile)
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from .auth import get_current_user, login_user, logout_user, check_auth
-from .status import get_system_status, get_agent_health, get_service_health, get_memory_system_status
 from .agent_config import AgentConfigManager
+from .auth import check_auth, get_current_user, login_user, logout_user
 from .digest import DigestGenerator
+from .status import (get_agent_health, get_memory_system_status,
+                     get_service_health, get_system_status)
 
 # Import syllabus parser (optional)
 try:
@@ -310,6 +312,7 @@ async def save_digest_feedback(request: Request, user: dict = Depends(check_auth
 async def export_digest_pdf(request: Request, user: dict = Depends(check_auth)):
     """Export digest as PDF."""
     import tempfile
+
     from fastapi.responses import FileResponse
     
     date = request.query_params.get('date', datetime.now().strftime('%Y-%m-%d'))
@@ -331,6 +334,7 @@ async def export_digest_pdf(request: Request, user: dict = Depends(check_auth)):
 async def export_digest_json(request: Request, user: dict = Depends(check_auth)):
     """Export digest as JSON."""
     import tempfile
+
     from fastapi.responses import FileResponse
     
     date = request.query_params.get('date', datetime.now().strftime('%Y-%m-%d'))
@@ -399,8 +403,8 @@ async def google_oauth_init(request: Request, user: dict = Depends(check_auth)):
     Returns authorization URL for user to click.
     Stores state token in session for verification.
     """
-    import secrets
     import base64
+    import secrets
     
     state_token = secrets.token_urlsafe(32)
     request.session["google_oauth_state"] = state_token
@@ -432,7 +436,7 @@ async def google_oauth_callback(request: Request, code: str = None, state: str =
     Stores credentials in secure session.
     """
     import requests as http_requests
-    
+
     # Verify state token
     stored_state = request.session.get("google_oauth_state")
     if not state or state != stored_state:
@@ -507,7 +511,7 @@ async def outlook_oauth_callback(request: Request, code: str = None, state: str 
     Stores credentials in secure session.
     """
     import requests as http_requests
-    
+
     # Verify state token
     stored_state = request.session.get("outlook_oauth_state")
     if not state or state != stored_state:
@@ -554,6 +558,256 @@ async def calendar_status(request: Request, user: dict = Depends(check_auth)):
         "outlook": {"connected": outlook_connected},
         "total": sum([google_connected, outlook_connected])
     }
+
+
+# ===== EVENT PREVIEW & PARSER INTEGRATION (A1.3 / A1.4) =====
+
+@app.get("/events/preview", response_class=HTMLResponse)
+async def events_preview_page(request: Request, upload_id: str, user: dict = Depends(check_auth)):
+    """Preview parsed syllabus events before calendar sync."""
+    rec = active_uploads.get(upload_id)
+    if not rec or rec.get("status") != "ready":
+        raise HTTPException(status_code=404, detail="Events not ready for preview")
+    return templates.TemplateResponse(
+        "event_preview.html",
+        {
+            "request": request,
+            "user": user,
+            "upload_id": upload_id,
+            "events": rec.get("events", []),
+        }
+    )
+
+
+@app.post("/api/events/preview/update")
+async def update_preview_event(request: Request, user: dict = Depends(check_auth)):
+    """Update a single event field (title/date/type/description)."""
+    data = await request.json()
+    upload_id = data.get("upload_id")
+    index = data.get("index")
+    field = data.get("field")
+    value = data.get("value")
+    rec = active_uploads.get(upload_id)
+    if not rec or rec.get("status") != "ready":
+        raise HTTPException(status_code=404, detail="Upload not found or not ready")
+    events = rec.get("events", [])
+    if index < 0 or index >= len(events):
+        raise HTTPException(status_code=400, detail="Invalid event index")
+    if field not in {"title", "date", "type", "description"}:
+        raise HTTPException(status_code=400, detail="Invalid field")
+    events[index][field] = value
+    add_log("INFO", f"Preview event updated: {field} -> {value}", "preview")
+    return {"success": True, "event": events[index]}
+
+
+@app.post("/api/events/preview/bulk")
+async def bulk_preview_action(request: Request, user: dict = Depends(check_auth)):
+    """Bulk accept/reject events. If rejected, remove from list."""
+    data = await request.json()
+    upload_id = data.get("upload_id")
+    action = data.get("action")  # 'accept_all' | 'reject_indices'
+    indices = data.get("indices", [])
+    rec = active_uploads.get(upload_id)
+    if not rec or rec.get("status") != "ready":
+        raise HTTPException(status_code=404, detail="Upload not found or not ready")
+    events = rec.get("events", [])
+    if action == "accept_all":
+        add_log("INFO", f"All events accepted for upload {upload_id}", "preview")
+        return {"success": True, "remaining": len(events)}
+    elif action == "reject_indices":
+        # Remove specified indices (sorted descending to avoid shift)
+        for idx in sorted(indices, reverse=True):
+            if 0 <= idx < len(events):
+                events.pop(idx)
+        add_log("INFO", f"Rejected {len(indices)} events", "preview")
+        return {"success": True, "remaining": len(events)}
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+
+
+# ===== CALENDAR SYNC (A1.5) =====
+
+@app.post("/api/calendar/sync")
+async def calendar_sync(request: Request, upload_id: str, provider: Optional[str] = None, user: dict = Depends(check_auth)):
+    """Sync accepted preview events to the connected calendar.
+
+    Prefers the specified provider if provided, otherwise auto-selects based on session.
+    """
+    from integrations.calendar.calendar_manager import CalendarManager
+
+    rec = active_uploads.get(upload_id)
+    if not rec or rec.get("status") != "ready":
+        raise HTTPException(status_code=404, detail="Events not ready for sync")
+
+    events = rec.get("events") or []
+    if not events:
+        raise HTTPException(status_code=400, detail="No events to sync")
+
+    google_connected = request.session.get("google_calendar_connected", False)
+    outlook_connected = request.session.get("outlook_calendar_connected", False)
+
+    if not provider:
+        # Pick a provider, prefer Outlook (tokens easier to use directly), then Google
+        provider = "outlook" if outlook_connected else ("google" if google_connected else None)
+
+    if not provider:
+        raise HTTPException(status_code=400, detail="No connected calendar provider found")
+
+    mgr = CalendarManager()
+
+    configured = False
+    chosen_provider = None
+
+    try:
+        if provider == "outlook" and outlook_connected:
+            tokens = request.session.get("outlook_calendar_token") or {}
+            access_token = tokens.get("access_token") or tokens.get("token")
+            if not access_token:
+                raise HTTPException(status_code=400, detail="Outlook access token missing")
+            configured = mgr.add_outlook_calendar(access_token=access_token)
+            chosen_provider = "outlook"
+        elif provider == "google" and google_connected:
+            # Prepare a token file compatible with google oauth libs if available
+            tokens = request.session.get("google_calendar_token") or {}
+            access_token = tokens.get("access_token") or tokens.get("token")
+            refresh_token = tokens.get("refresh_token")
+            if not access_token:
+                raise HTTPException(status_code=400, detail="Google access token missing")
+
+            # Build a token JSON that google.oauth2.credentials can read
+            token_payload = {
+                "token": access_token,
+                "refresh_token": refresh_token,
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
+                "client_secret": os.getenv("GOOGLE_CLIENT_SECRET", ""),
+                "scopes": ["https://www.googleapis.com/auth/calendar"],
+            }
+
+            # Store under project temp/config dir
+            cfg_dir = Path(mgr.config_dir)
+            cfg_dir.mkdir(parents=True, exist_ok=True)
+            token_path = cfg_dir / "google_token.json"
+            with open(token_path, "w", encoding="utf-8") as f:
+                json.dump(token_payload, f)
+
+            # Add google provider; credentials file won't be used if token is valid
+            configured = mgr.add_google_calendar(credentials_path=os.getenv("GOOGLE_CREDENTIALS_PATH"), token_path=str(token_path))
+            chosen_provider = "google"
+        else:
+            raise HTTPException(status_code=400, detail="Requested provider not connected")
+    except HTTPException:
+        raise
+    except Exception as e:
+        add_log("ERROR", f"Calendar provider setup failed: {e}", "calendar")
+        raise HTTPException(status_code=500, detail="Calendar provider setup failed")
+
+    if not configured:
+        raise HTTPException(status_code=500, detail="Failed to configure calendar provider")
+
+    # Normalize events for providers; keep minimal required fields
+    batch = []
+    for ev in events:
+        batch.append({
+            "title": ev.get("title") or "Event",
+            "date": ev.get("date") or "",
+            "description": ev.get("description") or "",
+            "type": ev.get("type") or "event",
+        })
+
+    result = mgr.create_events_batch(batch, provider=chosen_provider)
+    add_log("INFO", f"Synced {result.get('successful', 0)}/{result.get('total', 0)} events via {chosen_provider}", "calendar")
+
+    return {
+        "success": True,
+        "provider": chosen_provider,
+        "synced": result.get("successful", 0),
+        "failed": result.get("failed", 0),
+        "details": result.get("events", []),
+    }
+
+
+# ===== PRIORITY RANKING (A1.8) =====
+
+@app.post("/api/priority/rank")
+async def rank_priority(request: Request, upload_id: Optional[str] = None, user: dict = Depends(check_auth)):
+    """Return priority-ranked tasks/events. If upload_id is provided, rank its events."""
+    from scheduling.priority_ranker import PriorityRanker
+
+    tasks = []
+    if upload_id:
+        rec = active_uploads.get(upload_id)
+        if not rec or rec.get("status") != "ready":
+            raise HTTPException(status_code=404, detail="Upload not found or not ready")
+        tasks = rec.get("events") or []
+    else:
+        try:
+            body = await request.json()
+            tasks = body.get("tasks") if isinstance(body, dict) else body
+        except Exception:
+            tasks = []
+
+    if not isinstance(tasks, list):
+        raise HTTPException(status_code=400, detail="Invalid tasks payload")
+
+    ranker = PriorityRanker()
+    ranked = ranker.rank_tasks(tasks)
+    add_log("INFO", f"Ranked {len(ranked)} tasks/events", "priority")
+    return {"count": len(ranked), "items": ranked}
+
+
+# ===== SCHEDULE GENERATION (A1.6) =====
+
+@app.post("/api/schedule/generate")
+async def generate_schedule(request: Request, upload_id: str, days: int = 7, user: dict = Depends(check_auth)):
+    """Generate a study schedule from ranked events for the next N days."""
+    from scheduling.priority_ranker import PriorityRanker
+    from scheduling.schedule_optimizer import ScheduleOptimizer
+
+    rec = active_uploads.get(upload_id)
+    if not rec or rec.get("status") != "ready":
+        raise HTTPException(status_code=404, detail="Upload not found or not ready")
+
+    events = rec.get("events") or []
+    if not events:
+        raise HTTPException(status_code=400, detail="No events to schedule")
+
+    # Rank events and then generate sessions
+    ranker = PriorityRanker()
+    ranked = ranker.rank_tasks(events)
+
+    optimizer = ScheduleOptimizer()
+    start_date = datetime.now()
+    end_date = start_date + timedelta(days=max(0, int(days)))
+    sessions = optimizer.generate_schedule(ranked, start_date, end_date)
+    sessions = optimizer.add_buffer_time(sessions)
+
+    # Persist schedule under upload record
+    rec["schedule"] = {"generated_at": datetime.now().isoformat(), "sessions": sessions}
+    add_log("INFO", f"Generated schedule with {len(sessions)} blocks for upload {upload_id}", "schedule")
+    return {"count": len(sessions), "sessions": sessions}
+
+
+# ===== TASK SOURCE STUBS (A1.7) =====
+
+@app.get("/api/tasks/todoist")
+async def tasks_todoist_stub(user: dict = Depends(check_auth)):
+    """Stub endpoint for Todoist tasks (integration pending)."""
+    sample = [
+        {"id": "td-1", "title": "Review lecture notes", "date": datetime.now().date().isoformat(), "priority": "high"},
+        {"id": "td-2", "title": "Start project outline", "date": (datetime.now().date()).isoformat(), "priority": "medium"},
+    ]
+    return {"provider": "todoist", "items": sample, "integration": "pending"}
+
+
+@app.get("/api/tasks/notion")
+async def tasks_notion_stub(user: dict = Depends(check_auth)):
+    """Stub endpoint for Notion tasks (integration pending)."""
+    sample = [
+        {"id": "nt-1", "title": "Draft study plan", "date": (datetime.now().date()).isoformat(), "priority": "medium"},
+        {"id": "nt-2", "title": "Compile references", "date": (datetime.now().date()).isoformat(), "priority": "low"},
+    ]
+    return {"provider": "notion", "items": sample, "integration": "pending"}
 
 
 # ===== SYLLABUS UPLOAD ENDPOINTS (A1.2) =====
@@ -723,6 +977,10 @@ async def shutdown_event():
 
 
 if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("WEB_PORT", "8000"))
+    host = os.getenv("WEB_HOST", "0.0.0.0")
+    uvicorn.run(app, host=host, port=port)
     import uvicorn
     port = int(os.getenv("WEB_PORT", "8000"))
     host = os.getenv("WEB_HOST", "0.0.0.0")
