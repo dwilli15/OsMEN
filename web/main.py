@@ -337,7 +337,484 @@ async def export_digest_json(request: Request, user: dict = Depends(check_auth))
     raise HTTPException(status_code=500, detail="Failed to generate JSON")
 
 
-@app.get("/logs/stream")
+# ============================================================================
+# Calendar Integration Endpoints (Agent Alpha - Task A1.1)
+# ============================================================================
+
+@app.get("/calendar", response_class=HTMLResponse)
+async def calendar_page(request: Request, user: dict = Depends(check_auth)):
+    """Calendar management page."""
+    # Import calendar manager
+    import sys
+    sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
+    from calendar_manager import CalendarManager
+    
+    manager = CalendarManager()
+    status = manager.get_status()
+    
+    return templates.TemplateResponse(
+        "calendar_setup.html",
+        {
+            "request": request,
+            "user": user,
+            "status": status,
+            "connected_calendars": status.get('configured_providers', []),
+            "primary_provider": status.get('primary_provider')
+        }
+    )
+
+
+@app.get("/api/calendar/google/oauth")
+async def google_calendar_oauth(request: Request, user: dict = Depends(check_auth)):
+    """Initiate Google Calendar OAuth flow."""
+    # Import Google Calendar integration
+    import sys
+    sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
+    from google_calendar import GoogleCalendarIntegration
+    
+    try:
+        google_cal = GoogleCalendarIntegration()
+        auth_url = google_cal.get_authorization_url()
+        
+        if auth_url:
+            add_log("INFO", "Google Calendar OAuth initiated", "calendar")
+            return {"auth_url": auth_url, "success": True}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
+    
+    except Exception as e:
+        add_log("ERROR", f"Google Calendar OAuth error: {e}", "calendar")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/calendar/google/callback")
+async def google_calendar_callback(request: Request, code: str = None, user: dict = Depends(check_auth)):
+    """Handle Google Calendar OAuth callback."""
+    if not code:
+        raise HTTPException(status_code=400, detail="Authorization code required")
+    
+    import sys
+    sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
+    from calendar_manager import CalendarManager
+    
+    try:
+        manager = CalendarManager()
+        
+        # Exchange code for credentials
+        credentials_path = BASE_DIR.parent / ".copilot" / "calendar" / "google_credentials.json"
+        token_path = BASE_DIR.parent / ".copilot" / "calendar" / "google_token.json"
+        
+        success = manager.add_google_calendar(
+            credentials_path=str(credentials_path),
+            token_path=str(token_path)
+        )
+        
+        if success:
+            add_log("INFO", "Google Calendar connected successfully", "calendar")
+            return RedirectResponse(url="/calendar?status=success")
+        else:
+            raise HTTPException(status_code=500, detail="Failed to connect Google Calendar")
+    
+    except Exception as e:
+        add_log("ERROR", f"Google Calendar callback error: {e}", "calendar")
+        return RedirectResponse(url="/calendar?status=error")
+
+
+@app.get("/api/calendar/outlook/oauth")
+async def outlook_calendar_oauth(request: Request, user: dict = Depends(check_auth)):
+    """Initiate Outlook Calendar OAuth flow."""
+    # Import Outlook Calendar integration
+    import sys
+    sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
+    from outlook_calendar import OutlookCalendarIntegration
+    
+    try:
+        outlook_cal = OutlookCalendarIntegration()
+        auth_url = outlook_cal.get_authorization_url()
+        
+        if auth_url:
+            add_log("INFO", "Outlook Calendar OAuth initiated", "calendar")
+            return {"auth_url": auth_url, "success": True}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
+    
+    except Exception as e:
+        add_log("ERROR", f"Outlook Calendar OAuth error: {e}", "calendar")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/calendar/outlook/callback")
+async def outlook_calendar_callback(request: Request, code: str = None, user: dict = Depends(check_auth)):
+    """Handle Outlook Calendar OAuth callback."""
+    if not code:
+        raise HTTPException(status_code=400, detail="Authorization code required")
+    
+    import sys
+    sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
+    from calendar_manager import CalendarManager
+    from outlook_calendar import OutlookCalendarIntegration
+    
+    try:
+        # Exchange code for access token
+        outlook_cal = OutlookCalendarIntegration()
+        access_token = outlook_cal.exchange_code_for_token(code)
+        
+        if not access_token:
+            raise HTTPException(status_code=500, detail="Failed to exchange code for token")
+        
+        # Add to calendar manager
+        manager = CalendarManager()
+        success = manager.add_outlook_calendar(access_token)
+        
+        if success:
+            add_log("INFO", "Outlook Calendar connected successfully", "calendar")
+            return RedirectResponse(url="/calendar?status=success")
+        else:
+            raise HTTPException(status_code=500, detail="Failed to connect Outlook Calendar")
+    
+    except Exception as e:
+        add_log("ERROR", f"Outlook Calendar callback error: {e}", "calendar")
+        return RedirectResponse(url="/calendar?status=error")
+
+
+@app.get("/api/calendar/events")
+async def list_calendar_events(request: Request, user: dict = Depends(check_auth)):
+    """List calendar events."""
+    import sys
+    sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
+    from calendar_manager import CalendarManager
+    
+    try:
+        manager = CalendarManager()
+        max_results = int(request.query_params.get('max_results', 50))
+        events = manager.list_events(max_results=max_results)
+        
+        return {"events": events, "count": len(events)}
+    
+    except Exception as e:
+        add_log("ERROR", f"Error listing events: {e}", "calendar")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/calendar/sync")
+async def sync_calendar_events(request: Request, user: dict = Depends(check_auth)):
+    """Sync events to calendar (batch creation)."""
+    import sys
+    sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
+    from calendar_manager import CalendarManager
+    
+    try:
+        data = await request.json()
+        events = data.get('events', [])
+        
+        if not events:
+            raise HTTPException(status_code=400, detail="No events provided")
+        
+        manager = CalendarManager()
+        result = manager.create_events_batch(events)
+        
+        add_log("INFO", f"Calendar sync: {result['successful']}/{result['total']} events created", "calendar")
+        
+        return result
+    
+    except Exception as e:
+        add_log("ERROR", f"Calendar sync error: {e}", "calendar")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# Syllabus Upload and Processing (Agent Alpha - Task A1.2, A1.3)
+# ============================================================================
+
+@app.post("/api/syllabus/upload")
+async def upload_syllabus(request: Request, user: dict = Depends(check_auth)):
+    """Upload and process syllabus file."""
+    from fastapi import UploadFile, File
+    import tempfile
+    import sys
+    
+    sys.path.insert(0, str(BASE_DIR.parent / "parsers" / "syllabus"))
+    from syllabus_parser import SyllabusParser
+    
+    try:
+        form = await request.form()
+        file: UploadFile = form.get('file')
+        
+        if not file:
+            raise HTTPException(status_code=400, detail="No file uploaded")
+        
+        # Validate file type
+        allowed_extensions = ['.pdf', '.docx', '.doc']
+        file_extension = Path(file.filename).suffix.lower()
+        
+        if file_extension not in allowed_extensions:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file type. Allowed: {', '.join(allowed_extensions)}"
+            )
+        
+        # Validate file size (max 10MB)
+        max_size = 10 * 1024 * 1024
+        file_content = await file.read()
+        
+        if len(file_content) > max_size:
+            raise HTTPException(status_code=400, detail="File too large (max 10MB)")
+        
+        # Save to temp file for processing
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
+            temp_file.write(file_content)
+            temp_file_path = temp_file.name
+        
+        # Parse syllabus
+        parser = SyllabusParser()
+        parsed_data = parser.parse(temp_file_path)
+        normalized_data = parser.normalize_data(parsed_data)
+        
+        # Clean up temp file
+        Path(temp_file_path).unlink()
+        
+        # Store parsed data for preview
+        preview_id = f"syllabus_{datetime.now().timestamp()}"
+        preview_path = BASE_DIR.parent / "content" / "inbox" / f"{preview_id}.json"
+        preview_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(preview_path, 'w') as f:
+            json.dump(normalized_data, f, indent=2)
+        
+        add_log("INFO", f"Syllabus uploaded and parsed: {file.filename}", "syllabus")
+        
+        return {
+            "success": True,
+            "preview_id": preview_id,
+            "course": normalized_data.get('course', {}),
+            "event_count": normalized_data.get('metadata', {}).get('total_events', 0)
+        }
+    
+    except Exception as e:
+        add_log("ERROR", f"Syllabus upload error: {e}", "syllabus")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/syllabus/preview/{preview_id}")
+async def get_syllabus_preview(preview_id: str, user: dict = Depends(check_auth)):
+    """Get parsed syllabus data for preview."""
+    try:
+        preview_path = BASE_DIR.parent / "content" / "inbox" / f"{preview_id}.json"
+        
+        if not preview_path.exists():
+            raise HTTPException(status_code=404, detail="Preview not found")
+        
+        with open(preview_path, 'r') as f:
+            data = json.load(f)
+        
+        return data
+    
+    except Exception as e:
+        add_log("ERROR", f"Preview retrieval error: {e}", "syllabus")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/events/preview/{preview_id}", response_class=HTMLResponse)
+async def event_preview_page(request: Request, preview_id: str, user: dict = Depends(check_auth)):
+    """Event preview and editing page."""
+    return templates.TemplateResponse(
+        "event_preview.html",
+        {
+            "request": request,
+            "user": user,
+            "preview_id": preview_id
+        }
+    )
+
+
+# ============================================================================
+# Scheduling Engine Integration (Agent Alpha - Task A1.6)
+# ============================================================================
+
+@app.get("/api/schedule/generate")
+async def generate_schedule(request: Request, user: dict = Depends(check_auth)):
+    """Generate optimal schedule from calendar events."""
+    import sys
+    sys.path.insert(0, str(BASE_DIR.parent / "scheduling"))
+    from schedule_optimizer import ScheduleOptimizer
+    from priority_ranker import PriorityRanker
+    
+    try:
+        # Get calendar events
+        sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
+        from calendar_manager import CalendarManager
+        
+        manager = CalendarManager()
+        events = manager.list_events(max_results=100)
+        
+        if not events:
+            return {"schedule": [], "message": "No events to schedule"}
+        
+        # Calculate priorities
+        ranker = PriorityRanker()
+        for event in events:
+            event['calculated_priority'] = ranker.calculate_priority(event)
+        
+        # Generate optimized schedule
+        optimizer = ScheduleOptimizer()
+        schedule = optimizer.optimize(events)
+        
+        add_log("INFO", f"Schedule generated with {len(schedule)} items", "scheduling")
+        
+        return {
+            "schedule": schedule,
+            "event_count": len(events),
+            "optimized_count": len(schedule)
+        }
+    
+    except Exception as e:
+        add_log("ERROR", f"Schedule generation error: {e}", "scheduling")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/tasks", response_class=HTMLResponse)
+async def tasks_page(request: Request, user: dict = Depends(check_auth)):
+    """Tasks and scheduling page."""
+    return templates.TemplateResponse(
+        "tasks.html",
+        {
+            "request": request,
+            "user": user
+        }
+    )
+
+
+# ============================================================================
+# Reminder Integration (Agent Alpha - Task A2.1)
+# ============================================================================
+
+@app.post("/api/reminders/create")
+async def create_reminder(request: Request, user: dict = Depends(check_auth)):
+    """Create reminder for a task."""
+    import sys
+    sys.path.insert(0, str(BASE_DIR.parent / "reminders"))
+    from adaptive_reminders import AdaptiveReminderSystem
+    
+    try:
+        data = await request.json()
+        task = data.get('task')
+        
+        if not task:
+            raise HTTPException(status_code=400, detail="Task data required")
+        
+        reminder_system = AdaptiveReminderSystem()
+        reminder = reminder_system.create_reminder(task)
+        
+        add_log("INFO", f"Reminder created for task: {task.get('title')}", "reminders")
+        
+        return reminder
+    
+    except Exception as e:
+        add_log("ERROR", f"Reminder creation error: {e}", "reminders")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/reminders/due")
+async def get_due_reminders(request: Request, user: dict = Depends(check_auth)):
+    """Get reminders that are due now."""
+    import sys
+    sys.path.insert(0, str(BASE_DIR.parent / "reminders"))
+    from adaptive_reminders import AdaptiveReminderSystem
+    
+    try:
+        reminder_system = AdaptiveReminderSystem()
+        due_reminders = reminder_system.get_due_reminders()
+        
+        return {"reminders": due_reminders, "count": len(due_reminders)}
+    
+    except Exception as e:
+        add_log("ERROR", f"Error getting due reminders: {e}", "reminders")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/reminders/{reminder_id}/snooze")
+async def snooze_reminder(reminder_id: str, request: Request, user: dict = Depends(check_auth)):
+    """Snooze a reminder."""
+    import sys
+    sys.path.insert(0, str(BASE_DIR.parent / "reminders"))
+    from adaptive_reminders import AdaptiveReminderSystem
+    
+    try:
+        data = await request.json()
+        duration_hours = data.get('duration_hours')
+        
+        reminder_system = AdaptiveReminderSystem()
+        success = reminder_system.snooze_reminder(reminder_id, duration_hours)
+        
+        if success:
+            add_log("INFO", f"Reminder snoozed: {reminder_id}", "reminders")
+            return {"success": True}
+        else:
+            raise HTTPException(status_code=404, detail="Reminder not found")
+    
+    except Exception as e:
+        add_log("ERROR", f"Snooze error: {e}", "reminders")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# Health Integration (Agent Alpha - Task A2.4, A2.5)
+# ============================================================================
+
+@app.get("/health", response_class=HTMLResponse)
+async def health_page(request: Request, user: dict = Depends(check_auth)):
+    """Health data and integration page."""
+    return templates.TemplateResponse(
+        "health.html",
+        {
+            "request": request,
+            "user": user
+        }
+    )
+
+
+@app.get("/api/health/status")
+async def get_health_status(request: Request, user: dict = Depends(check_auth)):
+    """Get health status summary."""
+    import sys
+    sys.path.insert(0, str(BASE_DIR.parent / "health_integration"))
+    from schedule_adjuster import HealthBasedScheduleAdjuster
+    
+    try:
+        adjuster = HealthBasedScheduleAdjuster()
+        status = adjuster.get_health_status_summary()
+        
+        return status
+    
+    except Exception as e:
+        add_log("ERROR", f"Health status error: {e}", "health")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/health/adjust_schedule")
+async def adjust_schedule_for_health(request: Request, user: dict = Depends(check_auth)):
+    """Adjust schedule based on health data."""
+    import sys
+    sys.path.insert(0, str(BASE_DIR.parent / "health_integration"))
+    from schedule_adjuster import HealthBasedScheduleAdjuster
+    
+    try:
+        data = await request.json()
+        schedule = data.get('schedule', [])
+        
+        adjuster = HealthBasedScheduleAdjuster()
+        adjusted_schedule = adjuster.adjust_schedule_for_health(schedule)
+        
+        add_log("INFO", f"Schedule adjusted for health ({len(adjusted_schedule)} items)", "health")
+        
+        return {"schedule": adjusted_schedule}
+    
+    except Exception as e:
+        add_log("ERROR", f"Schedule adjustment error: {e}", "health")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.logs/stream")
 async def stream_logs(request: Request, user: dict = Depends(check_auth)):
     """Server-Sent Events endpoint for live log streaming."""
     async def event_generator():

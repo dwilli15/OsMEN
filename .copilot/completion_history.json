@@ -1,0 +1,35 @@
+{
+  "tasks": [],
+  "reminders": [
+    {
+      "id": "reminder_test_task_1_1762942645.494344",
+      "task_id": "test_task_1",
+      "task_title": "Test Assignment",
+      "reminder_time": "2025-11-14T08:00:25.494344",
+      "created_at": "2025-11-12T04:17:25.494344",
+      "status": "snoozed",
+      "channels": [
+        "email",
+        "dashboard"
+      ],
+      "escalation_level": "moderate",
+      "snooze_count": 1,
+      "sent_count": 0
+    },
+    {
+      "id": "reminder_test_task_1_1762942690.074564",
+      "task_id": "test_task_1",
+      "task_title": "Test Assignment",
+      "reminder_time": "2025-11-14T08:00:10.074564",
+      "created_at": "2025-11-12T04:18:10.074564",
+      "status": "snoozed",
+      "channels": [
+        "email",
+        "dashboard"
+      ],
+      "escalation_level": "moderate",
+      "snooze_count": 1,
+      "sent_count": 0
+    }
+  ]
+}
