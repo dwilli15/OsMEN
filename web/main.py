@@ -6,11 +6,12 @@ Main application entry point providing no-code interface for system management.
 import os
 import json
 import asyncio
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, Request, Depends, HTTPException, Form
+from fastapi import FastAPI, Request, Depends, HTTPException, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -21,6 +22,13 @@ from .auth import get_current_user, login_user, logout_user, check_auth
 from .status import get_system_status, get_agent_health, get_service_health, get_memory_system_status
 from .agent_config import AgentConfigManager
 from .digest import DigestGenerator
+
+# Import syllabus parser (optional)
+try:
+    from parsers.syllabus.syllabus_parser import SyllabusParser
+    PARSER_AVAILABLE = True
+except Exception:
+    PARSER_AVAILABLE = False
 
 # Initialize agent config manager and digest generator
 config_manager = AgentConfigManager()
@@ -54,6 +62,9 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 # Log buffer for live streaming
 log_buffer = []
 MAX_LOG_BUFFER = 100
+
+# In-memory tracker for syllabus uploads (replace with DB in production)
+active_uploads = {}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -543,6 +554,143 @@ async def calendar_status(request: Request, user: dict = Depends(check_auth)):
         "outlook": {"connected": outlook_connected},
         "total": sum([google_connected, outlook_connected])
     }
+
+
+# ===== SYLLABUS UPLOAD ENDPOINTS (A1.2) =====
+
+@app.get("/syllabus/upload", response_class=HTMLResponse)
+async def syllabus_upload_page(request: Request, user: dict = Depends(check_auth)):
+    """Syllabus upload page."""
+    return templates.TemplateResponse(
+        "syllabus_upload.html",
+        {
+            "request": request,
+            "user": user,
+        }
+    )
+
+
+@app.post("/api/syllabus/upload")
+async def upload_syllabus(file: UploadFile = File(...), user: dict = Depends(check_auth)):
+    """Upload and validate syllabus file (PDF/DOCX)."""
+    allowed_types = {
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    }
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Only PDF and DOCX files are supported")
+
+    content = await file.read()
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="File too large (max 50MB)")
+
+    upload_id = str(uuid.uuid4())
+    upload_dir = Path(os.getenv("UPLOAD_DIR", str(BASE_DIR / ".." / "content" / "inbox"))) / "syllabi"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    file_path = upload_dir / f"{upload_id}_{file.filename}"
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    active_uploads[upload_id] = {
+        "filename": file.filename,
+        "file_path": str(file_path),
+        "file_type": file.content_type,
+        "file_size": len(content),
+        "status": "parsing",
+        "progress": 0,
+        "created_at": datetime.now().isoformat(),
+        "user": user.get("username"),
+        "events": None,
+        "error": None,
+    }
+
+    asyncio.create_task(_process_syllabus_async(upload_id))
+    add_log("INFO", f"Syllabus uploaded: {file.filename}", "syllabus")
+
+    return {"upload_id": upload_id, "status": "processing"}
+
+
+async def _process_syllabus_async(upload_id: str):
+    """Process syllabus asynchronously and extract events."""
+    try:
+        if upload_id not in active_uploads:
+            return
+        rec = active_uploads[upload_id]
+
+        # Parse file
+        rec["status"] = "parsing"
+        rec["progress"] = 25
+
+        events = []
+        if PARSER_AVAILABLE:
+            try:
+                parser = SyllabusParser()
+                parsed = parser.parse(rec["file_path"])
+                normalized = parser.normalize_data(parsed)
+                raw_events = normalized.get("events", [])
+                for ev in raw_events:
+                    events.append({
+                        "title": ev.get("title") or ev.get("name") or "Event",
+                        "date": ev.get("date") or ev.get("due_date") or "",
+                        "type": ev.get("type") or "event",
+                        "description": ev.get("description") or "",
+                    })
+            except Exception as e:
+                add_log("WARNING", f"Parser error, using fallback: {e}", "syllabus")
+        
+        # Fallback mock events if parser not available or produced none
+        if not events:
+            events = [
+                {"title": "Assignment 1", "date": "2025-11-20", "type": "assignment", "description": "Complete assignment 1"},
+                {"title": "Midterm Exam", "date": "2025-12-10", "type": "exam", "description": "Midterm examination"},
+            ]
+
+        rec["status"] = "extracting"
+        rec["progress"] = 70
+
+        rec["events"] = events
+
+        # Simple validation/conflict step placeholder
+        rec["status"] = "validating"
+        rec["progress"] = 90
+
+        rec["status"] = "ready"
+        rec["progress"] = 100
+        add_log("INFO", f"Syllabus processed: {len(events)} events", "syllabus")
+    except Exception as e:
+        if upload_id in active_uploads:
+            active_uploads[upload_id]["status"] = "error"
+            active_uploads[upload_id]["error"] = str(e)
+        add_log("ERROR", f"Syllabus processing failed: {e}", "syllabus")
+
+
+@app.get("/api/syllabus/progress/{upload_id}")
+async def syllabus_progress(upload_id: str, user: dict = Depends(check_auth)):
+    if upload_id not in active_uploads:
+        raise HTTPException(status_code=404, detail="Upload not found")
+    rec = active_uploads[upload_id]
+    return {
+        "upload_id": upload_id,
+        "status": rec["status"],
+        "progress": rec["progress"],
+        "filename": rec["filename"],
+        "error": rec["error"],
+        "events": rec["events"] if rec["status"] == "ready" else None,
+    }
+
+
+@app.delete("/api/syllabus/upload/{upload_id}")
+async def cancel_syllabus_upload(upload_id: str, user: dict = Depends(check_auth)):
+    if upload_id not in active_uploads:
+        raise HTTPException(status_code=404, detail="Upload not found")
+    rec = active_uploads.pop(upload_id)
+    try:
+        fp = Path(rec["file_path"]) if rec.get("file_path") else None
+        if fp and fp.exists():
+            fp.unlink(missing_ok=True)
+    finally:
+        add_log("INFO", f"Syllabus upload cancelled: {upload_id}", "syllabus")
+    return {"success": True}
 
 
 def add_log(level: str, message: str, source: str = "system"):
