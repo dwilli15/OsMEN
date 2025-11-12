@@ -365,6 +365,186 @@ async def stream_logs(request: Request, user: dict = Depends(check_auth)):
     )
 
 
+# ===== CALENDAR OAUTH ENDPOINTS (A1.1) =====
+
+@app.get("/calendar/setup", response_class=HTMLResponse)
+async def calendar_setup_page(request: Request, user: dict = Depends(check_auth)):
+    """Calendar setup/connection page."""
+    return templates.TemplateResponse(
+        "calendar_setup.html",
+        {
+            "request": request,
+            "user": user,
+            "google_client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
+            "microsoft_client_id": os.getenv("MICROSOFT_CLIENT_ID", ""),
+        }
+    )
+
+
+@app.get("/api/calendar/google/oauth")
+async def google_oauth_init(request: Request, user: dict = Depends(check_auth)):
+    """Initialize Google Calendar OAuth flow.
+    
+    Returns authorization URL for user to click.
+    Stores state token in session for verification.
+    """
+    import secrets
+    import base64
+    
+    state_token = secrets.token_urlsafe(32)
+    request.session["google_oauth_state"] = state_token
+    
+    google_client_id = os.getenv("GOOGLE_CLIENT_ID")
+    redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/calendar/google/callback")
+    
+    oauth_params = {
+        "client_id": google_client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "https://www.googleapis.com/auth/calendar",
+        "access_type": "offline",
+        "state": state_token
+    }
+    
+    auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + "&".join(
+        f"{k}={v}" for k, v in oauth_params.items()
+    )
+    
+    return {"auth_url": auth_url, "provider": "google"}
+
+
+@app.get("/api/calendar/google/callback")
+async def google_oauth_callback(request: Request, code: str = None, state: str = None, user: dict = Depends(check_auth)):
+    """Handle Google Calendar OAuth callback.
+    
+    Exchanges authorization code for access token.
+    Stores credentials in secure session.
+    """
+    import requests as http_requests
+    
+    # Verify state token
+    stored_state = request.session.get("google_oauth_state")
+    if not state or state != stored_state:
+        raise HTTPException(status_code=400, detail="Invalid state token")
+    
+    if not code:
+        raise HTTPException(status_code=400, detail="No authorization code provided")
+    
+    # Exchange code for token
+    token_url = "https://oauth2.googleapis.com/token"
+    token_data = {
+        "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+        "client_secret": os.getenv("GOOGLE_CLIENT_SECRET"),
+        "code": code,
+        "grant_type": "authorization_code",
+        "redirect_uri": os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/calendar/google/callback")
+    }
+    
+    try:
+        response = http_requests.post(token_url, json=token_data)
+        response.raise_for_status()
+        tokens = response.json()
+        
+        # Store credentials in session
+        request.session["google_calendar_token"] = tokens
+        request.session["google_calendar_connected"] = True
+        
+        add_log("INFO", f"User {user.get('username')} connected Google Calendar", "calendar")
+        
+        return RedirectResponse(url="/calendar/setup?success=true", status_code=302)
+    except Exception as e:
+        add_log("ERROR", f"Google OAuth callback failed: {e}", "calendar")
+        return RedirectResponse(url="/calendar/setup?error=true", status_code=302)
+
+
+@app.get("/api/calendar/outlook/oauth")
+async def outlook_oauth_init(request: Request, user: dict = Depends(check_auth)):
+    """Initialize Microsoft Outlook Calendar OAuth flow.
+    
+    Returns authorization URL for user to click.
+    Stores state token in session for verification.
+    """
+    import secrets
+    
+    state_token = secrets.token_urlsafe(32)
+    request.session["outlook_oauth_state"] = state_token
+    
+    microsoft_client_id = os.getenv("MICROSOFT_CLIENT_ID")
+    redirect_uri = os.getenv("MICROSOFT_REDIRECT_URI", "http://localhost:8000/api/calendar/outlook/callback")
+    
+    oauth_params = {
+        "client_id": microsoft_client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "Calendars.ReadWrite offline_access",
+        "response_mode": "query",
+        "state": state_token
+    }
+    
+    auth_url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?" + "&".join(
+        f"{k}={v}" for k, v in oauth_params.items()
+    )
+    
+    return {"auth_url": auth_url, "provider": "outlook"}
+
+
+@app.get("/api/calendar/outlook/callback")
+async def outlook_oauth_callback(request: Request, code: str = None, state: str = None, user: dict = Depends(check_auth)):
+    """Handle Microsoft Outlook Calendar OAuth callback.
+    
+    Exchanges authorization code for access token.
+    Stores credentials in secure session.
+    """
+    import requests as http_requests
+    
+    # Verify state token
+    stored_state = request.session.get("outlook_oauth_state")
+    if not state or state != stored_state:
+        raise HTTPException(status_code=400, detail="Invalid state token")
+    
+    if not code:
+        raise HTTPException(status_code=400, detail="No authorization code provided")
+    
+    # Exchange code for token
+    token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+    token_data = {
+        "client_id": os.getenv("MICROSOFT_CLIENT_ID"),
+        "client_secret": os.getenv("MICROSOFT_CLIENT_SECRET"),
+        "code": code,
+        "grant_type": "authorization_code",
+        "redirect_uri": os.getenv("MICROSOFT_REDIRECT_URI", "http://localhost:8000/api/calendar/outlook/callback")
+    }
+    
+    try:
+        response = http_requests.post(token_url, json=token_data)
+        response.raise_for_status()
+        tokens = response.json()
+        
+        # Store credentials in session
+        request.session["outlook_calendar_token"] = tokens
+        request.session["outlook_calendar_connected"] = True
+        
+        add_log("INFO", f"User {user.get('username')} connected Outlook Calendar", "calendar")
+        
+        return RedirectResponse(url="/calendar/setup?success=true", status_code=302)
+    except Exception as e:
+        add_log("ERROR", f"Outlook OAuth callback failed: {e}", "calendar")
+        return RedirectResponse(url="/calendar/setup?error=true", status_code=302)
+
+
+@app.get("/api/calendar/status")
+async def calendar_status(request: Request, user: dict = Depends(check_auth)):
+    """Check connected calendars for current user."""
+    google_connected = request.session.get("google_calendar_connected", False)
+    outlook_connected = request.session.get("outlook_calendar_connected", False)
+    
+    return {
+        "google": {"connected": google_connected},
+        "outlook": {"connected": outlook_connected},
+        "total": sum([google_connected, outlook_connected])
+    }
+
+
 def add_log(level: str, message: str, source: str = "system"):
     """Add log entry to buffer."""
     global log_buffer
