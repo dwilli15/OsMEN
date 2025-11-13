@@ -145,6 +145,14 @@ if PROMETHEUS_ENABLED:
 # Setup templates and static files
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent
+
+# Add project directories to Python path for proper imports
+import sys
+for module_dir in ['integrations', 'scheduling', 'parsers', 'reminders', 'health_integration']:
+    module_path = str(PROJECT_ROOT / module_dir)
+    if module_path not in sys.path:
+        sys.path.insert(0, module_path)
+
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
@@ -470,9 +478,7 @@ async def export_digest_json(request: Request, user: dict = Depends(check_auth))
 async def calendar_page(request: Request, user: dict = Depends(check_auth)):
     """Calendar management page."""
     # Import calendar manager
-    import sys
-    sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
-    from calendar_manager import CalendarManager
+    from calendar.calendar_manager import CalendarManager
     
     manager = CalendarManager()
     status = manager.get_status()
@@ -494,8 +500,7 @@ async def google_calendar_oauth(request: Request, user: dict = Depends(check_aut
     """Initiate Google Calendar OAuth flow."""
     # Import Google Calendar integration
     import sys
-    sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
-    from google_calendar import GoogleCalendarIntegration
+    from calendar.google_calendar import GoogleCalendarIntegration
     
     try:
         google_cal = GoogleCalendarIntegration()
@@ -519,8 +524,7 @@ async def google_calendar_callback(request: Request, code: str = None, user: dic
         raise HTTPException(status_code=400, detail="Authorization code required")
     
     import sys
-    sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
-    from calendar_manager import CalendarManager
+    from calendar.calendar_manager import CalendarManager
     
     try:
         manager = CalendarManager()
@@ -550,8 +554,7 @@ async def outlook_calendar_oauth(request: Request, user: dict = Depends(check_au
     """Initiate Outlook Calendar OAuth flow."""
     # Import Outlook Calendar integration
     import sys
-    sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
-    from outlook_calendar import OutlookCalendarIntegration
+    from calendar.outlook_calendar import OutlookCalendarIntegration
     
     try:
         outlook_cal = OutlookCalendarIntegration()
@@ -575,9 +578,8 @@ async def outlook_calendar_callback(request: Request, code: str = None, user: di
         raise HTTPException(status_code=400, detail="Authorization code required")
     
     import sys
-    sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
-    from calendar_manager import CalendarManager
-    from outlook_calendar import OutlookCalendarIntegration
+    from calendar.calendar_manager import CalendarManager
+    from calendar.outlook_calendar import OutlookCalendarIntegration
     
     try:
         # Exchange code for access token
@@ -606,8 +608,7 @@ async def outlook_calendar_callback(request: Request, code: str = None, user: di
 async def list_calendar_events(request: Request, user: dict = Depends(check_auth)):
     """List calendar events."""
     import sys
-    sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
-    from calendar_manager import CalendarManager
+    from calendar.calendar_manager import CalendarManager
     
     try:
         manager = CalendarManager()
@@ -625,8 +626,7 @@ async def list_calendar_events(request: Request, user: dict = Depends(check_auth
 async def sync_calendar_events(request: Request, user: dict = Depends(check_auth)):
     """Sync events to calendar (batch creation)."""
     import sys
-    sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
-    from calendar_manager import CalendarManager
+    from calendar.calendar_manager import CalendarManager
     
     try:
         data = await request.json()
@@ -660,8 +660,7 @@ async def upload_syllabus(request: Request, user: dict = Depends(check_auth)):
     import tempfile
     import sys
     
-    sys.path.insert(0, str(BASE_DIR.parent / "parsers" / "syllabus"))
-    from syllabus_parser import SyllabusParser
+    from syllabus.syllabus_parser import SyllabusParser
     
     try:
         form = await request.form()
@@ -824,15 +823,12 @@ async def bulk_preview_action(request: Request, user: dict = Depends(check_auth)
 @app.get("/api/schedule/generate")
 async def generate_schedule(request: Request, user: dict = Depends(check_auth)):
     """Generate optimal schedule from calendar events."""
-    import sys
-    sys.path.insert(0, str(BASE_DIR.parent / "scheduling"))
-    from schedule_optimizer import ScheduleOptimizer
-    from priority_ranker import PriorityRanker
+    from scheduling.schedule_optimizer import ScheduleOptimizer
+    from scheduling.priority_ranker import PriorityRanker
     
     try:
         # Get calendar events
-        sys.path.insert(0, str(BASE_DIR.parent / "integrations" / "calendar"))
-        from calendar_manager import CalendarManager
+        from calendar.calendar_manager import CalendarManager
         
         manager = CalendarManager()
         events = manager.list_events(max_results=100)
@@ -881,8 +877,6 @@ async def tasks_page(request: Request, user: dict = Depends(check_auth)):
 @app.post("/api/reminders/create")
 async def create_reminder(request: Request, user: dict = Depends(check_auth)):
     """Create reminder for a task."""
-    import sys
-    sys.path.insert(0, str(BASE_DIR.parent / "reminders"))
     from adaptive_reminders import AdaptiveReminderSystem
     
     try:
@@ -907,8 +901,6 @@ async def create_reminder(request: Request, user: dict = Depends(check_auth)):
 @app.get("/api/reminders/due")
 async def get_due_reminders(request: Request, user: dict = Depends(check_auth)):
     """Get reminders that are due now."""
-    import sys
-    sys.path.insert(0, str(BASE_DIR.parent / "reminders"))
     from adaptive_reminders import AdaptiveReminderSystem
     
     try:
@@ -925,8 +917,6 @@ async def get_due_reminders(request: Request, user: dict = Depends(check_auth)):
 @app.post("/api/reminders/{reminder_id}/snooze")
 async def snooze_reminder(reminder_id: str, request: Request, user: dict = Depends(check_auth)):
     """Snooze a reminder."""
-    import sys
-    sys.path.insert(0, str(BASE_DIR.parent / "reminders"))
     from adaptive_reminders import AdaptiveReminderSystem
     
     try:
@@ -966,8 +956,6 @@ async def health_page(request: Request, user: dict = Depends(check_auth)):
 @app.get("/api/health/status")
 async def get_health_status(request: Request, user: dict = Depends(check_auth)):
     """Get health status summary."""
-    import sys
-    sys.path.insert(0, str(BASE_DIR.parent / "health_integration"))
     from schedule_adjuster import HealthBasedScheduleAdjuster
     
     try:
@@ -984,8 +972,6 @@ async def get_health_status(request: Request, user: dict = Depends(check_auth)):
 @app.post("/api/health/adjust_schedule")
 async def adjust_schedule_for_health(request: Request, user: dict = Depends(check_auth)):
     """Adjust schedule based on health data."""
-    import sys
-    sys.path.insert(0, str(BASE_DIR.parent / "health_integration"))
     from schedule_adjuster import HealthBasedScheduleAdjuster
     
     try:
