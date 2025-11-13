@@ -1041,6 +1041,16 @@ async def startup_event():
 
 
 # ============================================================================
+# HEALTH CHECK
+# ============================================================================
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Docker"""
+    return {"status": "healthy", "service": "osmen-web"}
+
+
+# ============================================================================
 # AGENT HUB - Comprehensive Agent Management Interface
 # ============================================================================
 

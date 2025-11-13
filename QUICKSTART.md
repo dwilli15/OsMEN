@@ -29,18 +29,27 @@ python3 -m pip install --user -r requirements.txt
 
 ## Step 4: Start Services (3 minutes)
 ```bash
-docker-compose up -d
+# Start core services (n8n, Langflow, databases)
+docker compose up -d
+
+# Start the web dashboard (Agent Hub)
+python3 start_web.py
+
+# OR include web in Docker (slower first time):
+# docker compose up -d web
 
 # Wait 2-3 minutes for first-time setup
 ```
 
 ## Step 5: Verify (1 minute)
 ```bash
+# In another terminal
 python3 check_operational.py
 ```
 
 ## Access Your System
 
+- **Agent Hub** (Main Interface): http://localhost:8000 ⭐
 - **Langflow** (Visual AI Builder): http://localhost:7860
 - **n8n** (Automation): http://localhost:5678 (admin/[your password])
 - **Qdrant** (Vector DB): http://localhost:6333/dashboard
@@ -58,10 +67,10 @@ python3 agents/daily_brief/daily_brief_agent.py
 
 Your OsMEN system is running. Next steps:
 
-1. **Read**: [1stsetup.md](1stsetup.md) for complete guide
-2. **Explore**: Open n8n and import workflows from `n8n/workflows/`
-3. **Customize**: Edit agent configs in `config/` directory
-4. **Learn**: Check out [docs/](docs/) for detailed documentation
+1. **Open Agent Hub**: http://localhost:8000
+2. **Create Agent Team**: Click "Create New Team" and describe what you need
+3. **Explore**: Check out agents, workflows, and embedded tools
+4. **Learn**: Check [1stsetup.md](1stsetup.md) for complete guide
 
 ## Troubleshooting
 

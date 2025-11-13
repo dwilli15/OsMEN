@@ -1,4 +1,4 @@
-.PHONY: help start stop restart logs status pull-models setup clean check-operational security-check test validate backup pre-commit-install setup-wizard validate-production
+.PHONY: help start stop restart logs status pull-models setup clean check-operational security-check test validate backup pre-commit-install setup-wizard validate-production start-web
 
 help:
 	@echo "OsMEN - Management Commands"
@@ -11,7 +11,8 @@ help:
 	@echo "  make validate-production - Comprehensive production readiness check"
 	@echo ""
 	@echo "Service Management:"
-	@echo "  make start             - Start all services"
+	@echo "  make start             - Start all services (including web)"
+	@echo "  make start-web         - Start web dashboard only"
 	@echo "  make stop              - Stop all services"
 	@echo "  make restart           - Restart all services"
 	@echo "  make logs              - View all logs"
@@ -49,11 +50,21 @@ setup-wizard:
 
 start:
 	@echo "Starting OsMEN services..."
-	docker-compose up -d
+	docker compose up -d
 	@echo "Services started!"
-	@echo "Langflow: http://localhost:7860"
-	@echo "n8n: http://localhost:5678"
-	@echo "Qdrant: http://localhost:6333/dashboard"
+	@echo ""
+	@echo "Access points:"
+	@echo "  Agent Hub: http://localhost:8000 (run 'make start-web' separately if not using Docker web)"
+	@echo "  Langflow:  http://localhost:7860"
+	@echo "  n8n:       http://localhost:5678"
+	@echo "  Qdrant:    http://localhost:6333/dashboard"
+	@echo ""
+
+start-web:
+	@echo "Starting OsMEN Web Dashboard..."
+	@echo "Access at: http://localhost:8000"
+	@echo ""
+	@python3 start_web.py
 
 stop:
 	@echo "Stopping OsMEN services..."

@@ -73,19 +73,23 @@ python3 -m pip install --user -r requirements.txt
 ### Step 4: Start Services (3 minutes)
 ```bash
 # Standard start (with OpenAI or LM Studio):
-docker-compose up -d
+docker compose up -d
+
+# Start the Agent Hub web interface:
+python3 start_web.py
 
 # OR with Ollama:
-docker-compose --profile ollama up -d
+docker compose --profile ollama up -d
+python3 start_web.py
 
 # Wait for services to initialize (about 2 minutes)
 # Check status with:
-docker-compose ps
+docker compose ps
 ```
 
 ### Step 5: Verify Everything Works (1 minute)
 ```bash
-# Run comprehensive check
+# Run comprehensive check (in another terminal)
 python3 check_operational.py
 
 # You should see:
@@ -102,7 +106,14 @@ python3 check_operational.py
 
 Your OsMEN system is now ready. Access the interfaces:
 
-### Management Interfaces
+### Main Interface
+- **🚀 Agent Hub** (Primary Interface): http://localhost:8000
+  - Dashboard with all agents and workflows
+  - Create custom agent teams with natural language
+  - Embedded n8n, Langflow, and Qdrant interfaces
+  - Full agent management
+
+### Component Interfaces
 - **n8n Workflow Automation**: http://localhost:5678
   - Username: `admin`
   - Password: `[what you set in .env]`
@@ -112,10 +123,6 @@ Your OsMEN system is now ready. Access the interfaces:
   
 - **Qdrant Vector Database**: http://localhost:6333/dashboard
   - No login required for local instance
-
-### API Endpoints (if gateway built successfully)
-- **Agent Gateway**: http://localhost:8080/docs
-- **MCP Server**: http://localhost:8081/tools
 
 ## 🤖 Your First Agent Team
 
