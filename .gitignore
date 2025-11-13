@@ -3,9 +3,6 @@
 *.env.local
 .env.*
 !.env.example
-!.env.production.example
-!.env.production.example
-!.env.production.example
 
 # Secrets and credentials
 *.key
@@ -97,10 +94,6 @@ content/output/*
 *.backup
 backup/
 backups/
-!scripts/backup/
-!scripts/backup/**
-!scripts/backup/
-!scripts/backup/**
 
 # Security and audit
 security_audit/

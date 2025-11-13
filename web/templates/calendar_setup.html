@@ -1,126 +1,123 @@
 {% extends "base.html" %}
 
-{% block title %}Calendar - OsMEN{% endblock %}
+{% block title %}Calendar Setup - OsMEN{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50">
     <!-- Navbar -->
-    {% include 'navbar.html' %}
-    
+    <nav class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">Calendar Setup</h1>
+            <div>
+                <a href="/dashboard" class="text-blue-100 hover:text-white mr-4">← Back to Dashboard</a>
+                <a href="/logout" class="bg-blue-700 px-4 py-2 rounded hover:bg-blue-800">Logout</a>
+            </div>
+        </div>
+    </nav>
+
     <!-- Main Content -->
-    <div class="container mx-auto p-6">
-        <h1 class="text-3xl font-bold mb-6">Calendar Integration</h1>
-        
-        <!-- Status Messages -->
-        {% if request.query_params.get('status') == 'success' %}
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-            Calendar connected successfully!
-        </div>
-        {% elif request.query_params.get('status') == 'error' %}
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-            Failed to connect calendar. Please try again.
-        </div>
-        {% endif %}
-        
-        <!-- Connected Calendars -->
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-semibold mb-4">Connected Calendars</h2>
-            
-            {% if connected_calendars %}
-            <div class="space-y-3">
-                {% for provider in connected_calendars %}
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded">
-                    <div class="flex items-center space-x-3">
-                        <span class="text-2xl">
-                            {% if provider == 'google' %}📅{% else %}📆{% endif %}
-                        </span>
-                        <div>
-                            <p class="font-medium">{{ provider|title }} Calendar</p>
-                            {% if provider == primary_provider %}
-                            <p class="text-sm text-green-600">Primary calendar</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="flex space-x-2">
-                        {% if provider != primary_provider %}
-                        <button class="text-blue-600 hover:text-blue-800">Set as Primary</button>
-                        {% endif %}
-                        <button class="text-red-600 hover:text-red-800">Disconnect</button>
-                    </div>
-                </div>
-                {% endfor %}
+    <div class="container mx-auto p-6 max-w-2xl">
+        <div class="bg-white rounded-lg shadow">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold mb-2">Connect Your Calendars</h2>
+                <p class="text-blue-100">Link your calendar providers to enable intelligent scheduling</p>
             </div>
-            {% else %}
-            <p class="text-gray-500">No calendars connected yet.</p>
+
+            <!-- Status Messages -->
+            {% if request.query_params.get('success') %}
+            <div class="bg-green-50 border border-green-200 text-green-700 px-6 py-4 m-6 rounded-lg">
+                ✅ Calendar connected successfully! You can now upload syllabi and sync events.
+            </div>
             {% endif %}
-        </div>
-        
-        <!-- Connect New Calendar -->
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-semibold mb-4">Connect New Calendar</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {% if request.query_params.get('error') %}
+            <div class="bg-red-50 border border-red-200 text-red-700 px-6 py-4 m-6 rounded-lg">
+                ❌ Connection failed. Please try again or use an alternative calendar provider.
+            </div>
+            {% endif %}
+
+            <!-- Calendar Options -->
+            <div class="p-6 space-y-4">
                 <!-- Google Calendar -->
-                <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 transition cursor-pointer" onclick="connectGoogle()">
-                    <div class="flex items-center space-x-4">
-                        <span class="text-4xl">📅</span>
-                        <div class="flex-1">
-                            <h3 class="font-semibold">Google Calendar</h3>
-                            <p class="text-sm text-gray-600">Connect your Google Calendar</p>
+                <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-400 transition cursor-pointer" id="google-card">
+                    <div class="flex items-start">
+                        <div class="flex-grow">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">🔵 Google Calendar</h3>
+                            <p class="text-gray-600 text-sm mb-4">
+                                Connect your Google Calendar to sync events from syllabi and enable smart scheduling.
+                            </p>
+                            <div class="space-y-2 text-sm text-gray-600">
+                                <p>✓ Automatic event creation from syllabi</p>
+                                <p>✓ Real-time scheduling optimization</p>
+                                <p>✓ Mobile app synchronization</p>
+                            </div>
                         </div>
-                        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        <button onclick="connectGoogle()" class="ml-4 bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition font-semibold">
                             Connect
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Outlook Calendar -->
-                <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 transition cursor-pointer" onclick="connectOutlook()">
-                    <div class="flex items-center space-x-4">
-                        <span class="text-4xl">📆</span>
-                        <div class="flex-1">
-                            <h3 class="font-semibold">Outlook Calendar</h3>
-                            <p class="text-sm text-gray-600">Connect your Outlook Calendar</p>
+                <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-400 transition cursor-pointer" id="outlook-card">
+                    <div class="flex items-start">
+                        <div class="flex-grow">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">🔷 Microsoft Outlook</h3>
+                            <p class="text-gray-600 text-sm mb-4">
+                                Connect your Microsoft Outlook Calendar for Office 365 integration and enterprise features.
+                            </p>
+                            <div class="space-y-2 text-sm text-gray-600">
+                                <p>✓ Outlook integration with Teams</p>
+                                <p>✓ Enterprise security</p>
+                                <p>✓ Automatic meeting scheduling</p>
+                            </div>
                         </div>
-                        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        <button onclick="connectOutlook()" class="ml-4 bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition font-semibold">
                             Connect
                         </button>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Upcoming Events -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold">Upcoming Events</h2>
-                <button onclick="loadEvents()" class="text-blue-600 hover:text-blue-800">
-                    Refresh
-                </button>
-            </div>
-            
-            <div id="events-list" class="space-y-3">
-                <p class="text-gray-500 text-center py-4">Loading events...</p>
-            </div>
-        </div>
-        
-        <!-- Syllabus Upload Section -->
-        <div class="bg-white rounded-lg shadow p-6 mt-6">
-            <h2 class="text-xl font-semibold mb-4">Import from Syllabus</h2>
-            
-            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <div class="mb-4">
-                    <span class="text-6xl">📄</span>
+
+                <!-- Connection Status -->
+                <div id="status-container" class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200" style="display: none;">
+                    <h4 class="font-semibold text-gray-800 mb-3">Connected Calendars:</h4>
+                    <div id="status-content" class="space-y-2">
+                        <p class="text-gray-600 text-sm">Loading status...</p>
+                    </div>
                 </div>
-                <p class="text-gray-700 mb-4">Upload your course syllabus (PDF or DOCX)</p>
-                <input type="file" id="syllabus-file" accept=".pdf,.docx,.doc" class="hidden" onchange="uploadSyllabus()">
-                <button onclick="document.getElementById('syllabus-file').click()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
-                    Choose File
-                </button>
-                <p class="text-sm text-gray-500 mt-2">Max file size: 10MB</p>
             </div>
-            
-            <div id="upload-status" class="mt-4 hidden"></div>
+
+            <!-- Security Notice -->
+            <div class="bg-blue-50 border-t border-gray-200 px-6 py-4 rounded-b-lg">
+                <p class="text-sm text-gray-700">
+                    <strong>🔒 Privacy:</strong> Your calendar data is only used to create events and generate schedules. 
+                    We never store or share your personal calendar data with third parties.
+                </p>
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="mt-6 bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4">Next Steps</h3>
+            <ol class="space-y-3 text-gray-700">
+                <li class="flex">
+                    <span class="text-blue-600 font-bold mr-3">1.</span>
+                    <span>Connect at least one calendar provider above</span>
+                </li>
+                <li class="flex">
+                    <span class="text-blue-600 font-bold mr-3">2.</span>
+                    <span>Upload your course syllabus (PDF or Word document)</span>
+                </li>
+                <li class="flex">
+                    <span class="text-blue-600 font-bold mr-3">3.</span>
+                    <span>Review and confirm the parsed events</span>
+                </li>
+                <li class="flex">
+                    <span class="text-blue-600 font-bold mr-3">4.</span>
+                    <span>Let OsMEN generate your optimal study schedule</span>
+                </li>
+            </ol>
         </div>
     </div>
 </div>
@@ -130,15 +127,11 @@ async function connectGoogle() {
     try {
         const response = await fetch('/api/calendar/google/oauth');
         const data = await response.json();
-        
-        if (data.success && data.auth_url) {
+        if (data.auth_url) {
             window.location.href = data.auth_url;
-        } else {
-            alert('Failed to initiate Google Calendar connection');
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('Error connecting to Google Calendar');
+        alert('Failed to initiate Google Calendar connection: ' + error);
     }
 }
 
@@ -146,86 +139,40 @@ async function connectOutlook() {
     try {
         const response = await fetch('/api/calendar/outlook/oauth');
         const data = await response.json();
-        
-        if (data.success && data.auth_url) {
+        if (data.auth_url) {
             window.location.href = data.auth_url;
-        } else {
-            alert('Failed to initiate Outlook Calendar connection');
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('Error connecting to Outlook Calendar');
+        alert('Failed to initiate Outlook Calendar connection: ' + error);
     }
 }
 
-async function loadEvents() {
-    const container = document.getElementById('events-list');
-    container.innerHTML = '<p class="text-gray-500 text-center py-4">Loading events...</p>';
-    
+// Load calendar status on page load
+async function loadCalendarStatus() {
     try {
-        const response = await fetch('/api/calendar/events?max_results=10');
-        const data = await response.json();
+        const response = await fetch('/api/calendar/status');
+        const status = await response.json();
         
-        if (data.events && data.events.length > 0) {
-            container.innerHTML = data.events.map(event => `
-                <div class="border-l-4 border-blue-500 pl-4 py-2">
-                    <div class="font-medium">${event.title || event.summary || 'Untitled Event'}</div>
-                    <div class="text-sm text-gray-600">${event.start || 'No date'}</div>
-                </div>
-            `).join('');
-        } else {
-            container.innerHTML = '<p class="text-gray-500 text-center py-4">No upcoming events</p>';
+        const statusContainer = document.getElementById('status-container');
+        const statusContent = document.getElementById('status-content');
+        
+        if (status.total > 0) {
+            statusContainer.style.display = 'block';
+            let html = '';
+            if (status.google.connected) {
+                html += '<p class="text-green-700">✅ Google Calendar: Connected</p>';
+            }
+            if (status.outlook.connected) {
+                html += '<p class="text-green-700">✅ Outlook Calendar: Connected</p>';
+            }
+            statusContent.innerHTML = html;
         }
     } catch (error) {
-        console.error('Error:', error);
-        container.innerHTML = '<p class="text-red-500 text-center py-4">Error loading events</p>';
+        console.error('Failed to load calendar status:', error);
     }
 }
 
-async function uploadSyllabus() {
-    const fileInput = document.getElementById('syllabus-file');
-    const file = fileInput.files[0];
-    const statusDiv = document.getElementById('upload-status');
-    
-    if (!file) return;
-    
-    statusDiv.classList.remove('hidden');
-    statusDiv.innerHTML = '<p class="text-blue-600">Uploading and parsing syllabus...</p>';
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    try {
-        const response = await fetch('/api/syllabus/upload', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            statusDiv.innerHTML = `
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                    <p class="font-medium">Syllabus parsed successfully!</p>
-                    <p class="text-sm">Course: ${data.course.name || 'Unknown'}</p>
-                    <p class="text-sm">Events found: ${data.event_count}</p>
-                    <a href="/events/preview/${data.preview_id}" class="text-blue-600 hover:underline">Review events →</a>
-                </div>
-            `;
-        } else {
-            throw new Error(data.detail || 'Upload failed');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        statusDiv.innerHTML = `
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                <p>Error: ${error.message}</p>
-            </div>
-        `;
-    }
-}
-
-// Load events on page load
-window.addEventListener('DOMContentLoaded', loadEvents);
+// Load status on page load
+document.addEventListener('DOMContentLoaded', loadCalendarStatus);
 </script>
 {% endblock %}

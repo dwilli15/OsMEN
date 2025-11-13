@@ -83,11 +83,6 @@
 - RBAC is enforced through `config/access_control.json` and the env vars `WEB_ADMIN_USERNAME`, `WEB_ADMIN_ROLE`, and `WEB_DEFAULT_ROLE`.
 - FastAPI routes require CSRF tokens; templates expose `window.OSMEN_CSRF_TOKEN` and the dashboard JS injects it into HTMX/fetch requests automatically.
 - Gateway endpoints are protected by a Redis-backed rate limiter (per-IP). Customize `RATE_LIMIT_PER_MINUTE`, `RATE_LIMIT_PREFIX`, and Redis credentials in `.env(.production)` as needed.
-- Prometheus metrics are exposed at `/metrics` on both the dashboard (admin-only) and the gateway. Toggle via `PROMETHEUS_METRICS_ENABLED`.
-- Run `scripts/backup/run_backup.py --label nightly` to archive Postgres dumps, Qdrant snapshots, and content exports into `BACKUP_DIR`.
-- `.github/workflows/infra-ci.yml` enforces infra checks (lint + security) on every push to `agent-beta-infrastructure`.
-- Prometheus metrics are exposed at `/metrics` on both the dashboard (admin-only) and the gateway. Toggle via `PROMETHEUS_METRICS_ENABLED`.
-- Run `scripts/backup/run_backup.py --label nightly` to archive Postgres dumps, Qdrant snapshots, and content exports into `BACKUP_DIR`.
 
 ## Deployment Steps
 
@@ -144,21 +139,7 @@ See `infra/nginx/README.md` for certificate issuance + proxy details.
 > Health endpoints: `curl http://localhost:8443/healthz` (gateway) and `curl http://localhost:8000/ready` (dashboard).  
 > Each service also exposes `GET /healthz/<service>` for granular probes (e.g., `/healthz/postgres`).
 
-### Step 5: Database, Vector, and Cache Setup
-```bash
-# Apply Postgres migrations (creates schema_migrations table automatically)
-python scripts/database/run_migrations.py
-
-# Seed Qdrant collections
-python scripts/qdrant/seed_collections.py --host http://localhost:6333
-
-# Warm Redis cache (optional)
-redis-cli -h redis ping
-```
-
-> The `postgres/init/02-osmen-schema.sql` file provisions the `osmen_app` database/user automatically when the container boots. Migrations can run repeatedly; they are idempotent.
-
-### Step 6: Start Developer Services
+### Step 5: Start Developer Services
 ```bash
 # Start all services
 ./start.sh
@@ -173,7 +154,7 @@ docker compose --profile ollama up -d
 docker compose ps
 ```
 
-### Step 7: Configure LLM Providers
+### Step 6: Configure LLM Providers
 
 #### Option 1: Production Cloud Providers
 See [docs/LLM_AGENTS.md](LLM_AGENTS.md) for detailed setup instructions.
@@ -194,14 +175,14 @@ docker exec osmen-ollama ollama pull mistral
 make pull-models
 ```
 
-### Step 8: Access Interfaces
+### Step 7: Access Interfaces
 - **Langflow**: http://localhost:7860
 - **n8n**: http://localhost:5678 (admin / your-password)
 - **Agent Gateway**: http://localhost:8080/docs
 - **MCP Server**: http://localhost:8081
 - **Qdrant**: http://localhost:6333/dashboard
 
-### Step 9: Import Workflows
+### Step 8: Import Workflows
 
 #### Import Langflow Flows
 1. Open Langflow at http://localhost:7860
@@ -252,12 +233,6 @@ python check_operational.py --all --gateway-url http://localhost:8443 --dashboar
 # Test agents manually
 python test_agents.py
 
-# Create an on-demand backup
-python scripts/backup/run_backup.py --label manual
-
-# Create an on-demand backup
-python scripts/backup/run_backup.py --label manual
-
 # Check service logs
 docker compose logs -f
 
@@ -265,7 +240,7 @@ docker compose logs -f
 make logs
 ```
 
-### Step 11: Enable Monitoring
+### Step 10: Enable Monitoring
 ```bash
 # View service status
 make status
