@@ -5,6 +5,9 @@ Validates environment configuration, secrets, and security settings
 """
 
 import os
+import re
+import shutil
+import subprocess
 import sys
 import re
 import shutil
@@ -220,15 +223,17 @@ class SecurityValidator:
                 ["git", "status", "--porcelain"],
                 capture_output=True,
                 cwd=self.project_root,
-                timeout=5
+                timeout=5,
+                text=True,
             )
-            
+
             if result.returncode == 0:
-                output = result.stdout.decode()
-                if ".env" in output:
-                    self.add_issue(".env file is staged or modified - DO NOT COMMIT")
-                    return False
-                    
+                for line in result.stdout.splitlines():
+                    path = line[3:].strip()
+                    if path == ".env":
+                        self.add_issue(".env file is staged or modified - DO NOT COMMIT")
+                        return False
+
         except Exception:
             # Git not available or error - skip check
             pass
@@ -297,6 +302,37 @@ class SecurityValidator:
             except Exception as exc:
                 self.add_warning(f"{name} scan failed: {exc}")
         
+    def run_security_scans(self) -> None:
+        """Run optional static/dependency scans if tooling is installed."""
+        scans: List[Tuple[str, List[str]]] = [
+            ("Bandit", ["bandit", "-q", "-r", str(self.project_root / "web"), "-ll"]),
+            ("Safety", ["safety", "check", "--full-report"]),
+        ]
+
+        for name, cmd in scans:
+            binary = cmd[0]
+            if shutil.which(binary) is None:
+                self.add_warning(f"{name} scan skipped (tool '{binary}' not installed)")
+                continue
+            try:
+                result = subprocess.run(
+                    cmd,
+                    cwd=self.project_root,
+                    capture_output=True,
+                    text=True,
+                    timeout=180,
+                )
+            except Exception as exc:
+                self.add_warning(f"{name} scan failed to run: {exc}")
+                continue
+
+            if result.returncode == 0:
+                self.add_passed(f"{name} scan passed")
+            else:
+                output = (result.stdout or result.stderr or "").strip().splitlines()
+                preview = "\n".join(output[:10])
+                self.add_warning(f"{name} scan reported issues (exit {result.returncode}):\n{preview}")
+
     def print_results(self):
         """Print all results"""
         print("\n" + "="*70)
