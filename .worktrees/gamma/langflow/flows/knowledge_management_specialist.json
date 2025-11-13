@@ -1,0 +1,102 @@
+{
+  "name": "Knowledge Management Specialist Agent",
+  "description": "Specialist agent for knowledge management with Obsidian integration",
+  "nodes": [
+    {
+      "id": "input",
+      "type": "ChatInput",
+      "data": {
+        "message": "Knowledge management request"
+      }
+    },
+    {
+      "id": "llm",
+      "type": "ChatOllama",
+      "data": {
+        "model": "llama2",
+        "base_url": "http://ollama:11434",
+        "temperature": 0.5,
+        "system_message": "You are a knowledge management specialist. You help users organize, search, and maintain their knowledge base in Obsidian. You can create notes, search existing knowledge, find connections between ideas, and suggest organizational improvements."
+      }
+    },
+    {
+      "id": "tools",
+      "type": "ToolCallingAgent",
+      "data": {
+        "tools": [
+          {
+            "name": "create_note",
+            "description": "Create a new note in Obsidian vault with title, content, and tags"
+          },
+          {
+            "name": "search_notes",
+            "description": "Search for notes in Obsidian vault by content or title"
+          },
+          {
+            "name": "read_note",
+            "description": "Read the content of a specific note"
+          },
+          {
+            "name": "find_related_notes",
+            "description": "Find notes related to a given note through backlinks and forward links"
+          },
+          {
+            "name": "create_daily_note",
+            "description": "Create or retrieve today's daily note"
+          },
+          {
+            "name": "export_knowledge_graph",
+            "description": "Export the graph structure of all notes and their connections"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mcp",
+      "type": "HTTPRequest",
+      "data": {
+        "url": "http://host.docker.internal:8081/tools/call",
+        "method": "POST",
+        "description": "MCP Server for tool execution"
+      }
+    },
+    {
+      "id": "memory",
+      "type": "VectorStoreRetriever",
+      "data": {
+        "vector_store": "qdrant",
+        "collection_name": "knowledge_memory",
+        "host": "http://qdrant:6333"
+      }
+    },
+    {
+      "id": "output",
+      "type": "ChatOutput",
+      "data": {
+        "message": "Knowledge management response"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "input",
+      "target": "llm"
+    },
+    {
+      "source": "llm",
+      "target": "tools"
+    },
+    {
+      "source": "tools",
+      "target": "mcp"
+    },
+    {
+      "source": "memory",
+      "target": "llm"
+    },
+    {
+      "source": "mcp",
+      "target": "output"
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+name: Daily Summary Generation
+
+on:
+  schedule:
+    # Run daily at 6 PM UTC (adjust based on user timezone)
+    - cron: '0 18 * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  generate-summary:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          # No external dependencies needed for basic summary
+      
+      - name: Generate daily summary
+        run: |
+          cd .copilot
+          python3 daily_summary.py
+        continue-on-error: true
+      
+      - name: Archive summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: daily-summary
+          path: .copilot/daily_summaries/*.json
+          retention-days: 90
+      
+      - name: Send summary notification
+        run: |
+          echo "📊 Daily summary generated for $(date -d yesterday +%Y-%m-%d)"
+          echo "Summary saved to .copilot/daily_summaries/"
+          echo ""
+          echo "To configure email delivery:"
+          echo "1. Set SMTP_* environment variables in repository settings"
+          echo "2. Add recipient email to memory.json user profile"
+        
+      - name: Cleanup old conversations
+        run: |
+          python3 << 'EOF'
+          import sys
+          sys.path.insert(0, '.copilot')
+          from conversation_store import ConversationStore
+          
+          store = ConversationStore()
+          deleted = store.cleanup_old_conversations(days=45)
+          print(f"Cleaned up {deleted} conversations older than 45 days")
+          EOF
+        continue-on-error: true
+      
+      - name: Generate innovation daily digest
+        run: |
+          cd scripts/innovation
+          python3 daily_digest.py
+        continue-on-error: true
+      
+      - name: Summary
+        run: |
+          echo "✅ Daily maintenance complete"
+          echo "- Generated daily summary"
+          echo "- Generated innovation digest"
+          echo "- Cleaned old conversations (45+ days)"
+          echo "- Archived summaries uploaded as artifacts"

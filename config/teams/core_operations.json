@@ -6,48 +6,56 @@
       "name": "Coordinator",
       "role": "coordinator",
       "description": "Routes tasks to specialist agents",
-      "flow_file": "langflow/flows/coordinator.json"
+      "flow_file": "langflow/flows/coordinator.json",
+      "required_role": "operator"
     },
     {
       "name": "Boot Hardening Specialist",
       "role": "security",
       "description": "System security and boot integrity",
-      "flow_file": "langflow/flows/boot_hardening_specialist.json"
+      "flow_file": "langflow/flows/boot_hardening_specialist.json",
+      "required_role": "admin"
     },
     {
       "name": "Daily Brief Specialist",
       "role": "reporting",
       "description": "Daily briefings and status reports",
-      "flow_file": "langflow/flows/daily_brief_specialist.json"
+      "flow_file": "langflow/flows/daily_brief_specialist.json",
+      "required_role": "viewer"
     },
     {
       "name": "Focus Guardrails Specialist",
       "role": "productivity",
       "description": "Productivity and distraction management",
-      "flow_file": "langflow/flows/focus_guardrails_specialist.json"
+      "flow_file": "langflow/flows/focus_guardrails_specialist.json",
+      "required_role": "viewer"
     },
     {
       "name": "Knowledge Management Specialist",
       "role": "knowledge",
       "description": "Obsidian integration and knowledge base",
-      "flow_file": "langflow/flows/knowledge_specialist.json"
+      "flow_file": "langflow/flows/knowledge_specialist.json",
+      "required_role": "operator"
     }
   ],
   "workflows": [
     {
       "name": "Daily Security Check",
       "trigger": "cron: 0 0 * * *",
-      "workflow_file": "n8n/workflows/boot_hardening_trigger.json"
+      "workflow_file": "n8n/workflows/boot_hardening_trigger.json",
+      "required_role": "admin"
     },
     {
       "name": "Morning Brief",
       "trigger": "cron: 0 8 * * *",
-      "workflow_file": "n8n/workflows/daily_brief_trigger.json"
+      "workflow_file": "n8n/workflows/daily_brief_trigger.json",
+      "required_role": "viewer"
     },
     {
       "name": "Focus Session Monitor",
       "trigger": "cron: */15 * * * *",
-      "workflow_file": "n8n/workflows/focus_guardrails_monitor.json"
+      "workflow_file": "n8n/workflows/focus_guardrails_monitor.json",
+      "required_role": "operator"
     }
   ]
 }

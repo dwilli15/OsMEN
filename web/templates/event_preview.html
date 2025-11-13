@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Preview Events - OsMEN{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <nav class="bg-blue-600 text-white p-4">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-bold">Preview Syllabus Events</h1>
+      <div>
+        <a href="/syllabus/upload" class="text-blue-100 hover:text-white mr-4">← Upload Another</a>
+        <a href="/calendar/setup" class="bg-blue-700 px-4 py-2 rounded hover:bg-blue-800">Calendar Setup</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mx-auto p-6">
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center justify-between mb-4" id="event-preview-toolbar" data-testid="event-preview-toolbar">
+        <h2 class="text-lg font-semibold" id="event-count" data-testid="event-count">Events Found ({{ events|length }})</h2>
+        <div class="space-x-2">
+          <button id="accept-all-btn" data-testid="accept-all-btn" onclick="acceptAll()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Accept All</button>
+          <button id="sync-calendar-btn" data-testid="sync-calendar-btn" onclick="syncToCalendar()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Sync to Calendar</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-left border" id="event-preview-table" data-testid="event-preview-table">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="px-3 py-2 border">#</th>
+              <th class="px-3 py-2 border">Title</th>
+              <th class="px-3 py-2 border">Date</th>
+              <th class="px-3 py-2 border">Type</th>
+              <th class="px-3 py-2 border">Description</th>
+              <th class="px-3 py-2 border">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="event-table" data-testid="event-table">
+            {% for e in events %}
+            <tr data-testid="event-row" data-row-index="{{ loop.index0 }}">
+              <td class="px-3 py-2 border" data-testid="event-index">{{ loop.index0 }}</td>
+              <td class="px-3 py-2 border"><input data-testid="event-title" class="w-full border p-1" value="{{ e.title }}" onchange="updateEvent({{ loop.index0 }}, 'title', this.value)"></td>
+              <td class="px-3 py-2 border"><input data-testid="event-date" class="w-full border p-1" value="{{ e.date }}" onchange="updateEvent({{ loop.index0 }}, 'date', this.value)"></td>
+              <td class="px-3 py-2 border"><input data-testid="event-type" class="w-full border p-1" value="{{ e.type }}" onchange="updateEvent({{ loop.index0 }}, 'type', this.value)"></td>
+              <td class="px-3 py-2 border"><input data-testid="event-description" class="w-full border p-1" value="{{ e.description }}" onchange="updateEvent({{ loop.index0 }}, 'description', this.value)"></td>
+              <td class="px-3 py-2 border">
+                <button data-testid="reject-btn" onclick="rejectEvent({{ loop.index0 }})" class="text-red-600 hover:text-red-800">Reject</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const uploadId = "{{ upload_id }}";
+
+async function updateEvent(index, field, value) {
+  await fetch('/api/events/preview/update', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': window.OSMEN_CSRF_TOKEN || ''
+    },
+    body: JSON.stringify({ upload_id: uploadId, index, field, value })
+  });
+}
+
+async function rejectEvent(index) {
+  await fetch('/api/events/preview/bulk', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': window.OSMEN_CSRF_TOKEN || ''
+    },
+    body: JSON.stringify({ upload_id: uploadId, action: 'reject_indices', indices: [index] })
+  });
+  location.reload();
+}
+
+async function acceptAll() {
+  await fetch('/api/events/preview/bulk', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': window.OSMEN_CSRF_TOKEN || ''
+    },
+    body: JSON.stringify({ upload_id: uploadId, action: 'accept_all' })
+  });
+  // Update count UI (stays same length, but we note acceptance)
+  const countEl = document.getElementById('event-count');
+  if (countEl) countEl.setAttribute('data-accepted','true');
+}
+
+async function syncToCalendar() {
+  const resp = await fetch(`/api/calendar/sync?upload_id=${uploadId}`, {
+    method: 'POST',
+    headers: {
+      'X-CSRF-Token': window.OSMEN_CSRF_TOKEN || ''
+    }
+  });
+  const result = await resp.json();
+  if (result.success) {
+    alert(`Synced ${result.synced} events (provider=${result.provider})`);
+  } else {
+    alert('Sync failed: ' + (result.error || 'Unknown error'));
+  }
+}
+</script>
+{% endblock %}

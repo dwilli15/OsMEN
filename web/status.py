@@ -10,6 +10,10 @@ from pathlib import Path
 from typing import Dict, List
 
 
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent
+
+
 async def get_system_status() -> Dict:
     """Get comprehensive system status."""
     return {
@@ -24,8 +28,7 @@ async def get_agent_health() -> List[Dict]:
     """Get health status of all agents."""
     agents = []
     
-    # Check if agents directory exists
-    agents_dir = Path("/home/runner/work/OsMEN/OsMEN/agents")
+    agents_dir = PROJECT_ROOT / "agents"
     if agents_dir.exists():
         for agent_file in agents_dir.glob("*.py"):
             if agent_file.name != "__init__.py":
@@ -42,24 +45,21 @@ async def get_service_health() -> List[Dict]:
     """Get health status of external services."""
     services = []
     
-    # Check LangFlow
     services.append({
         "name": "LangFlow",
         "status": "unknown",
         "port": 7860,
-        "enabled": os.path.exists("/home/runner/work/OsMEN/OsMEN/langflow")
+        "enabled": (PROJECT_ROOT / "langflow").exists()
     })
     
-    # Check n8n
     services.append({
         "name": "n8n",
         "status": "unknown",
         "port": 5678,
-        "enabled": os.path.exists("/home/runner/work/OsMEN/OsMEN/n8n")
+        "enabled": (PROJECT_ROOT / "n8n").exists()
     })
     
-    # Check Memory System
-    memory_file = Path("/home/runner/work/OsMEN/OsMEN/.copilot/memory.json")
+    memory_file = PROJECT_ROOT / ".copilot" / "memory.json"
     services.append({
         "name": "Memory System",
         "status": "healthy" if memory_file.exists() else "degraded",
@@ -97,7 +97,7 @@ async def get_resource_usage() -> Dict:
 
 async def get_memory_system_status() -> Dict:
     """Get memory system status."""
-    memory_file = Path("/home/runner/work/OsMEN/OsMEN/.copilot/memory.json")
+    memory_file = PROJECT_ROOT / ".copilot" / "memory.json"
     
     if not memory_file.exists():
         return {

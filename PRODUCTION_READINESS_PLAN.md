@@ -211,25 +211,44 @@
 **Why:** Can't ship without security  
 **Impact:** CRITICAL - Security is non-negotiable
 
-- [ ] **8.1** Implement proper secrets management
+- [x] **8.1** Implement proper secrets management
   - Use environment variables
   - Encrypt sensitive data at rest
   - Secure credential storage
   - Test: No secrets in code or logs
+  - Maintain centralized inventory (see table below)
 
-- [ ] **8.2** Add HTTPS/TLS
+| Secret | Env Var | Owner | Rotation | Storage |
+|--------|---------|-------|----------|---------|
+| Dashboard session key | `WEB_SECRET_KEY` | Infra (Beta) | 90 days | 1Password → `.env.production` |
+| API session signing key | `SESSION_SECRET_KEY` | Infra (Beta) | 90 days | 1Password → `.env.production` |
+| Postgres credentials | `POSTGRES_*` | DBA / Infra | 30 days | Managed DB / `.env.production` |
+| Redis password | `REDIS_PASSWORD` | Infra | 30 days | 1Password vault |
+| n8n basic auth + DB creds | `N8N_*` | Infra | 30 days | 1Password vault |
+| LLM provider tokens | `OPENAI_API_KEY`, etc. | AI Platform | 60 days | Provider vault integration |
+
+**Vault Workflow**
+1. Generate secrets inside shared 1Password vault (`OsMEN/Production`).
+2. Copy values into `.env.production` (never commit) and record rotation date in vault notes.
+3. For cloud deployments, mirror secrets into AWS Secrets Manager (`/osmen/prod/<name>`).
+4. Run `python scripts/automation/validate_security.py` to ensure `.env`/`.env.production` exist and no defaults remain.
+5. Rotate n8n/admin, Postgres, and Redis credentials prior to each merge point; document completion in `3agent_chat.md`.
+
+- [x] **8.2** Add HTTPS/TLS
   - SSL certificates (Let's Encrypt)
   - Force HTTPS redirect
   - Secure headers
+  - Sample reverse proxy config in `infra/nginx/osmen.conf`
+  - Set `ENFORCE_HTTPS=true` in `.env.production`
   - Test: All traffic encrypted
 
-- [ ] **8.3** Implement rate limiting
+- [x] **8.3** Implement rate limiting
   - API rate limits
   - Login attempt limits
   - DOS protection
   - Test: Rate limits work correctly
 
-- [ ] **8.4** Add security headers
+- [x] **8.4** Add security headers
   - CSP, HSTS, X-Frame-Options
   - XSS protection
   - CSRF tokens

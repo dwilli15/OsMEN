@@ -1,0 +1,53 @@
+{
+  "name": "Core Operations Team",
+  "description": "Primary team for system operations and daily tasks",
+  "agents": [
+    {
+      "name": "Coordinator",
+      "role": "coordinator",
+      "description": "Routes tasks to specialist agents",
+      "flow_file": "langflow/flows/coordinator.json"
+    },
+    {
+      "name": "Boot Hardening Specialist",
+      "role": "security",
+      "description": "System security and boot integrity",
+      "flow_file": "langflow/flows/boot_hardening_specialist.json"
+    },
+    {
+      "name": "Daily Brief Specialist",
+      "role": "reporting",
+      "description": "Daily briefings and status reports",
+      "flow_file": "langflow/flows/daily_brief_specialist.json"
+    },
+    {
+      "name": "Focus Guardrails Specialist",
+      "role": "productivity",
+      "description": "Productivity and distraction management",
+      "flow_file": "langflow/flows/focus_guardrails_specialist.json"
+    },
+    {
+      "name": "Knowledge Management Specialist",
+      "role": "knowledge",
+      "description": "Obsidian integration and knowledge base",
+      "flow_file": "langflow/flows/knowledge_specialist.json"
+    }
+  ],
+  "workflows": [
+    {
+      "name": "Daily Security Check",
+      "trigger": "cron: 0 0 * * *",
+      "workflow_file": "n8n/workflows/boot_hardening_trigger.json"
+    },
+    {
+      "name": "Morning Brief",
+      "trigger": "cron: 0 8 * * *",
+      "workflow_file": "n8n/workflows/daily_brief_trigger.json"
+    },
+    {
+      "name": "Focus Session Monitor",
+      "trigger": "cron: */15 * * * *",
+      "workflow_file": "n8n/workflows/focus_guardrails_monitor.json"
+    }
+  ]
+}

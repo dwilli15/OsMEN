@@ -24,6 +24,9 @@ if [ ! -f .env ]; then
     exit 0
 fi
 
+echo "🔐 Running security validation..."
+python3 scripts/automation/validate_security.py || true
+
 # Create necessary directories
 echo "📁 Creating directories..."
 mkdir -p langflow/flows langflow/config

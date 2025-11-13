@@ -1,0 +1,39 @@
+{
+  "roles": {
+    "viewer": {
+      "description": "Read-only access to dashboards and reports",
+      "inherits": [],
+      "permissions": [
+        "dashboard:view",
+        "status:view",
+        "digest:view",
+        "logs:view_limited"
+      ]
+    },
+    "operator": {
+      "description": "Operate agents and update runtime settings",
+      "inherits": ["viewer"],
+      "permissions": [
+        "agents:toggle",
+        "config:update",
+        "digest:feedback",
+        "logs:view"
+      ]
+    },
+    "admin": {
+      "description": "Full control over infrastructure and secrets",
+      "inherits": ["operator"],
+      "permissions": [
+        "secrets:manage",
+        "roles:manage",
+        "system:admin"
+      ]
+    }
+  },
+  "users": [
+    {
+      "username": "admin",
+      "role": "admin"
+    }
+  ]
+}

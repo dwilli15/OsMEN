@@ -6,15 +6,63 @@ Tests for calendar manager and provider integrations.
 Part of Production Readiness - Phase 1 Testing
 """
 
+import json
 import sys
 import time
+import types
+from base64 import b64decode, b64encode
 from pathlib import Path
 from datetime import datetime, timedelta
+from urllib.parse import parse_qs, urlparse
+
+import itsdangerous
+import pytest
+from fastapi.testclient import TestClient
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from integrations.calendar.calendar_manager import CalendarManager
+from web.main import app, check_auth, SECRET_KEY, active_uploads
+
+
+def _install_stub_module(monkeypatch, module_name: str, **attrs):
+    """Register a lightweight stub module for FastAPI endpoint tests."""
+    module = types.ModuleType(module_name)
+    for name, value in attrs.items():
+        setattr(module, name, value)
+    monkeypatch.setitem(sys.modules, module_name, module)
+    return module
+
+
+@pytest.fixture
+def api_client():
+    """Provide a FastAPI TestClient with auth override for endpoint tests."""
+    app.dependency_overrides[check_auth] = lambda: {"email": "gamma@osmen.ai"}
+    client = TestClient(app)
+    try:
+        yield client
+    finally:
+        client.close()
+        app.dependency_overrides.pop(check_auth, None)
+
+
+def _decode_session_cookie(client: TestClient) -> dict:
+    """Decode the signed session cookie emitted by SessionMiddleware."""
+    cookie = client.cookies.get("session")
+    if not cookie:
+        return {}
+    signer = itsdangerous.TimestampSigner(SECRET_KEY)
+    raw = signer.unsign(cookie.encode("utf-8"))
+    return json.loads(b64decode(raw))
+
+
+def _set_session_cookie(client: TestClient, data: dict):
+    """Inject session state into the test client."""
+    payload = b64encode(json.dumps(data).encode("utf-8"))
+    signer = itsdangerous.TimestampSigner(SECRET_KEY)
+    signed = signer.sign(payload).decode("utf-8")
+    client.cookies.set("session", signed, path="/")
 
 
 def test_calendar_manager_initialization():
@@ -198,6 +246,190 @@ def test_performance_benchmark():
     except Exception as e:
         print(f"❌ Performance Benchmark: FAIL - {e}")
         return False
+
+
+# ============================================================================
+# FastAPI endpoint coverage (Alpha A1.1 - A1.4)
+# ============================================================================
+
+def test_google_oauth_endpoint_returns_stateful_url(api_client, monkeypatch):
+    """Ensure Google OAuth endpoint builds a signed URL + session state."""
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "client-123")
+    monkeypatch.setenv("GOOGLE_REDIRECT_URI", "https://example.com/callback")
+
+    response = api_client.get("/api/calendar/google/oauth")
+    assert response.status_code == 200
+    data = response.json()
+    params = parse_qs(urlparse(data["auth_url"]).query)
+
+    assert params["client_id"][0] == "client-123"
+    assert params["redirect_uri"][0] == "https://example.com/callback"
+    assert data["provider"] == "google"
+
+    session_data = _decode_session_cookie(api_client)
+    assert params["state"][0] == session_data["google_oauth_state"]
+
+
+def test_google_callback_requires_code(api_client):
+    """Callback should error when code is missing but state validates."""
+    oauth_init = api_client.get("/api/calendar/google/oauth")
+    state = parse_qs(urlparse(oauth_init.json()["auth_url"]).query)["state"][0]
+    response = api_client.get(
+        f"/api/calendar/google/callback?state={state}",
+        follow_redirects=False,
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "No authorization code provided"
+
+
+def test_google_callback_success_persists_tokens(api_client, monkeypatch):
+    """Successful Google OAuth stores tokens and toggles connected flag."""
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "client-456")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "secret-456")
+    monkeypatch.setenv("GOOGLE_REDIRECT_URI", "https://example.com/google")
+
+    # Prime session with state token via init endpoint.
+    oauth_init = api_client.get("/api/calendar/google/oauth")
+    assert oauth_init.status_code == 200
+    state = parse_qs(urlparse(oauth_init.json()["auth_url"]).query)["state"][0]
+
+    payload = {"access_token": "tok-123", "refresh_token": "refresh-789"}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return payload
+
+    monkeypatch.setattr("requests.post", lambda *args, **kwargs: FakeResponse())
+
+    response = api_client.get(
+        f"/api/calendar/google/callback?code=auth-code&state={state}",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 302
+    assert response.headers["location"].startswith("/calendar/setup")
+
+    session_data = _decode_session_cookie(api_client)
+    assert session_data["google_calendar_connected"] is True
+    assert session_data["google_calendar_token"]["access_token"] == "tok-123"
+
+
+def test_outlook_oauth_endpoint_returns_stateful_url(api_client, monkeypatch):
+    """Outlook OAuth flow should mirror Google's state handling."""
+    monkeypatch.setenv("MICROSOFT_CLIENT_ID", "ms-client")
+    monkeypatch.setenv("MICROSOFT_REDIRECT_URI", "https://example.com/outlook")
+
+    response = api_client.get("/api/calendar/outlook/oauth")
+    assert response.status_code == 200
+    data = response.json()
+
+    params = parse_qs(urlparse(data["auth_url"]).query)
+    assert params["client_id"][0] == "ms-client"
+    assert params["redirect_uri"][0] == "https://example.com/outlook"
+    assert data["provider"] == "outlook"
+
+    session_data = _decode_session_cookie(api_client)
+    assert params["state"][0] == session_data["outlook_oauth_state"]
+
+
+def test_outlook_callback_connects_calendar(api_client, monkeypatch):
+    """Microsoft callback stores returned tokens in the session."""
+    monkeypatch.setenv("MICROSOFT_CLIENT_ID", "ms-client")
+    monkeypatch.setenv("MICROSOFT_CLIENT_SECRET", "ms-secret")
+
+    oauth_init = api_client.get("/api/calendar/outlook/oauth")
+    assert oauth_init.status_code == 200
+    state = parse_qs(urlparse(oauth_init.json()["auth_url"]).query)["state"][0]
+
+    payload = {"access_token": "ms-token", "refresh_token": "ms-refresh"}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return payload
+
+    monkeypatch.setattr("requests.post", lambda *args, **kwargs: FakeResponse())
+
+    response = api_client.get(
+        f"/api/calendar/outlook/callback?code=abc123&state={state}",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 302
+    assert response.headers["location"].startswith("/calendar/setup")
+
+    session_data = _decode_session_cookie(api_client)
+    assert session_data["outlook_calendar_connected"] is True
+    assert session_data["outlook_calendar_token"]["access_token"] == "ms-token"
+
+
+def test_calendar_status_reflects_connected_providers(api_client):
+    """Calendar status endpoint reads connection flags from the session."""
+    _set_session_cookie(
+        api_client,
+        {
+            "google_calendar_connected": True,
+            "outlook_calendar_connected": False,
+        },
+    )
+    response = api_client.get("/api/calendar/status")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["google"]["connected"] is True
+    assert data["outlook"]["connected"] is False
+    assert data["total"] == 1
+
+
+def test_event_preview_update_edits_event(api_client):
+    """Single-event edits should persist back into the active upload cache."""
+    active_uploads.clear()
+    upload_id = "upload-123"
+    active_uploads[upload_id] = {
+        "status": "ready",
+        "events": [
+            {"title": "Midterm", "date": "2025-10-10", "type": "exam", "description": "old"}
+        ],
+    }
+
+    payload = {
+        "upload_id": upload_id,
+        "index": 0,
+        "field": "title",
+        "value": "Updated Midterm",
+    }
+    response = api_client.post("/api/events/preview/update", json=payload)
+    assert response.status_code == 200
+    assert active_uploads[upload_id]["events"][0]["title"] == "Updated Midterm"
+    assert response.json()["event"]["title"] == "Updated Midterm"
+
+
+def test_event_preview_bulk_rejects_indices(api_client):
+    """Bulk rejection should remove targeted events from the staging cache."""
+    active_uploads.clear()
+    upload_id = "upload-bulk"
+    active_uploads[upload_id] = {
+        "status": "ready",
+        "events": [
+            {"title": "Lecture 1"},
+            {"title": "Lecture 2"},
+            {"title": "Lecture 3"},
+        ],
+    }
+
+    payload = {
+        "upload_id": upload_id,
+        "action": "reject_indices",
+        "indices": [0, 2],
+    }
+    response = api_client.post("/api/events/preview/bulk", json=payload)
+    assert response.status_code == 200
+    assert response.json()["remaining"] == 1
+    assert len(active_uploads[upload_id]["events"]) == 1
 
 
 def main():

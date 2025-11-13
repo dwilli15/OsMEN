@@ -1,0 +1,59 @@
+name: Weekly Innovation Scan
+
+on:
+  schedule:
+    # Run every Sunday at 18:00 UTC (6 PM)
+    - cron: '0 18 * * 0'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  innovation-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install feedparser requests python-dateutil
+      
+      - name: Run innovation feed monitor
+        run: |
+          cd scripts/innovation
+          python3 monitor_feeds.py
+        continue-on-error: true
+      
+      - name: Generate weekly digest
+        run: |
+          cd scripts/innovation
+          python3 generate_digest.py
+        continue-on-error: true
+      
+      - name: Commit and push updates
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .copilot/innovation_cache.json .copilot/innovation_scan_latest.md .copilot/weekly_digest_latest.md docs/INNOVATION_BACKLOG.md
+          git diff --cached --quiet || git commit -m "Weekly innovation scan: $(date -u +%Y-%m-%d)"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Summary
+        run: |
+          echo "✅ Weekly innovation scan complete"
+          echo "📄 Reports generated in .copilot/"
+          echo "📧 Review digest at .copilot/weekly_digest_latest.md"

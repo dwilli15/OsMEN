@@ -6,9 +6,11 @@ Validates environment configuration, secrets, and security settings
 
 import os
 import sys
+import re
+import shutil
+import subprocess
 from pathlib import Path
 from typing import List, Tuple
-import re
 
 
 class SecurityValidator:
@@ -67,6 +69,38 @@ class SecurityValidator:
         if "API_KEY=" in content or "PASSWORD=" in content:
             self.add_warning("Secrets found in .env - ensure this file is in .gitignore")
             
+        return True
+    
+    def check_production_env_file(self) -> bool:
+        """Ensure .env.production exists and does not contain placeholders."""
+        prod_file = self.project_root / ".env.production"
+        template = self.project_root / ".env.production.example"
+        
+        if not template.exists():
+            return True  # Nothing to validate
+        
+        if not prod_file.exists():
+            self.add_warning(".env.production not found. Required for docker-compose.prod.yml deployments.")
+            return False
+        
+        with open(prod_file) as f:
+            content = f.read()
+        
+        placeholders = [
+            "replace-with-64-byte-hex",
+            "replace-with-strong-password",
+            "replace-with-openai-key",
+            "replace-with-github-token",
+            "replace-with-aws-access-key",
+            "replace-with-anthropic-key"
+        ]
+        
+        issues = [phrase for phrase in placeholders if phrase in content]
+        if issues:
+            self.add_issue(f".env.production still contains placeholder values: {', '.join(set(issues))}")
+            return False
+        
+        self.add_passed(".env.production populated with real secrets")
         return True
         
     def check_gitignore(self) -> bool:
@@ -182,7 +216,6 @@ class SecurityValidator:
         """Check if secrets might be committed to git"""
         # Check git status for .env file
         try:
-            import subprocess
             result = subprocess.run(
                 ["git", "status", "--porcelain"],
                 capture_output=True,
@@ -238,6 +271,31 @@ class SecurityValidator:
                     
         self.add_passed("Logging configuration check passed")
         return True
+
+    def run_security_scans(self):
+        """Run optional static analysis and dependency scans."""
+        scans = [
+            ("bandit", ["bandit", "-q", "-r", "web", "gateway"]),
+            ("safety", ["safety", "check", "--full-report"])
+        ]
+        for name, command in scans:
+            if not shutil.which(command[0]):
+                self.add_warning(f"{name} scanner not installed; skipping ({' '.join(command)})")
+                continue
+            try:
+                result = subprocess.run(
+                    command,
+                    capture_output=True,
+                    text=True,
+                    cwd=self.project_root,
+                    timeout=120
+                )
+                if result.returncode == 0:
+                    self.add_passed(f"{name} security scan passed")
+                else:
+                    self.add_warning(f"{name} scan reported issues:\n{result.stdout or result.stderr}")
+            except Exception as exc:
+                self.add_warning(f"{name} scan failed: {exc}")
         
     def print_results(self):
         """Print all results"""
@@ -292,6 +350,7 @@ def main():
     
     # Run all checks
     validator.check_env_file()
+    validator.check_production_env_file()
     validator.check_gitignore()
     validator.check_docker_compose_security()
     validator.check_file_permissions()
@@ -299,6 +358,7 @@ def main():
     validator.check_secret_exposure()
     validator.check_required_directories()
     validator.check_logging_configuration()
+    validator.run_security_scans()
     
     # Print results
     return validator.print_results()

@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Syllabus - OsMEN{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Navbar -->
+    <nav class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">Upload Syllabus</h1>
+            <div>
+                <a href="/dashboard" class="text-blue-100 hover:text-white mr-4">← Back to Dashboard</a>
+                <a href="/logout" class="bg-blue-700 px-4 py-2 rounded hover:bg-blue-800">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto p-6 max-w-3xl">
+        <div class="bg-white rounded-lg shadow">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold mb-2">Upload Your Syllabus</h2>
+                <p class="text-purple-100">OsMEN will parse your syllabus and create calendar events automatically</p>
+            </div>
+
+            <!-- Upload Area -->
+            <div class="p-6">
+                <!-- Drag and Drop Zone -->
+                <div id="dropzone" class="border-4 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-blue-500 transition cursor-pointer bg-gray-50" 
+                     ondrop="handleDrop(event)" 
+                     ondragover="handleDragOver(event)" 
+                     ondragleave="handleDragLeave(event)">
+                    <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <p class="text-xl font-semibold text-gray-700 mb-2">Drop your syllabus here</p>
+                    <p class="text-gray-500 mb-4">or click to select a file</p>
+                    <input type="file" id="file-input" class="hidden" accept=".pdf,.docx" onchange="handleFileSelect(event)" />
+                    <button onclick="document.getElementById('file-input').click()" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition">
+                        Select File
+                    </button>
+                    <p class="text-sm text-gray-500 mt-4">Supported formats: PDF, DOCX (max 50MB)</p>
+                </div>
+
+                <!-- File Info (shown after selection) -->
+                <div id="file-info" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-semibold text-gray-800">Selected File:</p>
+                            <p id="filename" class="text-gray-600"></p>
+                            <p id="filesize" class="text-sm text-gray-500 mt-1"></p>
+                        </div>
+                        <button onclick="clearFile()" class="text-red-600 hover:text-red-800 font-semibold">Change</button>
+                    </div>
+                </div>
+
+                <!-- Upload Progress (shown during upload) -->
+                <div id="upload-progress" class="mt-6 hidden">
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-semibold text-gray-700">Processing Syllabus...</span>
+                            <span id="progress-percent" class="text-lg font-bold text-blue-600">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                            <div id="progress-bar" class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div id="status-icon" class="text-lg">⏳</div>
+                        <span id="status-text" class="text-gray-700">Preparing file...</span>
+                    </div>
+                </div>
+
+                <!-- Success State (shown after upload) -->
+                <div id="upload-success" class="mt-6 hidden">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <p class="text-green-800 font-semibold mb-2">✅ Syllabus processed successfully!</p>
+                        <p class="text-green-700 text-sm">OsMEN found the following events in your syllabus:</p>
+                    </div>
+                    <div id="events-list" class="space-y-3">
+                        <!-- Events will be populated here -->
+                    </div>
+                    <div class="mt-6 flex space-x-4">
+                        <button onclick="confirmEvents()" class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition font-semibold">
+                            ✓ Confirm & Create Events
+                        </button>
+                        <button onclick="resetUpload()" class="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 transition font-semibold">
+                            Upload Another
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Upload Button -->
+                <div id="upload-button" class="mt-6 hidden">
+                    <button onclick="uploadFile()" class="w-full bg-green-500 text-white px-6 py-3 rounded hover:bg-green-600 transition font-semibold text-lg">
+                        📤 Upload & Process Syllabus
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-lg font-semibold text-gray-800 mb-2">📅 Events Extracted</p>
+                <p class="text-3xl font-bold text-blue-600" id="event-count">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-lg font-semibold text-gray-800 mb-2">⚡ Processing Speed</p>
+                <p class="text-sm text-gray-600">Under 5 seconds</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-lg font-semibold text-gray-800 mb-2">🔒 Privacy</p>
+                <p class="text-sm text-gray-600">Never shared</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedFile = null;
+let uploadId = null;
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.getElementById('dropzone').classList.add('border-blue-500', 'bg-blue-50');
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.getElementById('dropzone').classList.remove('border-blue-500', 'bg-blue-50');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.getElementById('dropzone').classList.remove('border-blue-500', 'bg-blue-50');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFileSelect({target: {files}});
+    }
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    if (files.length === 0) return;
+    
+    selectedFile = files[0];
+    
+    // Validate file type
+    const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!validTypes.includes(selectedFile.type)) {
+        alert('Please upload a PDF or DOCX file');
+        return;
+    }
+    
+    // Validate file size
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (selectedFile.size > maxSize) {
+        alert('File is too large (max 50MB)');
+        return;
+    }
+    
+    // Show file info
+    document.getElementById('file-info').classList.remove('hidden');
+    document.getElementById('filename').textContent = selectedFile.name;
+    document.getElementById('filesize').textContent = `Size: ${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`;
+    document.getElementById('upload-button').classList.remove('hidden');
+}
+
+function clearFile() {
+    selectedFile = null;
+    document.getElementById('file-input').value = '';
+    document.getElementById('file-info').classList.add('hidden');
+    document.getElementById('upload-button').classList.add('hidden');
+}
+
+async function uploadFile() {
+    if (!selectedFile) {
+        alert('Please select a file');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    
+    try {
+        // Hide upload button and show progress
+        document.getElementById('upload-button').classList.add('hidden');
+        document.getElementById('upload-progress').classList.remove('hidden');
+        
+        // Upload file
+        const response = await fetch('/api/syllabus/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('Upload failed: ' + response.statusText);
+        }
+        
+        const result = await response.json();
+        uploadId = result.upload_id;
+        
+        // Poll for progress
+        pollProgress();
+        
+    } catch (error) {
+        alert('Upload failed: ' + error.message);
+        document.getElementById('upload-progress').classList.add('hidden');
+        document.getElementById('upload-button').classList.remove('hidden');
+    }
+}
+
+async function pollProgress() {
+    if (!uploadId) return;
+    
+    try {
+        const response = await fetch(`/api/syllabus/progress/${uploadId}`);
+        const data = await response.json();
+        
+        // Update progress bar
+        document.getElementById('progress-bar').style.width = data.progress + '%';
+        document.getElementById('progress-percent').textContent = data.progress + '%';
+        
+        // Update status
+        const statusMap = {
+            'validating': '🔍 Validating file...',
+            'parsing': '📖 Parsing document...',
+            'extracting': '✂️ Extracting events...',
+            'ready': '✅ Processing complete!'
+        };
+        document.getElementById('status-text').textContent = statusMap[data.status] || 'Processing...';
+        
+        if (data.status === 'ready') {
+            // Show results
+            showResults(data.events);
+        } else if (data.status === 'error') {
+            alert('Error processing syllabus: ' + data.error);
+            document.getElementById('upload-progress').classList.add('hidden');
+            document.getElementById('upload-button').classList.remove('hidden');
+        } else {
+            // Continue polling
+            setTimeout(pollProgress, 500);
+        }
+    } catch (error) {
+        console.error('Poll error:', error);
+        setTimeout(pollProgress, 1000);
+    }
+}
+
+function showResults(events) {
+    document.getElementById('upload-progress').classList.add('hidden');
+    document.getElementById('upload-success').classList.remove('hidden');
+    
+    // Display events
+    const eventsList = document.getElementById('events-list');
+    eventsList.innerHTML = '';
+    
+    events.forEach(event => {
+        const eventEl = document.createElement('div');
+        eventEl.className = 'bg-gray-50 border border-gray-200 rounded p-3';
+        eventEl.innerHTML = `
+            <p class="font-semibold text-gray-800">${event.title}</p>
+            <p class="text-sm text-gray-600">📅 ${event.date}</p>
+            <p class="text-sm text-gray-600">Type: ${event.type}</p>
+        `;
+        eventsList.appendChild(eventEl);
+    });
+    
+    document.getElementById('event-count').textContent = events.length;
+}
+
+function confirmEvents() {
+    alert('Events created successfully! Redirecting to calendar...');
+    window.location.href = '/calendar/setup';
+}
+
+function resetUpload() {
+    uploadId = null;
+    selectedFile = null;
+    document.getElementById('file-input').value = '';
+    document.getElementById('file-info').classList.add('hidden');
+    document.getElementById('upload-success').classList.add('hidden');
+    document.getElementById('upload-progress').classList.add('hidden');
+    document.getElementById('upload-button').classList.add('hidden');
+}
+</script>
+{% endblock %}

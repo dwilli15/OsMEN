@@ -1,0 +1,53 @@
+{
+  "course_code": "CS 101",
+  "course_name": "Introduction to Programming",
+  "instructor": {
+    "name": "Dr. Jane Smith",
+    "email": "jane.smith@university.edu",
+    "office": "Computer Science Building, Room 305",
+    "office_hours": "Monday & Wednesday 2-4 PM"
+  },
+  "schedule": {
+    "days": ["Tuesday", "Thursday"],
+    "time": "10:00 AM - 11:30 AM",
+    "location": "Science Hall, Room 101"
+  },
+  "events": [
+    {
+      "type": "assignment",
+      "name": "Assignment 1",
+      "due_date": "2025-01-20T23:59:00",
+      "weight": "15%"
+    },
+    {
+      "type": "exam",
+      "name": "Midterm Exam",
+      "date": "2025-02-12T09:00:00",
+      "weight": "30%"
+    },
+    {
+      "type": "assignment",
+      "name": "Assignment 2",
+      "due_date": "2025-02-26T23:59:00",
+      "weight": "15%"
+    },
+    {
+      "type": "project",
+      "name": "Final Project",
+      "due_date": "2025-03-15T23:59:00",
+      "weight": "25%"
+    },
+    {
+      "type": "exam",
+      "name": "Final Exam",
+      "date": "2025-03-20T14:00:00",
+      "weight": "15%"
+    }
+  ],
+  "grading": {
+    "Assignments": "30%",
+    "Midterm": "30%",
+    "Final Project": "25%",
+    "Final Exam": "15%"
+  }
+}
