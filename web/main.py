@@ -22,6 +22,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from .agent_config import AgentConfigManager
 from .auth import check_auth, get_current_user, login_user, logout_user
 from .digest import DigestGenerator
+from database.audit import record_audit
 from .status import (get_agent_health, get_memory_system_status,
                      get_service_health, get_system_status)
 
@@ -35,6 +36,27 @@ except Exception:
 # Initialize agent config manager and digest generator
 config_manager = AgentConfigManager()
 digest_generator = DigestGenerator()
+
+def _require_web_secret(var_name: str, default: str, min_length: int = 32) -> str:
+    value = os.getenv(var_name)
+    if value and len(value) >= min_length:
+        return value
+    if ENVIRONMENT == "production":
+        raise RuntimeError(f"{var_name} must be set to at least {min_length} characters in production.")
+    return value or default
+
+
+configure_logging()
+logger = logging.getLogger("osmen.web")
+
+SENTRY_DSN = os.getenv("SENTRY_DSN")
+if SENTRY_DSN:
+    import sentry_sdk  # type: ignore
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=os.getenv("SENTRY_ENVIRONMENT", ENVIRONMENT),
+        traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1"))
+    )
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -54,6 +76,30 @@ app.add_middleware(
     max_age=SESSION_COOKIE_MAX_AGE
 )
 
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Apply security headers to every response."""
+
+    def __init__(self, app):
+        super().__init__(app)
+        self.csp = os.getenv("WEB_CONTENT_SECURITY_POLICY", "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self'; font-src 'self';")
+
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers.setdefault("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        response.headers.setdefault("Content-Security-Policy", self.csp)
+        return response
+
+
+PROMETHEUS_ENABLED = os.getenv("PROMETHEUS_METRICS_ENABLED", "true").lower() == "true"
+REQUEST_COUNT = Counter("osmen_web_requests_total", "Total web requests", ["method", "path", "status"])
+REQUEST_LATENCY = Histogram("osmen_web_request_duration_seconds", "Request duration", ["path"])
+
+
+# Add CORS middleware
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -69,8 +115,20 @@ app.add_middleware(SecurityHeadersMiddleware)
 if os.getenv("ENFORCE_HTTPS", "false").lower() == "true":
     app.add_middleware(HTTPSRedirectMiddleware)
 
-# Setup templates and static files
+if PROMETHEUS_ENABLED:
+    @app.middleware("http")
+    async def prometheus_middleware(request: Request, call_next):
+        if request.url.path == "/metrics":
+            return await call_next(request)
+        start = time.perf_counter()
+        response = await call_next(request)
+        duration = time.perf_counter() - start
+        REQUEST_COUNT.labels(request.method, request.url.path, str(response.status_code)).inc()
+        REQUEST_LATENCY.labels(request.url.path).observe(duration)
+        return response
+
 BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
@@ -119,6 +177,7 @@ async def login(
     """Handle login form submission."""
     validate_csrf(request, csrf_token)
     if await login_user(request, username, password):
+        await record_audit(username, "login", {})
         return RedirectResponse(url="/dashboard", status_code=303)
     return templates.TemplateResponse(
         "login.html",
@@ -129,8 +188,10 @@ async def login(
 @app.get("/logout")
 async def logout(request: Request):
     """Logout and redirect to login page."""
+    user = await get_current_user(request)
     await logout_user(request)
-    return RedirectResponse(url="/login")
+    if user:
+       return RedirectResponse(url="/login")
 
 
 # Health Check Endpoints (no authentication required for monitoring)
@@ -158,9 +219,9 @@ async def readiness_check():
     """
     # Check if critical files/directories exist
     critical_paths = [
-        Path("/home/runner/work/OsMEN/OsMEN/.copilot/memory.json"),
-        Path("/home/runner/work/OsMEN/OsMEN/agents"),
-        Path("/home/runner/work/OsMEN/OsMEN/web")
+        PROJECT_ROOT / ".copilot" / "memory.json",
+        PROJECT_ROOT / "agents",
+        PROJECT_ROOT / "web"
     ]
     
     all_ready = all(path.exists() for path in critical_paths)
@@ -198,6 +259,14 @@ async def kubernetes_health():
     Alias for /health for Kubernetes compatibility.
     """
     return await health_check()
+
+
+@app.get("/metrics")
+async def metrics(_: dict = AdminRole):
+    """Prometheus metrics endpoint."""
+    if not PROMETHEUS_ENABLED:
+        raise HTTPException(status_code=404, detail="Metrics disabled")
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
@@ -252,6 +321,7 @@ async def toggle_agent(agent_name: str, request: Request, user: dict = OperatorR
     if agent:
         config_manager.toggle_agent(agent_name, not agent.get("enabled", False))
         add_log("INFO", f"Agent {agent_name} toggled", "config")
+        await record_audit(user["username"], "agents.toggle", {"agent": agent_name})
         return {"success": True, "enabled": config_manager.get_agent(agent_name).get("enabled")}
     return {"success": False, "error": "Agent not found"}
 
@@ -269,6 +339,7 @@ async def update_memory_settings(request: Request, user: dict = OperatorRole):
     }
     config_manager.update_memory_settings(settings)
     add_log("INFO", "Memory settings updated", "config")
+    await record_audit(user["username"], "memory.update", settings)
     return {"success": True}
 
 
@@ -288,6 +359,7 @@ async def update_notification_settings(request: Request, user: dict = OperatorRo
     }
     config_manager.update_notification_settings(settings)
     add_log("INFO", "Notification settings updated", "config")
+    await record_audit(user["username"], "notifications.update", settings)
     return {"success": True}
 
 
@@ -330,6 +402,7 @@ async def save_digest_feedback(request: Request, user: dict = OperatorRole):
     success = digest_generator.save_feedback(date, feedback)
     if success:
         add_log("INFO", f"Daily reflection saved for {date}", "digest")
+        await record_audit(user["username"], "digest.feedback", {"date": date})
         return HTMLResponse("<div class='text-green-600'>Reflection saved successfully!</div>")
     return HTMLResponse("<div class='text-red-600'>Failed to save reflection</div>")
 
@@ -740,6 +813,7 @@ async def calendar_sync(request: Request, upload_id: str, provider: Optional[str
 
     result = mgr.create_events_batch(batch, provider=chosen_provider)
     add_log("INFO", f"Synced {result.get('successful', 0)}/{result.get('total', 0)} events via {chosen_provider}", "calendar")
+    await record_audit(user["username"], "calendar.sync", {"provider": chosen_provider, "synced": result.get("successful", 0)})
 
     return {
         "success": True,
@@ -810,6 +884,7 @@ async def generate_schedule(request: Request, upload_id: str, days: int = 7, use
     # Persist schedule under upload record
     rec["schedule"] = {"generated_at": datetime.now().isoformat(), "sessions": sessions}
     add_log("INFO", f"Generated schedule with {len(sessions)} blocks for upload {upload_id}", "schedule")
+    await record_audit(user["username"], "schedule.generate", {"upload_id": upload_id, "sessions": len(sessions)})
     return {"count": len(sessions), "sessions": sessions}
 
 
@@ -885,6 +960,7 @@ async def upload_syllabus(
 
     asyncio.create_task(_process_syllabus_async(upload_id))
     add_log("INFO", f"Syllabus uploaded: {file.filename}", "syllabus")
+    await record_audit(user["username"], "syllabus.upload", {"upload_id": upload_id, "filename": file.filename})
 
     return {"upload_id": upload_id, "status": "processing"}
 
@@ -982,6 +1058,7 @@ def add_log(level: str, message: str, source: str = "system"):
         "source": source
     }
     log_buffer.append(log_entry)
+    logger.log(getattr(logging, level.upper(), logging.INFO), "%s: %s", source, message)
     if len(log_buffer) > MAX_LOG_BUFFER:
         log_buffer = log_buffer[-MAX_LOG_BUFFER:]
 

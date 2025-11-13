@@ -358,6 +358,7 @@ def main():
     validator.check_secret_exposure()
     validator.check_required_directories()
     validator.check_logging_configuration()
+    validator.run_security_scans()
     
     # Print results
     return validator.print_results()

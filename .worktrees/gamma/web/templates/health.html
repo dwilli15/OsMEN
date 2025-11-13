@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Health - OsMEN{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Navbar -->
+    {% include 'navbar.html' %}
+    
+    <!-- Main Content -->
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-6">Health Integration</h1>
+        
+        <!-- Health Status Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold mb-4">Sleep Quality</h2>
+                <div id="sleep-status" class="text-center py-4">
+                    <p class="text-4xl mb-2">😴</p>
+                    <p id="sleep-quality" class="text-xl font-medium">Loading...</p>
+                    <p id="sleep-hours" class="text-sm text-gray-600 mt-2">-</p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold mb-4">Energy Level</h2>
+                <div id="energy-status" class="text-center py-4">
+                    <p class="text-4xl mb-2">⚡</p>
+                    <p id="energy-level" class="text-xl font-medium">Loading...</p>
+                    <p id="peak-time" class="text-sm text-gray-600 mt-2">-</p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold mb-4">Overall Status</h2>
+                <div id="overall-status" class="text-center py-4">
+                    <p class="text-4xl mb-2">💚</p>
+                    <p id="overall-text" class="text-xl font-medium">Loading...</p>
+                    <p id="productivity-impact" class="text-sm text-gray-600 mt-2">-</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Health Recommendations -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Recommendations</h2>
+            <div id="recommendations-container" class="space-y-2">
+                <p class="text-gray-500">Loading recommendations...</p>
+            </div>
+        </div>
+        
+        <!-- Health Data Sync -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Data Sources</h2>
+            
+            <div class="space-y-4">
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">📱</span>
+                            <div>
+                                <p class="font-medium">Android Health</p>
+                                <p class="text-sm text-gray-600">Track sleep, steps, and activity</p>
+                            </div>
+                        </div>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                            Connect
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">⌚</span>
+                            <div>
+                                <p class="font-medium">Google Fit</p>
+                                <p class="text-sm text-gray-600">Sync fitness and health data</p>
+                            </div>
+                        </div>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                            Connect
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Health-Adjusted Schedule -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">Health-Adjusted Schedule</h2>
+                <button onclick="adjustSchedule()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Optimize for Health
+                </button>
+            </div>
+            <div id="adjusted-schedule" class="divide-y">
+                <p class="text-gray-500 text-center py-8">Click "Optimize for Health" to adjust your schedule</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadHealthStatus() {
+    try {
+        const response = await fetch('/api/health/status');
+        const data = await response.json();
+        
+        // Update sleep status
+        const sleep = data.sleep || {};
+        document.getElementById('sleep-quality').textContent = sleep.sleep_status || 'Unknown';
+        document.getElementById('sleep-hours').textContent = 
+            sleep.average_hours ? `${sleep.average_hours.toFixed(1)} hours avg` : '-';
+        
+        // Update energy status
+        const energy = data.energy || {};
+        document.getElementById('energy-level').textContent = energy.status || 'Unknown';
+        document.getElementById('peak-time').textContent = 
+            energy.peak_energy_time ? `Peak: ${energy.peak_energy_time}` : '-';
+        
+        // Update overall status
+        document.getElementById('overall-text').textContent = data.overall_status || 'Unknown';
+        document.getElementById('productivity-impact').textContent = 
+            sleep.productivity_impact === 'positive' ? '✅ Good for productivity' :
+            sleep.productivity_impact === 'negative' ? '⚠️ May affect productivity' :
+            '-';
+        
+        // Update recommendations
+        const recommendations = data.recommendations || [];
+        const recsContainer = document.getElementById('recommendations-container');
+        
+        if (recommendations.length > 0) {
+            recsContainer.innerHTML = recommendations.map(rec => `
+                <div class="flex items-start space-x-2">
+                    <span class="text-green-500 mt-1">✓</span>
+                    <p class="text-gray-700">${rec}</p>
+                </div>
+            `).join('');
+        } else {
+            recsContainer.innerHTML = '<p class="text-gray-500">No recommendations at this time</p>';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('sleep-quality').textContent = 'Error';
+        document.getElementById('energy-level').textContent = 'Error';
+        document.getElementById('overall-text').textContent = 'Error';
+    }
+}
+
+async function adjustSchedule() {
+    const container = document.getElementById('adjusted-schedule');
+    container.innerHTML = '<p class="text-blue-600 text-center py-8">Adjusting schedule based on health data...</p>';
+    
+    try {
+        // First, get the current schedule
+        const scheduleResponse = await fetch('/api/schedule/generate');
+        const scheduleData = await scheduleResponse.json();
+        
+        // Then adjust it for health
+        const response = await fetch('/api/health/adjust_schedule', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({schedule: scheduleData.schedule || []})
+        });
+        
+        const data = await response.json();
+        
+        if (data.schedule && data.schedule.length > 0) {
+            container.innerHTML = data.schedule.map(item => `
+                <div class="p-4 hover:bg-gray-50">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="font-medium">${item.title || 'Untitled'}</h3>
+                            ${item.health_recommendation ? `
+                                <p class="text-sm text-blue-600 mt-1">
+                                    💡 ${item.health_recommendation}
+                                </p>
+                            ` : ''}
+                            ${item.recommended_time ? `
+                                <p class="text-sm text-green-600 mt-1">
+                                    ⏰ Recommended time: ${item.recommended_time}
+                                </p>
+                            ` : ''}
+                            ${item.recommended_location ? `
+                                <p class="text-sm text-purple-600 mt-1">
+                                    📍 Recommended location: ${item.recommended_location}
+                                </p>
+                            ` : ''}
+                            <p class="text-sm text-gray-600 mt-2">
+                                ${item.date || item.start || 'No date'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<p class="text-gray-500 text-center py-8">No schedule to adjust</p>';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        container.innerHTML = '<p class="text-red-500 text-center py-8">Error adjusting schedule</p>';
+    }
+}
+
+// Load health status on page load
+window.addEventListener('DOMContentLoaded', loadHealthStatus);
+</script>
+{% endblock %}

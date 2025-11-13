@@ -1,0 +1,147 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-11-09T08:35:00Z",
+  "review_schedule": "weekly_sunday_6pm",
+  "next_review": "2025-11-16T18:00:00Z",
+  "pre_approved_tasks": {
+    "low_risk_system_maintenance": [
+      {
+        "id": "auto_update_memory",
+        "name": "Auto-update memory.json on PR merge",
+        "description": "Automatically update system memory after successful PR merges",
+        "risk_level": "low",
+        "approved": true,
+        "approved_date": "2025-11-09",
+        "conditions": [
+          "PR successfully merged to main",
+          "All tests passing",
+          "Security scan clean"
+        ]
+      },
+      {
+        "id": "daily_summary_generation",
+        "name": "Generate daily summary",
+        "description": "Create and send daily summary email of system activity",
+        "risk_level": "low",
+        "approved": true,
+        "approved_date": "2025-11-09",
+        "conditions": [
+          "Run at 6 PM daily",
+          "No user data exposed",
+          "Email properly formatted"
+        ]
+      },
+      {
+        "id": "log_rotation",
+        "name": "Rotate old logs",
+        "description": "Archive logs older than 30 days",
+        "risk_level": "low",
+        "approved": true,
+        "approved_date": "2025-11-09",
+        "conditions": [
+          "Logs older than 30 days",
+          "Compress before archiving",
+          "Keep 90-day archive"
+        ]
+      },
+      {
+        "id": "conversation_cleanup",
+        "name": "Clean old conversations",
+        "description": "Summarize and archive conversations older than 45 days",
+        "risk_level": "low",
+        "approved": true,
+        "approved_date": "2025-11-09",
+        "conditions": [
+          "Conversations older than 45 days",
+          "Summary generated first",
+          "Original archived, not deleted"
+        ]
+      }
+    ],
+    "calendar_automation": [
+      {
+        "id": "event_reminder",
+        "name": "Send event reminders",
+        "description": "Send reminder notifications for upcoming calendar events",
+        "risk_level": "low",
+        "approved": true,
+        "approved_date": "2025-11-09",
+        "conditions": [
+          "Event within reminder window",
+          "User preferences respected",
+          "No spam (max 3 reminders per event)"
+        ]
+      },
+      {
+        "id": "conflict_notification",
+        "name": "Notify calendar conflicts",
+        "description": "Alert user when new event conflicts with existing",
+        "risk_level": "low",
+        "approved": true,
+        "approved_date": "2025-11-09",
+        "conditions": [
+          "Actual time conflict detected",
+          "Not duplicate notification",
+          "Suggest resolution options"
+        ]
+      },
+      {
+        "id": "buffer_time_suggestion",
+        "name": "Suggest buffer time",
+        "description": "Propose buffer time between back-to-back events",
+        "risk_level": "low",
+        "approved": true,
+        "approved_date": "2025-11-09",
+        "conditions": [
+          "Events less than 15 minutes apart",
+          "Suggestion only, no auto-add",
+          "Respects existing buffer rules"
+        ]
+      }
+    ],
+    "task_management": [
+      {
+        "id": "priority_recalculation",
+        "name": "Recalculate task priorities",
+        "description": "Update task priorities based on due dates and effort",
+        "risk_level": "low",
+        "approved": true,
+        "approved_date": "2025-11-09",
+        "conditions": [
+          "Run daily at midnight",
+          "Manual priorities not overridden",
+          "Notify if high-priority changes"
+        ]
+      },
+      {
+        "id": "overdue_notification",
+        "name": "Send overdue task alerts",
+        "description": "Notify about tasks past their due date",
+        "risk_level": "low",
+        "approved": true,
+        "approved_date": "2025-11-09",
+        "conditions": [
+          "Task actually overdue",
+          "Not already notified today",
+          "Max 1 notification per day per task"
+        ]
+      }
+    ],
+    "pending_approval": [],
+    "rejected": []
+  },
+  "execution_log": [],
+  "statistics": {
+    "total_approved": 9,
+    "total_executed": 0,
+    "total_rejected": 0,
+    "last_review_date": null,
+    "next_review_date": "2025-11-16T18:00:00Z"
+  },
+  "user_preferences": {
+    "notification_method": "daily_digest",
+    "approval_required_for_new_categories": true,
+    "auto_approve_similar_tasks": false,
+    "max_autonomous_actions_per_day": 50
+  }
+}

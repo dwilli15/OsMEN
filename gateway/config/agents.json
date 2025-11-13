@@ -14,6 +14,7 @@
       "description": "OpenAI's production language models",
       "api_type": "openai",
       "default_model": "gpt-4",
+      "required_role": "admin",
       "models": [
         "gpt-4",
         "gpt-4-turbo-preview",
@@ -27,6 +28,7 @@
       "name": "GitHub Copilot",
       "description": "GitHub's AI pair programmer",
       "api_type": "copilot",
+      "required_role": "operator",
       "integration_methods": [
         "vscode",
         "cli",
@@ -39,6 +41,7 @@
       "name": "Amazon Q",
       "description": "Amazon's generative AI assistant",
       "api_type": "aws",
+      "required_role": "admin",
       "integration_methods": [
         "aws_cli",
         "sdk",
@@ -52,6 +55,7 @@
       "description": "Anthropic's Claude models",
       "api_type": "anthropic",
       "default_model": "claude-3-opus-20240229",
+      "required_role": "admin",
       "models": [
         "claude-3-opus-20240229",
         "claude-3-sonnet-20240229",
@@ -66,7 +70,8 @@
       "api_type": "openai_compatible",
       "host_url": "http://host.docker.internal:1234",
       "installation": "Install LM Studio on host and enable API server",
-      "capabilities": ["local_inference", "privacy", "offline"]
+      "capabilities": ["local_inference", "privacy", "offline"],
+      "required_role": "viewer"
     },
     "ollama": {
       "enabled": false,
@@ -74,6 +79,7 @@
       "description": "Secondary local LLM runtime (optional)",
       "api_type": "ollama",
       "default_model": "llama2",
+      "required_role": "operator",
       "models": [
         "llama2",
         "mistral",

@@ -1,0 +1,81 @@
+{
+  "name": "Focus Guardrails Specialist Agent",
+  "description": "Specialist agent for maintaining focus and productivity guardrails",
+  "nodes": [
+    {
+      "id": "input",
+      "type": "ChatInput",
+      "data": {
+        "message": "Focus guardrails request"
+      }
+    },
+    {
+      "id": "llm",
+      "type": "ChatOllama",
+      "data": {
+        "model": "llama2",
+        "base_url": "http://ollama:11434",
+        "temperature": 0.4,
+        "system_message": "You are a focus and productivity specialist. You help users maintain focus by blocking distractions, managing time, and enforcing productivity guardrails."
+      }
+    },
+    {
+      "id": "tools",
+      "type": "ToolCallingAgent",
+      "data": {
+        "tools": [
+          {
+            "name": "block_distracting_sites",
+            "description": "Block distracting websites using Simplewall"
+          },
+          {
+            "name": "manage_focus_sessions",
+            "description": "Manage timed focus sessions (Pomodoro)"
+          },
+          {
+            "name": "monitor_app_usage",
+            "description": "Monitor and limit application usage"
+          },
+          {
+            "name": "send_focus_reminders",
+            "description": "Send reminders to maintain focus"
+          }
+        ]
+      }
+    },
+    {
+      "id": "memory",
+      "type": "VectorStoreRetriever",
+      "data": {
+        "vector_store": "qdrant",
+        "collection_name": "focus_guardrails_memory",
+        "host": "http://qdrant:6333"
+      }
+    },
+    {
+      "id": "output",
+      "type": "ChatOutput",
+      "data": {
+        "message": "Focus guardrails response"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "input",
+      "target": "llm"
+    },
+    {
+      "source": "llm",
+      "target": "tools"
+    },
+    {
+      "source": "memory",
+      "target": "llm"
+    },
+    {
+      "source": "tools",
+      "target": "output"
+    }
+  ]
+}

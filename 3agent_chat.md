@@ -23,7 +23,7 @@ Shared Secret Context: OsMEN v1.7.0 | 6-Day Accelerated Plan | Merge Points @ 48
 | Agent | Branch | Status | Last Update | Task Count |
 |-------|--------|--------|-------------|-----------|
 | **Alpha** | `agent-alpha-integration` | 🟢 ACTIVE | 2025-11-12 11:25 UTC | 16/48 |
-| **Beta** | `agent-beta-infrastructure` | 🟢 ACTIVE | 2025-11-12 23:30 UTC | 16/48 |
+| **Beta** | `agent-beta-infrastructure` | 🟢 ACTIVE | 2025-11-13 01:57 UTC | 16/48 |
 | **Gamma** | `agent-gamma-testing` | 🟢 ACTIVE | 2025-11-12 23:35 UTC | 16/48 |
 
 ---
@@ -261,6 +261,29 @@ Next Focus: move into B2.* once infra verified with Gamma; B1 backlog is fully c
 Blockers: None.
 ```
 
+### 2025-11-13 01:57 UTC | BETA B2.1–B2.8 INFRASTRUCTURE COMPLETE
+**From:** Agent Beta  
+**To:** Alpha, Gamma  
+**Subject:** DB/Qdrant/Redis + monitoring/backups + CI in place
+
+```
+Status: 🟢 COMPLETE (Day 2 backlog)
+- B2.1 Database: Added `postgres/init/02-osmen-schema.sql`, asyncpg pool helpers, and `scripts/database/run_migrations.py` (plus audit logging hooks in web app)
+- B2.2 Qdrant: Introduced `qdrant/config/collections.json` + seeding CLI to recreate collections
+- B2.3 Redis: Central `cache/redis_cache.py` + cached status API with new env knobs
+- B2.4 Logging: Shared `logging_config/` + configure_logging() hooks for web + gateway
+- B2.5 Error Tracking: Optional Sentry initialization driven by `SENTRY_DSN`
+- B2.6 Monitoring: Prometheus metrics middleware/endpoints on both services + docs
+- B2.7 Backups: `scripts/backup/run_backup.py` (Postgres dump, Qdrant snapshots, content archive) + docs updates
+- B2.8 CI/CD: Added `.github/workflows/infra-ci.yml` to run security validation + compile checks on beta branch
+
+Docs/Env: `.env*` now include DB/cache/backup/Sentry variables; `docs/PRODUCTION_DEPLOYMENT.md` updated with new Step 5 + backup instructions; `docs/SECRETS_MANAGEMENT.md` unchanged; `AGENT_BETA_TASKS.md` tracks B2 completion.
+
+Next: Ready for Gamma validation + Merge Point 1 handoff (full infra stack operational).
+
+Blockers: None.
+```
+
 ---
 
 ### 2025-11-12 23:30 UTC | BETA DAY 1 COMPLETE (B1.1–B1.8)
@@ -318,8 +341,9 @@ Next: A1.6 schedule generation endpoint wiring `scheduling/schedule_optimizer.py
 - **de69e12** - feat(A1.1): Calendar OAuth endpoints (Google & Outlook)
 - **d1a818b** - feat(A1.2): Add syllabus_upload.html (cherry-picked from Gamma)
 - **5e9ed9d** - feat(A1.2): Wire upload/progress/cancel endpoints into web/main.py
-- **<to be added>** - feat(A1.3–A1.5): Add event_preview.html and `/api/calendar/sync`
-- **<to be added>** - feat(A1.6–A1.8): Priority rank API, schedule generate API, and task source stubs
+- **2e7f521** - feat(alpha): A1.3–A1.8 — event preview UI, calendar sync API, priority rank API, schedule generate API, and task source stubs; update 3agent_chat
+- **d0b01de** - chore: stage Day1 foundations consolidation (Alpha A1.1-A1.8, Beta B1.1-B1.8 logs, infra hardening, new calendar/schedule endpoints, rate limiting, security + docs updates); exclude admin temp file
+- **cbcd83c** - feat(alpha): enhance event_preview.html with stable test selectors (data-testid) for Gamma UI automation
 
 ### Beta Commits
 *(Awaiting start)*
@@ -391,5 +415,5 @@ Next: A1.6 schedule generation endpoint wiring `scheduling/schedule_optimizer.py
 
 ---
 
-**Last Updated:** 2025-11-12 22:05 UTC by Agent Beta  
+**Last Updated:** 2025-11-13 01:57 UTC by Agent Beta  
 **Next Sync:** Hour 12 (2025-11-12 12:00 UTC)
