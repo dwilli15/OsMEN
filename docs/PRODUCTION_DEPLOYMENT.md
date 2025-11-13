@@ -12,7 +12,10 @@
 
 ### 2. Configuration ✅
 - [ ] Copy `.env.example` to `.env`
+- [ ] Copy `.env.production.example` to `.env.production` for production docker-compose usage
+- [ ] Generate dashboard admin hash: `python scripts/security/hash_password.py > hash.txt` → set `WEB_ADMIN_PASSWORD_HASH`
 - [ ] Update n8n password (change from 'changeme')
+- [ ] Follow `docs/SECRETS_MANAGEMENT.md` for storing OAuth tokens/API keys
 - [ ] Configure LLM provider(s):
   - [ ] OpenAI API key (if using)
   - [ ] GitHub Copilot token (if using)
@@ -107,7 +110,30 @@ pip install -r requirements.txt
 python check_operational.py
 ```
 
-### Step 4: Start Services
+### Step 4: Launch Production Stack (docker-compose.prod.yml)
+```bash
+# Create hardened production env file
+cp .env.production.example .env.production
+
+# Validate configuration without starting containers
+docker compose -f docker-compose.prod.yml --env-file .env.production config
+
+# Launch the production stack
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+
+# Tail logs if needed
+docker compose -f docker-compose.prod.yml logs -f
+
+# (Optional) Configure nginx TLS proxy
+sudo cp infra/nginx/osmen.conf /etc/nginx/conf.d/
+sudo systemctl reload nginx
+```
+
+See `infra/nginx/README.md` for certificate issuance + proxy details.  
+> Health endpoints: `curl http://localhost:8443/healthz` (gateway) and `curl http://localhost:8000/ready` (dashboard).  
+> Each service also exposes `GET /healthz/<service>` for granular probes (e.g., `/healthz/postgres`).
+
+### Step 5: Start Developer Services
 ```bash
 # Start all services
 ./start.sh
@@ -122,7 +148,7 @@ docker compose --profile ollama up -d
 docker compose ps
 ```
 
-### Step 5: Configure LLM Providers
+### Step 6: Configure LLM Providers
 
 #### Option 1: Production Cloud Providers
 See [docs/LLM_AGENTS.md](LLM_AGENTS.md) for detailed setup instructions.
@@ -143,14 +169,14 @@ docker exec osmen-ollama ollama pull mistral
 make pull-models
 ```
 
-### Step 6: Access Interfaces
+### Step 7: Access Interfaces
 - **Langflow**: http://localhost:7860
 - **n8n**: http://localhost:5678 (admin / your-password)
 - **Agent Gateway**: http://localhost:8080/docs
 - **MCP Server**: http://localhost:8081
 - **Qdrant**: http://localhost:6333/dashboard
 
-### Step 7: Import Workflows
+### Step 8: Import Workflows
 
 #### Import Langflow Flows
 1. Open Langflow at http://localhost:7860
@@ -169,7 +195,7 @@ make pull-models
    - `daily_brief_trigger.json`
    - `focus_guardrails_monitor.json`
 
-### Step 8: Configure Windows Integration (Windows Only)
+### Step 9: Configure Windows Integration (Windows Only)
 
 #### Simplewall Setup
 1. Install Simplewall from https://www.henrypp.org/product/simplewall
@@ -190,10 +216,13 @@ make pull-models
    curl -X POST http://localhost:5678/webhook/boot-hardening
    ```
 
-### Step 9: Verify Operation
+### Step 10: Verify Operation
 ```bash
 # Run comprehensive check
 python check_operational.py
+
+# Include service health endpoints (recommended for production)
+python check_operational.py --all --gateway-url http://localhost:8443 --dashboard-url http://localhost:8000
 
 # Test agents manually
 python test_agents.py
