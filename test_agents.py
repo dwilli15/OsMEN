@@ -8,6 +8,50 @@ import sys
 import json
 from datetime import datetime
 
+from parsers.syllabus.syllabus_parser import SyllabusParser
+from scheduling.schedule_optimizer import ScheduleOptimizer
+
+
+def _sample_parsed_syllabus():
+    """Provide representative parsed syllabus data for parser/scheduler tests."""
+    return {
+        "course_info": {
+            "course_code": "CS 401",
+            "course_name": "Advanced Systems",
+            "instructor": "Dr. Rivera",
+            "semester": "Fall",
+            "year": 2025,
+        },
+        "events": [
+            {
+                "type": "exam",
+                "title": "Midterm Exam",
+                "date": "2025-10-12",
+                "description": "Comprehensive midterm covering units 1-5",
+            },
+            {
+                "type": "lecture",
+                "title": "Guest Lecture",
+                "date": "2025-09-18",
+                "description": "Industry expert session",
+            },
+        ],
+        "assignments": [
+            {
+                "type": "assignment",
+                "title": "Homework 1",
+                "due_date": "2025-09-05",
+                "description": "Problem set on distributed systems",
+            },
+            {
+                "type": "project",
+                "title": "Capstone Proposal",
+                "due_date": "2025-09-25",
+                "description": "Submit proposal for final project",
+            },
+        ],
+    }
+
 
 def test_boot_hardening():
     """Test Boot Hardening Agent"""
@@ -191,6 +235,71 @@ def test_tool_integrations():
     return all(results)
 
 
+def test_syllabus_parser_normalization_pipeline():
+    """Validate parser normalization needed for Alpha A1.3/A1.4 flows."""
+    print("\n" + "="*50)
+    print("Testing Syllabus Parser Normalization")
+    print("="*50)
+    
+    try:
+        parser = SyllabusParser()
+        normalized = parser.normalize_data(_sample_parsed_syllabus())
+        events = normalized["events"]
+        
+        assert normalized["metadata"]["total_events"] == 4, "Expected all events to be counted"
+        assert events[0]["title"] == "Homework 1", "Events should be chronological"
+        
+        midterm = next(event for event in events if event["title"] == "Midterm Exam")
+        assert midterm["priority"] == "high", "Midterm should be high priority"
+        assert midterm["reminder"]["advance_days"] == 7, "High priority reminder lead time mismatch"
+        
+        print("✅ Syllabus Parser Normalization: PASS")
+        print(f"Total Normalized Events: {len(events)}")
+        print(f"Top Event: {events[0]['title']} on {events[0]['date']}")
+        return True
+    except Exception as e:
+        print(f"❌ Syllabus Parser Normalization: FAIL - {e}")
+        return False
+
+
+def test_schedule_optimizer_with_normalized_events():
+    """Ensure normalized events convert into prioritized study sessions."""
+    print("\n" + "="*50)
+    print("Testing Schedule Optimizer Integration")
+    print("="*50)
+    
+    try:
+        parser = SyllabusParser()
+        normalized = parser.normalize_data(_sample_parsed_syllabus())
+        
+        priority_scores = {"high": 100, "medium": 70, "low": 40}
+        tasks = [
+            {
+                "id": idx,
+                "title": event["title"],
+                "priority_score": priority_scores.get(event["priority"], 40),
+            }
+            for idx, event in enumerate(normalized["events"])
+        ]
+        
+        optimizer = ScheduleOptimizer()
+        start_date = datetime(2025, 9, 1)
+        schedule = optimizer.generate_schedule(tasks, start_date, start_date)
+        
+        assert schedule, "Schedule should not be empty"
+        assert schedule[0]["task_title"] == "Midterm Exam", "Highest priority task should be scheduled first"
+        
+        buffered = optimizer.add_buffer_time(schedule)
+        assert any(item["type"] == "buffer" for item in buffered[1:]), "Buffer blocks should be injected between sessions"
+        
+        print("✅ Schedule Optimizer Integration: PASS")
+        print(f"Scheduled Blocks: {len(schedule)} | Buffered Blocks: {len(buffered)}")
+        return True
+    except Exception as e:
+        print(f"❌ Schedule Optimizer Integration: FAIL - {e}")
+        return False
+
+
 def main():
     """Run all tests"""
     print("\n" + "="*50)
@@ -205,6 +314,8 @@ def main():
     results.append(("Daily Brief", test_daily_brief()))
     results.append(("Focus Guardrails", test_focus_guardrails()))
     results.append(("Tool Integrations", test_tool_integrations()))
+    results.append(("Syllabus Parser Normalization", test_syllabus_parser_normalization_pipeline()))
+    results.append(("Schedule Optimizer Integration", test_schedule_optimizer_with_normalized_events()))
     
     # Summary
     print("\n" + "="*50)

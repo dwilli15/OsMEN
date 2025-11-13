@@ -5,14 +5,22 @@ Unified API gateway for production LLM agents (OpenAI, GitHub Copilot, Amazon Q,
 """
 
 import os
+import asyncio
 import logging
-from typing import Optional, Dict, List, Any
+from datetime import datetime, timezone
+from typing import Optional, Dict, List, Any, Tuple
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 import httpx
+import asyncpg
+import redis.asyncio as redis
+
+from rate_limiter import RateLimiter
 
 from resilience import retryable_llm_call
 
@@ -22,6 +30,27 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+
+
+def require_secret(name: str, min_length: int = 32) -> str:
+    """Ensure required secrets are populated with strong values."""
+    value = os.getenv(name)
+    if value and len(value) >= min_length:
+        return value
+    if ENVIRONMENT == "production":
+        raise RuntimeError(f"{name} must be set to at least {min_length} characters in production.")
+    fallback = value or f"{name.lower()}-dev-secret"
+    logger.warning(
+        "Using fallback value for %s in %s environment. Set a secure secret via environment variable.",
+        name,
+        ENVIRONMENT
+    )
+    os.environ[name] = fallback
+    return fallback
+
+
+SESSION_SECRET = require_secret("SESSION_SECRET_KEY", min_length=32)
 
 
 class CompletionRequest(BaseModel):
@@ -41,6 +70,156 @@ class CompletionResponse(BaseModel):
     model: str
     usage: Optional[Dict[str, int]] = None
 
+
+class ServiceHealthMonitor:
+    """Perform health checks against core infrastructure services."""
+
+    def __init__(self):
+        self.postgres_config = {
+            "user": os.getenv("POSTGRES_USER", "postgres"),
+            "password": os.getenv("POSTGRES_PASSWORD", "postgres"),
+            "database": os.getenv("POSTGRES_DB", "postgres"),
+            "host": os.getenv("POSTGRES_HOST", "postgres"),
+            "port": int(os.getenv("POSTGRES_PORT", "5432")),
+            "timeout": float(os.getenv("POSTGRES_HEALTH_TIMEOUT", "5")),
+        }
+        self.redis_config = {
+            "host": os.getenv("REDIS_HOST", "redis"),
+            "port": int(os.getenv("REDIS_PORT", "6379")),
+            "password": os.getenv("REDIS_PASSWORD"),
+        }
+        self.qdrant_url = os.getenv("QDRANT_HOST", "http://qdrant:6333")
+        self.langflow_url = os.getenv(
+            "LANGFLOW_INTERNAL_URL",
+            os.getenv("LANGFLOW_HOST", "http://langflow:7860")
+        )
+        self.n8n_url = os.getenv(
+            "N8N_INTERNAL_URL",
+            f"http://{os.getenv('N8N_HOST', 'n8n')}:{os.getenv('N8N_PORT', '5678')}"
+        )
+        self.http_timeout = float(os.getenv("SERVICE_HEALTH_TIMEOUT", "5"))
+
+    async def check_postgres(self) -> Tuple[bool, str]:
+        """Verify PostgreSQL connectivity with a lightweight query."""
+        conn = None
+        try:
+            conn = await asyncpg.connect(
+                user=self.postgres_config["user"],
+                password=self.postgres_config["password"],
+                database=self.postgres_config["database"],
+                host=self.postgres_config["host"],
+                port=self.postgres_config["port"],
+                timeout=self.postgres_config["timeout"]
+            )
+            await conn.execute("SELECT 1")
+            return True, "PostgreSQL responded to SELECT 1"
+        except Exception as exc:
+            return False, f"PostgreSQL error: {exc}"
+        finally:
+            if conn:
+                await conn.close()
+
+    async def check_redis(self) -> Tuple[bool, str]:
+        """Verify Redis availability using PING."""
+        client = redis.Redis(
+            host=self.redis_config["host"],
+            port=self.redis_config["port"],
+            password=self.redis_config["password"],
+            encoding="utf-8",
+            decode_responses=True
+        )
+        try:
+            pong = await client.ping()
+            return True, f"Redis responded with {pong}"
+        except Exception as exc:
+            return False, f"Redis error: {exc}"
+        finally:
+            await client.close()
+
+    async def check_qdrant(self) -> Tuple[bool, str]:
+        """Verify Qdrant REST API health endpoint."""
+        base_url = self.qdrant_url.rstrip("/")
+        for path in ("/healthz", "/health"):
+            ok, detail = await self._http_check(f"{base_url}{path}")
+            if ok:
+                return True, "Qdrant health endpoint reachable"
+        return False, f"Qdrant health check failed: {detail}"
+
+    async def check_langflow(self) -> Tuple[bool, str]:
+        """Verify Langflow UI availability (optional)."""
+        if not self.langflow_url:
+            return True, "Langflow disabled"
+        return await self._http_check(self.langflow_url)
+
+    async def check_n8n(self) -> Tuple[bool, str]:
+        """Verify n8n workflow UI availability (optional)."""
+        if not self.n8n_url:
+            return True, "n8n disabled"
+        return await self._http_check(self.n8n_url)
+
+    async def _http_check(self, url: str, expected: Tuple[int, ...] = (200, 204)) -> Tuple[bool, str]:
+        """Perform a simple HTTP GET and report status."""
+        try:
+            async with httpx.AsyncClient(timeout=self.http_timeout) as client:
+                response = await client.get(url)
+            ok = response.status_code in expected
+            detail = f"HTTP {response.status_code}"
+            try:
+                payload = response.json()
+                status_text = payload.get("status")
+                if status_text:
+                    detail = f"{detail} ({status_text})"
+            except ValueError:
+                pass
+            return ok, detail
+        except Exception as exc:
+            return False, str(exc)
+
+    async def collect(self) -> Dict[str, Dict[str, Any]]:
+        """Gather health for all registered services concurrently."""
+        checks = {
+            "postgres": self.check_postgres(),
+            "redis": self.check_redis(),
+            "qdrant": self.check_qdrant(),
+            "langflow": self.check_langflow(),
+            "n8n": self.check_n8n(),
+        }
+        tasks = {name: asyncio.create_task(coro) for name, coro in checks.items()}
+        results: Dict[str, Dict[str, Any]] = {}
+        for name, task in tasks.items():
+            try:
+                ok, detail = await task
+            except Exception as exc:
+                ok, detail = False, f"Unexpected error: {exc}"
+            results[name] = {"ok": ok, "detail": detail}
+        return results
+
+    async def summary(self) -> Dict[str, Any]:
+        """Return overall health summary including per-service detail."""
+        services = await self.collect()
+        status = "healthy" if all(entry["ok"] for entry in services.values()) else "degraded"
+        return {
+            "status": status,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "services": services
+        }
+
+    async def service_status(self, service: str) -> Optional[Dict[str, Any]]:
+        """Return the health status for a single named service."""
+        service_name = service.lower()
+        check_method = getattr(self, f"check_{service_name}", None)
+        if not check_method:
+            return None
+        ok, detail = await check_method()
+        return {
+            "service": service_name,
+            "ok": ok,
+            "detail": detail,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
+
+health_monitor = ServiceHealthMonitor()
 
 class AgentGateway:
     """Gateway for routing requests to different LLM agents"""
@@ -300,6 +479,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+if os.getenv("ENFORCE_HTTPS", "false").lower() == "true":
+    app.add_middleware(HTTPSRedirectMiddleware)
+
 # Initialize gateway
 gateway = AgentGateway()
 
@@ -315,21 +497,43 @@ async def root():
 
 
 @app.get("/agents")
-async def list_agents():
+async def list_agents(_: None = Depends(agents_guard)):
     """List available agents"""
     return await gateway.list_agents()
 
 
 @app.post("/completion", response_model=CompletionResponse)
-async def completion(request: CompletionRequest):
+async def completion(request: CompletionRequest, _: None = Depends(completion_guard)):
     """Generate completion using specified agent"""
     return await gateway.completion(request)
 
 
+async def _health_response():
+    summary = await health_monitor.summary()
+    status_code = 200 if summary["status"] == "healthy" else 503
+    return JSONResponse(summary, status_code=status_code)
+
+
 @app.get("/health")
-async def health():
-    """Health check endpoint"""
-    return {"status": "healthy"}
+async def health(_: None = Depends(health_guard)):
+    """Aggregate health endpoint for infrastructure services."""
+    return await _health_response()
+
+
+@app.get("/healthz")
+async def healthz(_: None = Depends(health_guard)):
+    """Alias for /health to support Kubernetes-style probing."""
+    return await _health_response()
+
+
+@app.get("/healthz/{service_name}")
+async def service_health(service_name: str, _: None = Depends(health_guard)):
+    """Return health information for an individual service."""
+    result = await health_monitor.service_status(service_name)
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"Unknown service '{service_name}'")
+    status_code = 200 if result["ok"] else 503
+    return JSONResponse(result, status_code=status_code)
 
 
 if __name__ == "__main__":

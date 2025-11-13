@@ -11,6 +11,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import sys
 import os
+import httpx
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from tools.obsidian.obsidian_integration import ObsidianIntegration
@@ -264,7 +265,27 @@ async def get_context(query: str):
 @app.get("/health")
 async def health():
     """Health check"""
-    return {"status": "healthy"}
+    gateway_endpoint = os.getenv("GATEWAY_HEALTH_ENDPOINT")
+    if not gateway_endpoint:
+        gateway_base = os.getenv("GATEWAY_HEALTH_URL", "http://agent-gateway:8080")
+        gateway_endpoint = f"{gateway_base.rstrip('/')}/healthz"
+    
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(gateway_endpoint)
+        response.raise_for_status()
+        payload = response.json()
+        status = payload.get("status", "unknown")
+        overall = "healthy" if status == "healthy" else "degraded"
+        return {
+            "status": overall,
+            "agent_gateway": payload
+        }
+    except Exception as exc:
+        return {
+            "status": "degraded",
+            "agent_gateway": {"status": "unreachable", "detail": str(exc)}
+        }
 
 
 if __name__ == "__main__":

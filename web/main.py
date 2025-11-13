@@ -7,7 +7,7 @@ import asyncio
 import json
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -44,8 +44,15 @@ app = FastAPI(
 )
 
 # Add session middleware
-SECRET_KEY = os.getenv("WEB_SECRET_KEY", "dev-secret-key-change-in-production")
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+SECRET_KEY = _require_web_secret("WEB_SECRET_KEY", "dev-secret-key-change-in-production")
+SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
+SESSION_COOKIE_MAX_AGE = int(os.getenv("SESSION_COOKIE_MAX_AGE", "3600"))
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SECRET_KEY,
+    https_only=SESSION_COOKIE_SECURE,
+    max_age=SESSION_COOKIE_MAX_AGE
+)
 
 # Add CORS middleware
 app.add_middleware(
@@ -55,6 +62,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Security headers middleware
+app.add_middleware(SecurityHeadersMiddleware)
+
+if os.getenv("ENFORCE_HTTPS", "false").lower() == "true":
+    app.add_middleware(HTTPSRedirectMiddleware)
 
 # Setup templates and static files
 BASE_DIR = Path(__file__).resolve().parent
@@ -69,6 +82,18 @@ MAX_LOG_BUFFER = 100
 active_uploads = {}
 
 
+def template_context(request: Request, extra: Optional[dict] = None) -> dict:
+    ctx = {"request": request, "csrf_token": ensure_csrf_token(request)}
+    if extra:
+        ctx.update(extra)
+    return ctx
+
+
+ViewerRole = Depends(role_required("viewer"))
+OperatorRole = Depends(role_required("operator"))
+AdminRole = Depends(role_required("admin"))
+
+
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
     """Root endpoint - redirects to dashboard or login."""
@@ -81,17 +106,23 @@ async def root(request: Request):
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     """Login page."""
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse("login.html", template_context(request))
 
 
 @app.post("/login")
-async def login(request: Request, username: str = Form(...), password: str = Form(...)):
+async def login(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    csrf_token: str = Form(...)
+):
     """Handle login form submission."""
+    validate_csrf(request, csrf_token)
     if await login_user(request, username, password):
         return RedirectResponse(url="/dashboard", status_code=303)
     return templates.TemplateResponse(
-        "login.html", 
-        {"request": request, "error": "Invalid username or password"}
+        "login.html",
+        template_context(request, {"error": "Invalid username or password"})
     )
 
 
@@ -170,58 +201,53 @@ async def kubernetes_health():
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request, user: dict = Depends(check_auth)):
+async def dashboard(request: Request, user: dict = ViewerRole):
     """Main dashboard page."""
     status = await get_system_status()
-    return templates.TemplateResponse(
-        "dashboard.html",
-        {
-            "request": request,
-            "user": user,
-            "status": status,
-            "now": datetime.now()
-        }
-    )
+    context = {
+        "user": user,
+        "status": status,
+        "now": datetime.now()
+    }
+    return templates.TemplateResponse("dashboard.html", template_context(request, context))
 
 
 @app.get("/api/status")
-async def status_api(user: dict = Depends(check_auth)):
+async def status_api(user: dict = ViewerRole):
     """API endpoint for system status."""
     return await get_system_status()
 
 
 @app.get("/api/agents")
-async def agents_api(user: dict = Depends(check_auth)):
+async def agents_api(user: dict = OperatorRole):
     """API endpoint for agent health."""
     return await get_agent_health()
 
 
 @app.get("/api/services")
-async def services_api(user: dict = Depends(check_auth)):
+async def services_api(user: dict = ViewerRole):
     """API endpoint for service health."""
     return await get_service_health()
 
 
 @app.get("/agents", response_class=HTMLResponse)
-async def agents_page(request: Request, user: dict = Depends(check_auth)):
+async def agents_page(request: Request, user: dict = OperatorRole):
     """Agent configuration page."""
-    return templates.TemplateResponse(
-        "agents.html",
-        {
-            "request": request,
-            "user": user,
-            "agents": config_manager.get_all_agents(),
-            "langflow_workflows": config_manager.get_langflow_workflows(),
-            "n8n_workflows": config_manager.get_n8n_workflows(),
-            "memory": config_manager.get_memory_settings(),
-            "notifications": config_manager.get_notification_settings()
-        }
-    )
+    context = {
+        "user": user,
+        "agents": config_manager.get_all_agents(),
+        "langflow_workflows": config_manager.get_langflow_workflows(),
+        "n8n_workflows": config_manager.get_n8n_workflows(),
+        "memory": config_manager.get_memory_settings(),
+        "notifications": config_manager.get_notification_settings()
+    }
+    return templates.TemplateResponse("agents.html", template_context(request, context))
 
 
 @app.post("/api/agents/{agent_name}/toggle")
-async def toggle_agent(agent_name: str, user: dict = Depends(check_auth)):
+async def toggle_agent(agent_name: str, request: Request, user: dict = OperatorRole):
     """Toggle agent enabled/disabled."""
+    validate_csrf(request)
     agent = config_manager.get_agent(agent_name)
     if agent:
         config_manager.toggle_agent(agent_name, not agent.get("enabled", False))
@@ -231,9 +257,10 @@ async def toggle_agent(agent_name: str, user: dict = Depends(check_auth)):
 
 
 @app.post("/api/memory/settings")
-async def update_memory_settings(request: Request, user: dict = Depends(check_auth)):
+async def update_memory_settings(request: Request, user: dict = OperatorRole):
     """Update memory settings."""
     form_data = await request.form()
+    validate_csrf(request, form_data.get("csrf_token"))
     settings = {
         "conversation_retention_days": int(form_data.get("conversation_retention_days", 45)),
         "summary_retention_months": int(form_data.get("summary_retention_months", 12)),
@@ -246,9 +273,10 @@ async def update_memory_settings(request: Request, user: dict = Depends(check_au
 
 
 @app.post("/api/notifications/settings")
-async def update_notification_settings(request: Request, user: dict = Depends(check_auth)):
+async def update_notification_settings(request: Request, user: dict = OperatorRole):
     """Update notification settings."""
     form_data = await request.form()
+    validate_csrf(request, form_data.get("csrf_token"))
     settings = {
         "email_enabled": form_data.get("email_enabled") == "on",
         "push_enabled": form_data.get("push_enabled") == "on",
@@ -264,35 +292,33 @@ async def update_notification_settings(request: Request, user: dict = Depends(ch
 
 
 @app.get("/digest", response_class=HTMLResponse)
-async def digest_page(request: Request, user: dict = Depends(check_auth)):
+async def digest_page(request: Request, user: dict = ViewerRole):
     """Daily digest page."""
     date = request.query_params.get('date', datetime.now().strftime('%Y-%m-%d'))
     data = digest_generator.get_digest_data(date)
-    return templates.TemplateResponse(
-        "digest.html",
-        {
-            "request": request,
-            "user": user,
-            "date": date,
-            "activities": data['activities'],
-            "task_stats": data['task_statistics'],
-            "procrastination": data['procrastination_insights'],
-            "health": data['health_correlations']
-        }
-    )
+    context = {
+        "user": user,
+        "date": date,
+        "activities": data['activities'],
+        "task_stats": data['task_statistics'],
+        "procrastination": data['procrastination_insights'],
+        "health": data['health_correlations']
+    }
+    return templates.TemplateResponse("digest.html", template_context(request, context))
 
 
 @app.get("/api/digest/data")
-async def get_digest_data_api(request: Request, user: dict = Depends(check_auth)):
+async def get_digest_data_api(request: Request, user: dict = ViewerRole):
     """Get digest data API."""
     date = request.query_params.get('date')
     return digest_generator.get_digest_data(date)
 
 
 @app.post("/api/digest/feedback")
-async def save_digest_feedback(request: Request, user: dict = Depends(check_auth)):
+async def save_digest_feedback(request: Request, user: dict = OperatorRole):
     """Save daily feedback."""
     form_data = await request.form()
+    validate_csrf(request, form_data.get("csrf_token"))
     date = form_data.get('date')
     feedback = {
         'mood': int(form_data.get('mood', 3)),
@@ -309,7 +335,7 @@ async def save_digest_feedback(request: Request, user: dict = Depends(check_auth
 
 
 @app.get("/api/digest/export/pdf")
-async def export_digest_pdf(request: Request, user: dict = Depends(check_auth)):
+async def export_digest_pdf(request: Request, user: dict = ViewerRole):
     """Export digest as PDF."""
     import tempfile
 
@@ -331,7 +357,7 @@ async def export_digest_pdf(request: Request, user: dict = Depends(check_auth)):
 
 
 @app.get("/api/digest/export/json")
-async def export_digest_json(request: Request, user: dict = Depends(check_auth)):
+async def export_digest_json(request: Request, user: dict = ViewerRole):
     """Export digest as JSON."""
     import tempfile
 
@@ -353,7 +379,7 @@ async def export_digest_json(request: Request, user: dict = Depends(check_auth))
 
 
 @app.get("/logs/stream")
-async def stream_logs(request: Request, user: dict = Depends(check_auth)):
+async def stream_logs(request: Request, user: dict = AdminRole):
     """Server-Sent Events endpoint for live log streaming."""
     async def event_generator():
         # Send initial logs from buffer
@@ -383,21 +409,18 @@ async def stream_logs(request: Request, user: dict = Depends(check_auth)):
 # ===== CALENDAR OAUTH ENDPOINTS (A1.1) =====
 
 @app.get("/calendar/setup", response_class=HTMLResponse)
-async def calendar_setup_page(request: Request, user: dict = Depends(check_auth)):
+async def calendar_setup_page(request: Request, user: dict = OperatorRole):
     """Calendar setup/connection page."""
-    return templates.TemplateResponse(
-        "calendar_setup.html",
-        {
-            "request": request,
-            "user": user,
-            "google_client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
-            "microsoft_client_id": os.getenv("MICROSOFT_CLIENT_ID", ""),
-        }
-    )
+    context = {
+        "user": user,
+        "google_client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
+        "microsoft_client_id": os.getenv("MICROSOFT_CLIENT_ID", "")
+    }
+    return templates.TemplateResponse("calendar_setup.html", template_context(request, context))
 
 
 @app.get("/api/calendar/google/oauth")
-async def google_oauth_init(request: Request, user: dict = Depends(check_auth)):
+async def google_oauth_init(request: Request, user: dict = OperatorRole):
     """Initialize Google Calendar OAuth flow.
     
     Returns authorization URL for user to click.
@@ -429,7 +452,7 @@ async def google_oauth_init(request: Request, user: dict = Depends(check_auth)):
 
 
 @app.get("/api/calendar/google/callback")
-async def google_oauth_callback(request: Request, code: str = None, state: str = None, user: dict = Depends(check_auth)):
+async def google_oauth_callback(request: Request, code: str = None, state: str = None, user: dict = OperatorRole):
     """Handle Google Calendar OAuth callback.
     
     Exchanges authorization code for access token.
@@ -473,7 +496,7 @@ async def google_oauth_callback(request: Request, code: str = None, state: str =
 
 
 @app.get("/api/calendar/outlook/oauth")
-async def outlook_oauth_init(request: Request, user: dict = Depends(check_auth)):
+async def outlook_oauth_init(request: Request, user: dict = OperatorRole):
     """Initialize Microsoft Outlook Calendar OAuth flow.
     
     Returns authorization URL for user to click.
@@ -504,7 +527,7 @@ async def outlook_oauth_init(request: Request, user: dict = Depends(check_auth))
 
 
 @app.get("/api/calendar/outlook/callback")
-async def outlook_oauth_callback(request: Request, code: str = None, state: str = None, user: dict = Depends(check_auth)):
+async def outlook_oauth_callback(request: Request, code: str = None, state: str = None, user: dict = OperatorRole):
     """Handle Microsoft Outlook Calendar OAuth callback.
     
     Exchanges authorization code for access token.
@@ -548,7 +571,7 @@ async def outlook_oauth_callback(request: Request, code: str = None, state: str 
 
 
 @app.get("/api/calendar/status")
-async def calendar_status(request: Request, user: dict = Depends(check_auth)):
+async def calendar_status(request: Request, user: dict = OperatorRole):
     """Check connected calendars for current user."""
     google_connected = request.session.get("google_calendar_connected", False)
     outlook_connected = request.session.get("outlook_calendar_connected", False)
@@ -563,25 +586,23 @@ async def calendar_status(request: Request, user: dict = Depends(check_auth)):
 # ===== EVENT PREVIEW & PARSER INTEGRATION (A1.3 / A1.4) =====
 
 @app.get("/events/preview", response_class=HTMLResponse)
-async def events_preview_page(request: Request, upload_id: str, user: dict = Depends(check_auth)):
+async def events_preview_page(request: Request, upload_id: str, user: dict = OperatorRole):
     """Preview parsed syllabus events before calendar sync."""
     rec = active_uploads.get(upload_id)
     if not rec or rec.get("status") != "ready":
         raise HTTPException(status_code=404, detail="Events not ready for preview")
-    return templates.TemplateResponse(
-        "event_preview.html",
-        {
-            "request": request,
-            "user": user,
-            "upload_id": upload_id,
-            "events": rec.get("events", []),
-        }
-    )
+    context = {
+        "user": user,
+        "upload_id": upload_id,
+        "events": rec.get("events", [])
+    }
+    return templates.TemplateResponse("event_preview.html", template_context(request, context))
 
 
 @app.post("/api/events/preview/update")
-async def update_preview_event(request: Request, user: dict = Depends(check_auth)):
+async def update_preview_event(request: Request, user: dict = OperatorRole):
     """Update a single event field (title/date/type/description)."""
+    validate_csrf(request)
     data = await request.json()
     upload_id = data.get("upload_id")
     index = data.get("index")
@@ -601,8 +622,9 @@ async def update_preview_event(request: Request, user: dict = Depends(check_auth
 
 
 @app.post("/api/events/preview/bulk")
-async def bulk_preview_action(request: Request, user: dict = Depends(check_auth)):
+async def bulk_preview_action(request: Request, user: dict = OperatorRole):
     """Bulk accept/reject events. If rejected, remove from list."""
+    validate_csrf(request)
     data = await request.json()
     upload_id = data.get("upload_id")
     action = data.get("action")  # 'accept_all' | 'reject_indices'
@@ -628,11 +650,12 @@ async def bulk_preview_action(request: Request, user: dict = Depends(check_auth)
 # ===== CALENDAR SYNC (A1.5) =====
 
 @app.post("/api/calendar/sync")
-async def calendar_sync(request: Request, upload_id: str, provider: Optional[str] = None, user: dict = Depends(check_auth)):
+async def calendar_sync(request: Request, upload_id: str, provider: Optional[str] = None, user: dict = OperatorRole):
     """Sync accepted preview events to the connected calendar.
 
     Prefers the specified provider if provided, otherwise auto-selects based on session.
     """
+    validate_csrf(request)
     from integrations.calendar.calendar_manager import CalendarManager
 
     rec = active_uploads.get(upload_id)
@@ -730,8 +753,9 @@ async def calendar_sync(request: Request, upload_id: str, provider: Optional[str
 # ===== PRIORITY RANKING (A1.8) =====
 
 @app.post("/api/priority/rank")
-async def rank_priority(request: Request, upload_id: Optional[str] = None, user: dict = Depends(check_auth)):
+async def rank_priority(request: Request, upload_id: Optional[str] = None, user: dict = OperatorRole):
     """Return priority-ranked tasks/events. If upload_id is provided, rank its events."""
+    validate_csrf(request)
     from scheduling.priority_ranker import PriorityRanker
 
     tasks = []
@@ -759,8 +783,9 @@ async def rank_priority(request: Request, upload_id: Optional[str] = None, user:
 # ===== SCHEDULE GENERATION (A1.6) =====
 
 @app.post("/api/schedule/generate")
-async def generate_schedule(request: Request, upload_id: str, days: int = 7, user: dict = Depends(check_auth)):
+async def generate_schedule(request: Request, upload_id: str, days: int = 7, user: dict = OperatorRole):
     """Generate a study schedule from ranked events for the next N days."""
+    validate_csrf(request)
     from scheduling.priority_ranker import PriorityRanker
     from scheduling.schedule_optimizer import ScheduleOptimizer
 
@@ -791,7 +816,7 @@ async def generate_schedule(request: Request, upload_id: str, days: int = 7, use
 # ===== TASK SOURCE STUBS (A1.7) =====
 
 @app.get("/api/tasks/todoist")
-async def tasks_todoist_stub(user: dict = Depends(check_auth)):
+async def tasks_todoist_stub(user: dict = OperatorRole):
     """Stub endpoint for Todoist tasks (integration pending)."""
     sample = [
         {"id": "td-1", "title": "Review lecture notes", "date": datetime.now().date().isoformat(), "priority": "high"},
@@ -801,7 +826,7 @@ async def tasks_todoist_stub(user: dict = Depends(check_auth)):
 
 
 @app.get("/api/tasks/notion")
-async def tasks_notion_stub(user: dict = Depends(check_auth)):
+async def tasks_notion_stub(user: dict = OperatorRole):
     """Stub endpoint for Notion tasks (integration pending)."""
     sample = [
         {"id": "nt-1", "title": "Draft study plan", "date": (datetime.now().date()).isoformat(), "priority": "medium"},
@@ -813,20 +838,20 @@ async def tasks_notion_stub(user: dict = Depends(check_auth)):
 # ===== SYLLABUS UPLOAD ENDPOINTS (A1.2) =====
 
 @app.get("/syllabus/upload", response_class=HTMLResponse)
-async def syllabus_upload_page(request: Request, user: dict = Depends(check_auth)):
+async def syllabus_upload_page(request: Request, user: dict = OperatorRole):
     """Syllabus upload page."""
-    return templates.TemplateResponse(
-        "syllabus_upload.html",
-        {
-            "request": request,
-            "user": user,
-        }
-    )
+    return templates.TemplateResponse("syllabus_upload.html", template_context(request, {"user": user}))
 
 
 @app.post("/api/syllabus/upload")
-async def upload_syllabus(file: UploadFile = File(...), user: dict = Depends(check_auth)):
+async def upload_syllabus(
+    request: Request,
+    csrf_token: str = Form(...),
+    file: UploadFile = File(...),
+    user: dict = OperatorRole
+):
     """Upload and validate syllabus file (PDF/DOCX)."""
+    validate_csrf(request, csrf_token)
     allowed_types = {
         "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -919,7 +944,7 @@ async def _process_syllabus_async(upload_id: str):
 
 
 @app.get("/api/syllabus/progress/{upload_id}")
-async def syllabus_progress(upload_id: str, user: dict = Depends(check_auth)):
+async def syllabus_progress(upload_id: str, user: dict = OperatorRole):
     if upload_id not in active_uploads:
         raise HTTPException(status_code=404, detail="Upload not found")
     rec = active_uploads[upload_id]
@@ -934,7 +959,7 @@ async def syllabus_progress(upload_id: str, user: dict = Depends(check_auth)):
 
 
 @app.delete("/api/syllabus/upload/{upload_id}")
-async def cancel_syllabus_upload(upload_id: str, user: dict = Depends(check_auth)):
+async def cancel_syllabus_upload(upload_id: str, user: dict = OperatorRole):
     if upload_id not in active_uploads:
         raise HTTPException(status_code=404, detail="Upload not found")
     rec = active_uploads.pop(upload_id)

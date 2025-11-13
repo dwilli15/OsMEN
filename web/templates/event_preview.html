@@ -61,7 +61,10 @@ const uploadId = "{{ upload_id }}";
 async function updateEvent(index, field, value) {
   await fetch('/api/events/preview/update', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': window.OSMEN_CSRF_TOKEN || ''
+    },
     body: JSON.stringify({ upload_id: uploadId, index, field, value })
   });
 }
@@ -69,7 +72,10 @@ async function updateEvent(index, field, value) {
 async function rejectEvent(index) {
   await fetch('/api/events/preview/bulk', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': window.OSMEN_CSRF_TOKEN || ''
+    },
     body: JSON.stringify({ upload_id: uploadId, action: 'reject_indices', indices: [index] })
   });
   location.reload();
@@ -78,14 +84,22 @@ async function rejectEvent(index) {
 async function acceptAll() {
   await fetch('/api/events/preview/bulk', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': window.OSMEN_CSRF_TOKEN || ''
+    },
     body: JSON.stringify({ upload_id: uploadId, action: 'accept_all' })
   });
   alert('All events accepted');
 }
 
 async function syncToCalendar() {
-  const resp = await fetch(`/api/calendar/sync?upload_id=${uploadId}`, { method: 'POST' });
+  const resp = await fetch(`/api/calendar/sync?upload_id=${uploadId}`, {
+    method: 'POST',
+    headers: {
+      'X-CSRF-Token': window.OSMEN_CSRF_TOKEN || ''
+    }
+  });
   const result = await resp.json();
   if (result.success) {
     alert(`Synced ${result.synced} events (provider=${result.provider})`);

@@ -24,6 +24,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 30000);
 });
 
+document.body.addEventListener('htmx:configRequest', function(event) {
+    if (window.OSMEN_CSRF_TOKEN) {
+        event.detail.headers['X-CSRF-Token'] = window.OSMEN_CSRF_TOKEN;
+    }
+});
+
 // Handle HTMX events
 document.body.addEventListener('htmx:afterRequest', function(event) {
     if (event.detail.xhr.status >= 400) {
