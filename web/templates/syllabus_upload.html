@@ -186,7 +186,6 @@ async function uploadFile() {
     }
     
     const formData = new FormData();
-    formData.append('csrf_token', window.OSMEN_CSRF_TOKEN || '');
     formData.append('file', selectedFile);
     
     try {

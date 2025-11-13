@@ -4,7 +4,7 @@ services:
     image: langflowai/langflow:latest
     container_name: osmen-langflow
     ports:
-      - "7860:7860"
+      - "127.0.0.1:7860:7860"
     environment:
       - LANGFLOW_DATABASE_URL=postgresql://langflow:langflow@postgres:5432/langflow
       - LANGFLOW_CONFIG_DIR=/app/config
@@ -13,8 +13,27 @@ services:
       - ./langflow/config:/app/config
       - langflow-data:/app/data
     depends_on:
-      - postgres
-    restart: unless-stopped
+      postgres:
+        condition: service_healthy
+    restart: on-failure:3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - osmen-network
 
@@ -23,7 +42,7 @@ services:
     image: n8nio/n8n:latest
     container_name: osmen-n8n
     ports:
-      - "5678:5678"
+      - "127.0.0.1:5678:5678"
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
@@ -43,24 +62,61 @@ services:
       - ./n8n/workflows:/home/node/.n8n
       - n8n-data:/home/node/.n8n
     depends_on:
-      - postgres
-    restart: unless-stopped
+      postgres:
+        condition: service_healthy
+    restart: on-failure:3
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - osmen-network
 
   # LM Studio - Primary local LLM (run externally on host)
   # Access at: http://host.docker.internal:1234
   # Instructions: Install LM Studio on host and enable API server
-  
+
   # Ollama - Secondary local LLM option (optional)
   ollama:
     image: ollama/ollama:latest
     container_name: osmen-ollama
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"
     volumes:
       - ollama-data:/root/.ollama
-    restart: unless-stopped
+    restart: on-failure:3
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 8G
+        reservations:
+          memory: 2G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - osmen-network
     profiles:
@@ -68,12 +124,16 @@ services:
     # Uncomment the following section if you have an NVIDIA GPU
     # deploy:
     #   resources:
+    #     limits:
+    #       cpus: '4'
+    #       memory: 8G
     #     reservations:
+    #       memory: 2G
     #       devices:
     #         - driver: nvidia
     #           count: all
     #           capabilities: [gpu]
-  
+
   # MCP Server - Model Context Protocol for tool integration
   mcp-server:
     build:
@@ -81,14 +141,32 @@ services:
       dockerfile: gateway/Dockerfile.mcp
     container_name: osmen-mcp-server
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
     environment:
       - OBSIDIAN_VAULT_PATH=${OBSIDIAN_VAULT_PATH:-}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
-      - ${OBSIDIAN_VAULT_PATH:-./obsidian-vault}:/vault
-      - ./tools:/app/tools
-    restart: unless-stopped
+      - ${OBSIDIAN_VAULT_PATH:-./obsidian-vault}:/vault:ro
+      - ./tools:/app/tools:ro
+    restart: on-failure:3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+        reservations:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - osmen-network
     extra_hosts:
@@ -104,25 +182,25 @@ services:
       # OpenAI Configuration
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
-      
+
       # GitHub Copilot Configuration
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - COPILOT_API_URL=${COPILOT_API_URL:-}
-      
+
       # Amazon Q Configuration
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
       - AWS_REGION=${AWS_REGION:-us-east-1}
-      
+
       # Anthropic Claude Configuration
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      
+
       # LM Studio Configuration (host)
       - LM_STUDIO_URL=${LM_STUDIO_URL:-http://host.docker.internal:1234/v1}
-      
+
       # Ollama Configuration (optional)
       - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
-      
+
       # Gateway settings
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:

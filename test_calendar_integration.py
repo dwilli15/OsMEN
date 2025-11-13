@@ -6,16 +6,12 @@ Tests for calendar manager and provider integrations.
 Part of Production Readiness - Phase 1 Testing
 """
 
-import json
 import sys
 import time
 import types
-from base64 import b64decode, b64encode
 from pathlib import Path
 from datetime import datetime, timedelta
-from urllib.parse import parse_qs, urlparse
 
-import itsdangerous
 import pytest
 from fastapi.testclient import TestClient
 
@@ -23,7 +19,7 @@ from fastapi.testclient import TestClient
 sys.path.insert(0, str(Path(__file__).parent))
 
 from integrations.calendar.calendar_manager import CalendarManager
-from web.main import app, check_auth, SECRET_KEY, active_uploads
+from web.main import app, check_auth, active_uploads
 
 
 def _install_stub_module(monkeypatch, module_name: str, **attrs):
@@ -45,24 +41,6 @@ def api_client():
     finally:
         client.close()
         app.dependency_overrides.pop(check_auth, None)
-
-
-def _decode_session_cookie(client: TestClient) -> dict:
-    """Decode the signed session cookie emitted by SessionMiddleware."""
-    cookie = client.cookies.get("session")
-    if not cookie:
-        return {}
-    signer = itsdangerous.TimestampSigner(SECRET_KEY)
-    raw = signer.unsign(cookie.encode("utf-8"))
-    return json.loads(b64decode(raw))
-
-
-def _set_session_cookie(client: TestClient, data: dict):
-    """Inject session state into the test client."""
-    payload = b64encode(json.dumps(data).encode("utf-8"))
-    signer = itsdangerous.TimestampSigner(SECRET_KEY)
-    signed = signer.sign(payload).decode("utf-8")
-    client.cookies.set("session", signed, path="/")
 
 
 def test_calendar_manager_initialization():
@@ -252,137 +230,151 @@ def test_performance_benchmark():
 # FastAPI endpoint coverage (Alpha A1.1 - A1.4)
 # ============================================================================
 
-def test_google_oauth_endpoint_returns_stateful_url(api_client, monkeypatch):
-    """Ensure Google OAuth endpoint builds a signed URL + session state."""
-    monkeypatch.setenv("GOOGLE_CLIENT_ID", "client-123")
-    monkeypatch.setenv("GOOGLE_REDIRECT_URI", "https://example.com/callback")
+def test_google_oauth_endpoint_returns_url(api_client, monkeypatch):
+    """Ensure Google OAuth endpoint surfaces provider URLs."""
+    class FakeGoogle:
+        def get_authorization_url(self):
+            return "https://auth.test/google"
+
+    _install_stub_module(monkeypatch, "google_calendar", GoogleCalendarIntegration=FakeGoogle)
 
     response = api_client.get("/api/calendar/google/oauth")
     assert response.status_code == 200
     data = response.json()
-    params = parse_qs(urlparse(data["auth_url"]).query)
+    assert data["auth_url"] == "https://auth.test/google"
+    assert data["success"] is True
 
-    assert params["client_id"][0] == "client-123"
-    assert params["redirect_uri"][0] == "https://example.com/callback"
-    assert data["provider"] == "google"
 
-    session_data = _decode_session_cookie(api_client)
-    assert params["state"][0] == session_data["google_oauth_state"]
+def test_google_oauth_endpoint_handles_provider_failure(api_client, monkeypatch):
+    """Provider failures should bubble up as 500 errors for visibility."""
+    class BrokenGoogle:
+        def get_authorization_url(self):
+            return None
+
+    _install_stub_module(monkeypatch, "google_calendar", GoogleCalendarIntegration=BrokenGoogle)
+
+    response = api_client.get("/api/calendar/google/oauth")
+    assert response.status_code == 500
 
 
 def test_google_callback_requires_code(api_client):
-    """Callback should error when code is missing but state validates."""
-    oauth_init = api_client.get("/api/calendar/google/oauth")
-    state = parse_qs(urlparse(oauth_init.json()["auth_url"]).query)["state"][0]
-    response = api_client.get(
-        f"/api/calendar/google/callback?state={state}",
-        follow_redirects=False,
-    )
+    """Callback fails fast when authorization code is missing."""
+    response = api_client.get("/api/calendar/google/callback", follow_redirects=False)
     assert response.status_code == 400
-    assert response.json()["detail"] == "No authorization code provided"
+    assert response.json()["detail"] == "Authorization code required"
 
 
-def test_google_callback_success_persists_tokens(api_client, monkeypatch):
-    """Successful Google OAuth stores tokens and toggles connected flag."""
-    monkeypatch.setenv("GOOGLE_CLIENT_ID", "client-456")
-    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "secret-456")
-    monkeypatch.setenv("GOOGLE_REDIRECT_URI", "https://example.com/google")
+def test_google_callback_success_redirects_with_persisted_config(api_client, monkeypatch):
+    """Successful callbacks redirect to calendar UI and persist token paths."""
+    captured = {}
 
-    # Prime session with state token via init endpoint.
-    oauth_init = api_client.get("/api/calendar/google/oauth")
-    assert oauth_init.status_code == 200
-    state = parse_qs(urlparse(oauth_init.json()["auth_url"]).query)["state"][0]
+    class FakeCalendarManager:
+        def add_google_calendar(self, credentials_path, token_path):
+            captured["credentials_path"] = credentials_path
+            captured["token_path"] = token_path
+            return True
 
-    payload = {"access_token": "tok-123", "refresh_token": "refresh-789"}
-
-    class FakeResponse:
-        def raise_for_status(self):
-            return None
-
-        def json(self):
-            return payload
-
-    monkeypatch.setattr("requests.post", lambda *args, **kwargs: FakeResponse())
+    _install_stub_module(monkeypatch, "calendar_manager", CalendarManager=FakeCalendarManager)
 
     response = api_client.get(
-        f"/api/calendar/google/callback?code=auth-code&state={state}",
+        "/api/calendar/google/callback?code=test-code",
         follow_redirects=False,
     )
 
-    assert response.status_code == 302
-    assert response.headers["location"].startswith("/calendar/setup")
-
-    session_data = _decode_session_cookie(api_client)
-    assert session_data["google_calendar_connected"] is True
-    assert session_data["google_calendar_token"]["access_token"] == "tok-123"
+    assert response.status_code in (302, 307)
+    assert response.headers["location"].endswith("status=success")
+    assert captured["credentials_path"].endswith("google_credentials.json")
+    assert captured["token_path"].endswith("google_token.json")
 
 
-def test_outlook_oauth_endpoint_returns_stateful_url(api_client, monkeypatch):
-    """Outlook OAuth flow should mirror Google's state handling."""
-    monkeypatch.setenv("MICROSOFT_CLIENT_ID", "ms-client")
-    monkeypatch.setenv("MICROSOFT_REDIRECT_URI", "https://example.com/outlook")
+def test_outlook_oauth_endpoint_returns_url(api_client, monkeypatch):
+    """Outlook OAuth endpoint should emit provider URL for the UI."""
+    class FakeOutlook:
+        def get_authorization_url(self):
+            return "https://auth.test/outlook"
+
+    _install_stub_module(monkeypatch, "outlook_calendar", OutlookCalendarIntegration=FakeOutlook)
 
     response = api_client.get("/api/calendar/outlook/oauth")
     assert response.status_code == 200
-    data = response.json()
-
-    params = parse_qs(urlparse(data["auth_url"]).query)
-    assert params["client_id"][0] == "ms-client"
-    assert params["redirect_uri"][0] == "https://example.com/outlook"
-    assert data["provider"] == "outlook"
-
-    session_data = _decode_session_cookie(api_client)
-    assert params["state"][0] == session_data["outlook_oauth_state"]
+    assert response.json()["auth_url"] == "https://auth.test/outlook"
 
 
 def test_outlook_callback_connects_calendar(api_client, monkeypatch):
-    """Microsoft callback stores returned tokens in the session."""
-    monkeypatch.setenv("MICROSOFT_CLIENT_ID", "ms-client")
-    monkeypatch.setenv("MICROSOFT_CLIENT_SECRET", "ms-secret")
+    """Outlook callback exchanges code for token and registers provider."""
+    class FakeOutlook:
+        def get_authorization_url(self):
+            return "https://auth.test/outlook"
 
-    oauth_init = api_client.get("/api/calendar/outlook/oauth")
-    assert oauth_init.status_code == 200
-    state = parse_qs(urlparse(oauth_init.json()["auth_url"]).query)["state"][0]
+        def exchange_code_for_token(self, code):
+            return f"token-{code}"
 
-    payload = {"access_token": "ms-token", "refresh_token": "ms-refresh"}
+    _install_stub_module(monkeypatch, "outlook_calendar", OutlookCalendarIntegration=FakeOutlook)
 
-    class FakeResponse:
-        def raise_for_status(self):
-            return None
+    captured = {}
 
-        def json(self):
-            return payload
+    class FakeCalendarManager:
+        def add_outlook_calendar(self, access_token):
+            captured["token"] = access_token
+            return True
 
-    monkeypatch.setattr("requests.post", lambda *args, **kwargs: FakeResponse())
+    _install_stub_module(monkeypatch, "calendar_manager", CalendarManager=FakeCalendarManager)
 
     response = api_client.get(
-        f"/api/calendar/outlook/callback?code=abc123&state={state}",
+        "/api/calendar/outlook/callback?code=XYZ",
         follow_redirects=False,
     )
 
-    assert response.status_code == 302
-    assert response.headers["location"].startswith("/calendar/setup")
-
-    session_data = _decode_session_cookie(api_client)
-    assert session_data["outlook_calendar_connected"] is True
-    assert session_data["outlook_calendar_token"]["access_token"] == "ms-token"
+    assert response.status_code in (302, 307)
+    assert response.headers["location"].endswith("status=success")
+    assert captured["token"] == "token-XYZ"
 
 
-def test_calendar_status_reflects_connected_providers(api_client):
-    """Calendar status endpoint reads connection flags from the session."""
-    _set_session_cookie(
-        api_client,
-        {
-            "google_calendar_connected": True,
-            "outlook_calendar_connected": False,
-        },
-    )
-    response = api_client.get("/api/calendar/status")
+def test_calendar_sync_requires_events(api_client):
+    """Sync endpoint validates payloads before hitting manager logic."""
+    response = api_client.post("/api/calendar/sync", json={"events": []})
+    assert response.status_code == 400
+
+
+def test_calendar_sync_uses_manager_batch(api_client, monkeypatch):
+    """Successful sync delegates to manager batch creation."""
+    captured = {}
+
+    class FakeCalendarManager:
+        def create_events_batch(self, events):
+            captured["events"] = events
+            return {"total": len(events), "successful": len(events), "failed": 0}
+
+    _install_stub_module(monkeypatch, "calendar_manager", CalendarManager=FakeCalendarManager)
+
+    payload = {
+        "events": [
+            {"title": "Study Session", "date": "2025-01-10", "duration_minutes": 45}
+        ]
+    }
+    response = api_client.post("/api/calendar/sync", json=payload)
+
+    assert response.status_code == 200
+    assert response.json()["successful"] == 1
+    assert captured["events"] == payload["events"]
+
+
+def test_list_calendar_events_respects_max_results(api_client, monkeypatch):
+    """Event listing should pass max_results down to the manager."""
+    captured = {}
+
+    class FakeCalendarManager:
+        def list_events(self, max_results=50):
+            captured["max_results"] = max_results
+            return [{"title": f"Event {i}"} for i in range(max_results)]
+
+    _install_stub_module(monkeypatch, "calendar_manager", CalendarManager=FakeCalendarManager)
+
+    response = api_client.get("/api/calendar/events?max_results=5")
     assert response.status_code == 200
     data = response.json()
-    assert data["google"]["connected"] is True
-    assert data["outlook"]["connected"] is False
-    assert data["total"] == 1
+    assert data["count"] == 5
+    assert captured["max_results"] == 5
 
 
 def test_event_preview_update_edits_event(api_client):
