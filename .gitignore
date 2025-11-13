@@ -3,9 +3,6 @@
 *.env.local
 .env.*
 !.env.example
-!.env.production.example
-!.env.production.example
-!.env.production.example
 
 # Secrets and credentials
 *.key
@@ -20,6 +17,7 @@ secrets/
 
 # Logs
 logs/*
+backups/
 !logs/.gitkeep
 *.log
 
@@ -97,8 +95,6 @@ content/output/*
 *.backup
 backup/
 backups/
-!scripts/backup/
-!scripts/backup/**
 !scripts/backup/
 !scripts/backup/**
 

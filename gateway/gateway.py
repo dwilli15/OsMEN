@@ -5,7 +5,6 @@ Unified API gateway for production LLM agents (OpenAI, GitHub Copilot, Amazon Q,
 """
 
 import os
-import time
 import asyncio
 import logging
 from datetime import datetime, timezone
@@ -15,30 +14,23 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
-from fastapi.responses import JSONResponse, Response
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 import httpx
 import asyncpg
 import redis.asyncio as redis
 
-from logging_config import configure_logging
 from rate_limiter import RateLimiter
-
 from resilience import retryable_llm_call
 
-configure_logging()
-logger = logging.getLogger("osmen.gateway")
+# Configure logging
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO"),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 
-SENTRY_DSN = os.getenv("SENTRY_DSN")
-if SENTRY_DSN:
-    import sentry_sdk  # type: ignore
-    sentry_sdk.init(
-        dsn=SENTRY_DSN,
-        environment=os.getenv("SENTRY_ENVIRONMENT", ENVIRONMENT),
-        traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1"))
-    )
 
 def require_secret(name: str, min_length: int = 32) -> str:
     """Ensure required secrets are populated with strong values."""
@@ -227,16 +219,6 @@ class ServiceHealthMonitor:
 
 
 health_monitor = ServiceHealthMonitor()
-
-rate_limiter = RateLimiter()
-DEFAULT_RATE_LIMIT = max(30, int(os.getenv("RATE_LIMIT_PER_MINUTE", "120")))
-completion_guard = rate_limiter.guard("completion", DEFAULT_RATE_LIMIT, 60)
-agents_guard = rate_limiter.guard("agents", max(30, DEFAULT_RATE_LIMIT // 4), 60)
-health_guard = rate_limiter.guard("health", 90, 60)
-
-PROMETHEUS_ENABLED = os.getenv("PROMETHEUS_METRICS_ENABLED", "true").lower() == "true"
-REQUEST_COUNTER = Counter("osmen_gateway_requests_total", "Gateway HTTP requests", ["method", "path", "status"])
-COMPLETION_LATENCY = Histogram("osmen_gateway_completion_seconds", "LLM completion latency", ["agent"])
 
 class AgentGateway:
     """Gateway for routing requests to different LLM agents"""
@@ -499,19 +481,13 @@ app.add_middleware(
 if os.getenv("ENFORCE_HTTPS", "false").lower() == "true":
     app.add_middleware(HTTPSRedirectMiddleware)
 
-if PROMETHEUS_ENABLED:
-    @app.middleware("http")
-    async def prometheus_middleware(request: Request, call_next):
-        if request.url.path == "/metrics":
-            return await call_next(request)
-        start = time.perf_counter()
-        response = await call_next(request)
-        duration = time.perf_counter() - start
-        REQUEST_COUNTER.labels(request.method, request.url.path, str(response.status_code)).inc()
-        return response
-
 # Initialize gateway
 gateway = AgentGateway()
+rate_limiter = RateLimiter()
+DEFAULT_RATE_LIMIT = max(1, int(os.getenv("RATE_LIMIT_PER_MINUTE", "120") or 120))
+completion_guard = rate_limiter.guard("completion", DEFAULT_RATE_LIMIT, 60)
+agents_guard = rate_limiter.guard("agents", max(30, DEFAULT_RATE_LIMIT // 4), 60)
+health_guard = rate_limiter.guard("health", 60, 60)
 
 
 @app.get("/")
@@ -533,11 +509,7 @@ async def list_agents(_: None = Depends(agents_guard)):
 @app.post("/completion", response_model=CompletionResponse)
 async def completion(request: CompletionRequest, _: None = Depends(completion_guard)):
     """Generate completion using specified agent"""
-    start = time.perf_counter()
-    response = await gateway.completion(request)
-    if PROMETHEUS_ENABLED:
-        COMPLETION_LATENCY.labels(request.agent).observe(time.perf_counter() - start)
-    return response
+    return await gateway.completion(request)
 
 
 async def _health_response():
@@ -549,13 +521,15 @@ async def _health_response():
 @app.get("/health")
 async def health(_: None = Depends(health_guard)):
     """Aggregate health endpoint for infrastructure services."""
-    return await _health_response()
+    summary = await health_monitor.summary()
+    status_code = 200 if summary["status"] == "healthy" else 503
+    return JSONResponse(summary, status_code=status_code)
 
 
 @app.get("/healthz")
 async def healthz(_: None = Depends(health_guard)):
     """Alias for /health to support Kubernetes-style probing."""
-    return await _health_response()
+    return await health()
 
 
 @app.get("/healthz/{service_name}")
@@ -566,14 +540,6 @@ async def service_health(service_name: str, _: None = Depends(health_guard)):
         raise HTTPException(status_code=404, detail=f"Unknown service '{service_name}'")
     status_code = 200 if result["ok"] else 503
     return JSONResponse(result, status_code=status_code)
-
-
-@app.get("/metrics")
-async def gateway_metrics(_: None = Depends(health_guard)):
-    """Prometheus metrics for the gateway."""
-    if not PROMETHEUS_ENABLED:
-        raise HTTPException(status_code=404, detail="Metrics disabled")
-    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 if __name__ == "__main__":
