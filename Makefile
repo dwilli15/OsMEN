@@ -120,6 +120,10 @@ validate: security-check test check-operational
 	@echo "Optional: Run 'make test-llm' to test LLM providers"
 	@echo ""
 
+validate-production:
+	@echo "Running comprehensive production readiness validation..."
+	@python3 scripts/automation/validate_production_ready.py
+
 pre-commit-install:
 	@echo "Installing pre-commit hooks..."
 	@pip3 install pre-commit

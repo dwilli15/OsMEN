@@ -30,44 +30,52 @@ OsMEN provides a complete agent orchestration platform for:
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### First-Time Setup (10 Minutes)
+
+**🤖 AI Agents**: See **[1stsetup.md](1stsetup.md)** for automated setup guide.
+
+**Prerequisites**:
 - Docker & Docker Compose
+- Python 3.12+
 - 16GB+ RAM recommended
 - 50GB free disk space
 - Optional: NVIDIA GPU for faster inference
 
-### Installation
+**Quick Installation**:
 
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/dwilli15/OsMEN.git
 cd OsMEN
 
-# Configure environment
+# 2. Configure environment (IMPORTANT: Change passwords!)
 cp .env.example .env
-# Edit .env with your preferences
+nano .env  # or your preferred editor
+# Required changes:
+# - N8N_BASIC_AUTH_PASSWORD (change from 'changeme')
+# - Add at least one LLM API key (OpenAI recommended)
 
-# Start all services
+# 3. Install dependencies
+python3 -m pip install --user -r requirements.txt
+
+# 4. Start all services
 docker-compose up -d
 
-# Configure LLM agents (see docs/LLM_AGENTS.md)
-# Option 1: Use production agents (OpenAI, Copilot, etc.)
-# Option 2: Use LM Studio (download from lmstudio.ai)
-# Option 3: Use Ollama (docker-compose --profile ollama up -d)
-
-# Access the interfaces
-# Langflow: http://localhost:7860
-# n8n: http://localhost:5678 (admin/changeme)
-# Agent Gateway: http://localhost:8080/docs
-# Qdrant: http://localhost:6333/dashboard
-
-# Check if everything is operational
+# 5. Verify everything works
 python3 check_operational.py
-# or
-make check-operational
 ```
 
-See [docs/SETUP.md](docs/SETUP.md) for detailed setup instructions.
+**Access Your Agent Hub**:
+- **Langflow**: http://localhost:7860
+- **n8n**: http://localhost:5678 (admin/[your-password])
+- **Qdrant**: http://localhost:6333/dashboard
+
+**Test Your First Agent**:
+```bash
+python3 agents/daily_brief/daily_brief_agent.py
+```
+
+See **[1stsetup.md](1stsetup.md)** for complete setup guide with troubleshooting.
 
 ### Verify Operational Status
 
