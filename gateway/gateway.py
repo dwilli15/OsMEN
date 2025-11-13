@@ -20,7 +20,6 @@ import httpx
 import asyncpg
 import redis.asyncio as redis
 
-from rate_limiter import RateLimiter
 
 from resilience import retryable_llm_call
 
@@ -484,6 +483,11 @@ if os.getenv("ENFORCE_HTTPS", "false").lower() == "true":
 
 # Initialize gateway
 gateway = AgentGateway()
+rate_limiter = RateLimiter()
+DEFAULT_RATE_LIMIT = max(1, int(os.getenv("RATE_LIMIT_PER_MINUTE", "120") or 120))
+completion_guard = rate_limiter.guard("completion", DEFAULT_RATE_LIMIT, 60)
+agents_guard = rate_limiter.guard("agents", max(30, DEFAULT_RATE_LIMIT // 4), 60)
+health_guard = rate_limiter.guard("health", 60, 60)
 
 
 @app.get("/")
@@ -515,19 +519,21 @@ async def _health_response():
 
 
 @app.get("/health")
-async def health(_: None = Depends(health_guard)):
+async def health():
     """Aggregate health endpoint for infrastructure services."""
-    return await _health_response()
+    summary = await health_monitor.summary()
+    status_code = 200 if summary["status"] == "healthy" else 503
+    return JSONResponse(summary, status_code=status_code)
 
 
 @app.get("/healthz")
-async def healthz(_: None = Depends(health_guard)):
+async def healthz():
     """Alias for /health to support Kubernetes-style probing."""
-    return await _health_response()
+    return await health()
 
 
 @app.get("/healthz/{service_name}")
-async def service_health(service_name: str, _: None = Depends(health_guard)):
+async def service_health(service_name: str):
     """Return health information for an individual service."""
     result = await health_monitor.service_status(service_name)
     if result is None:

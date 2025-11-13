@@ -16,7 +16,6 @@
 - [ ] Generate dashboard admin hash: `python scripts/security/hash_password.py > hash.txt` → set `WEB_ADMIN_PASSWORD_HASH`
 - [ ] Update n8n password (change from 'changeme')
 - [ ] Follow `docs/SECRETS_MANAGEMENT.md` for storing OAuth tokens/API keys
-- [ ] Review `config/access_control.json` for role assignments (admin/operator/viewer)
 - [ ] Configure LLM provider(s):
   - [ ] OpenAI API key (if using)
   - [ ] GitHub Copilot token (if using)
@@ -78,11 +77,6 @@
 - [ ] Configuration files backed up
 - [ ] Database backup plan established
 - [ ] Vector store backup plan (if using)
-
-### Access Control & Rate Limiting
-- RBAC is enforced through `config/access_control.json` and the env vars `WEB_ADMIN_USERNAME`, `WEB_ADMIN_ROLE`, and `WEB_DEFAULT_ROLE`.
-- FastAPI routes require CSRF tokens; templates expose `window.OSMEN_CSRF_TOKEN` and the dashboard JS injects it into HTMX/fetch requests automatically.
-- Gateway endpoints are protected by a Redis-backed rate limiter (per-IP). Customize `RATE_LIMIT_PER_MINUTE`, `RATE_LIMIT_PREFIX`, and Redis credentials in `.env(.production)` as needed.
 
 ## Deployment Steps
 

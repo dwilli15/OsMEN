@@ -211,7 +211,7 @@
 **Why:** Can't ship without security  
 **Impact:** CRITICAL - Security is non-negotiable
 
-- [x] **8.1** Implement proper secrets management
+- [ ] **8.1** Implement proper secrets management
   - Use environment variables
   - Encrypt sensitive data at rest
   - Secure credential storage
@@ -234,7 +234,7 @@
 4. Run `python scripts/automation/validate_security.py` to ensure `.env`/`.env.production` exist and no defaults remain.
 5. Rotate n8n/admin, Postgres, and Redis credentials prior to each merge point; document completion in `3agent_chat.md`.
 
-- [x] **8.2** Add HTTPS/TLS
+- [ ] **8.2** Add HTTPS/TLS
   - SSL certificates (Let's Encrypt)
   - Force HTTPS redirect
   - Secure headers
@@ -242,13 +242,13 @@
   - Set `ENFORCE_HTTPS=true` in `.env.production`
   - Test: All traffic encrypted
 
-- [x] **8.3** Implement rate limiting
+- [ ] **8.3** Implement rate limiting
   - API rate limits
   - Login attempt limits
   - DOS protection
   - Test: Rate limits work correctly
 
-- [x] **8.4** Add security headers
+- [ ] **8.4** Add security headers
   - CSP, HSTS, X-Frame-Options
   - XSS protection
   - CSRF tokens
