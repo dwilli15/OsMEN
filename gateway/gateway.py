@@ -519,7 +519,7 @@ async def _health_response():
 
 
 @app.get("/health")
-async def health():
+async def health(_: None = Depends(health_guard)):
     """Aggregate health endpoint for infrastructure services."""
     summary = await health_monitor.summary()
     status_code = 200 if summary["status"] == "healthy" else 503
@@ -527,13 +527,13 @@ async def health():
 
 
 @app.get("/healthz")
-async def healthz():
+async def healthz(_: None = Depends(health_guard)):
     """Alias for /health to support Kubernetes-style probing."""
     return await health()
 
 
 @app.get("/healthz/{service_name}")
-async def service_health(service_name: str):
+async def service_health(service_name: str, _: None = Depends(health_guard)):
     """Return health information for an individual service."""
     result = await health_monitor.service_status(service_name)
     if result is None:
