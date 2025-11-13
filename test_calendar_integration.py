@@ -8,13 +8,39 @@ Part of Production Readiness - Phase 1 Testing
 
 import sys
 import time
+import types
 from pathlib import Path
 from datetime import datetime, timedelta
+
+import pytest
+from fastapi.testclient import TestClient
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from integrations.calendar.calendar_manager import CalendarManager
+from web.main import app, check_auth, active_uploads
+
+
+def _install_stub_module(monkeypatch, module_name: str, **attrs):
+    """Register a lightweight stub module for FastAPI endpoint tests."""
+    module = types.ModuleType(module_name)
+    for name, value in attrs.items():
+        setattr(module, name, value)
+    monkeypatch.setitem(sys.modules, module_name, module)
+    return module
+
+
+@pytest.fixture
+def api_client():
+    """Provide a FastAPI TestClient with auth override for endpoint tests."""
+    app.dependency_overrides[check_auth] = lambda: {"email": "gamma@osmen.ai"}
+    client = TestClient(app)
+    try:
+        yield client
+    finally:
+        client.close()
+        app.dependency_overrides.pop(check_auth, None)
 
 
 def test_calendar_manager_initialization():
@@ -198,6 +224,204 @@ def test_performance_benchmark():
     except Exception as e:
         print(f"❌ Performance Benchmark: FAIL - {e}")
         return False
+
+
+# ============================================================================
+# FastAPI endpoint coverage (Alpha A1.1 - A1.4)
+# ============================================================================
+
+def test_google_oauth_endpoint_returns_url(api_client, monkeypatch):
+    """Ensure Google OAuth endpoint surfaces provider URLs."""
+    class FakeGoogle:
+        def get_authorization_url(self):
+            return "https://auth.test/google"
+
+    _install_stub_module(monkeypatch, "google_calendar", GoogleCalendarIntegration=FakeGoogle)
+
+    response = api_client.get("/api/calendar/google/oauth")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["auth_url"] == "https://auth.test/google"
+    assert data["success"] is True
+
+
+def test_google_oauth_endpoint_handles_provider_failure(api_client, monkeypatch):
+    """Provider failures should bubble up as 500 errors for visibility."""
+    class BrokenGoogle:
+        def get_authorization_url(self):
+            return None
+
+    _install_stub_module(monkeypatch, "google_calendar", GoogleCalendarIntegration=BrokenGoogle)
+
+    response = api_client.get("/api/calendar/google/oauth")
+    assert response.status_code == 500
+
+
+def test_google_callback_requires_code(api_client):
+    """Callback fails fast when authorization code is missing."""
+    response = api_client.get("/api/calendar/google/callback", follow_redirects=False)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Authorization code required"
+
+
+def test_google_callback_success_redirects_with_persisted_config(api_client, monkeypatch):
+    """Successful callbacks redirect to calendar UI and persist token paths."""
+    captured = {}
+
+    class FakeCalendarManager:
+        def add_google_calendar(self, credentials_path, token_path):
+            captured["credentials_path"] = credentials_path
+            captured["token_path"] = token_path
+            return True
+
+    _install_stub_module(monkeypatch, "calendar_manager", CalendarManager=FakeCalendarManager)
+
+    response = api_client.get(
+        "/api/calendar/google/callback?code=test-code",
+        follow_redirects=False,
+    )
+
+    assert response.status_code in (302, 307)
+    assert response.headers["location"].endswith("status=success")
+    assert captured["credentials_path"].endswith("google_credentials.json")
+    assert captured["token_path"].endswith("google_token.json")
+
+
+def test_outlook_oauth_endpoint_returns_url(api_client, monkeypatch):
+    """Outlook OAuth endpoint should emit provider URL for the UI."""
+    class FakeOutlook:
+        def get_authorization_url(self):
+            return "https://auth.test/outlook"
+
+    _install_stub_module(monkeypatch, "outlook_calendar", OutlookCalendarIntegration=FakeOutlook)
+
+    response = api_client.get("/api/calendar/outlook/oauth")
+    assert response.status_code == 200
+    assert response.json()["auth_url"] == "https://auth.test/outlook"
+
+
+def test_outlook_callback_connects_calendar(api_client, monkeypatch):
+    """Outlook callback exchanges code for token and registers provider."""
+    class FakeOutlook:
+        def get_authorization_url(self):
+            return "https://auth.test/outlook"
+
+        def exchange_code_for_token(self, code):
+            return f"token-{code}"
+
+    _install_stub_module(monkeypatch, "outlook_calendar", OutlookCalendarIntegration=FakeOutlook)
+
+    captured = {}
+
+    class FakeCalendarManager:
+        def add_outlook_calendar(self, access_token):
+            captured["token"] = access_token
+            return True
+
+    _install_stub_module(monkeypatch, "calendar_manager", CalendarManager=FakeCalendarManager)
+
+    response = api_client.get(
+        "/api/calendar/outlook/callback?code=XYZ",
+        follow_redirects=False,
+    )
+
+    assert response.status_code in (302, 307)
+    assert response.headers["location"].endswith("status=success")
+    assert captured["token"] == "token-XYZ"
+
+
+def test_calendar_sync_requires_events(api_client):
+    """Sync endpoint validates payloads before hitting manager logic."""
+    response = api_client.post("/api/calendar/sync", json={"events": []})
+    assert response.status_code == 400
+
+
+def test_calendar_sync_uses_manager_batch(api_client, monkeypatch):
+    """Successful sync delegates to manager batch creation."""
+    captured = {}
+
+    class FakeCalendarManager:
+        def create_events_batch(self, events):
+            captured["events"] = events
+            return {"total": len(events), "successful": len(events), "failed": 0}
+
+    _install_stub_module(monkeypatch, "calendar_manager", CalendarManager=FakeCalendarManager)
+
+    payload = {
+        "events": [
+            {"title": "Study Session", "date": "2025-01-10", "duration_minutes": 45}
+        ]
+    }
+    response = api_client.post("/api/calendar/sync", json=payload)
+
+    assert response.status_code == 200
+    assert response.json()["successful"] == 1
+    assert captured["events"] == payload["events"]
+
+
+def test_list_calendar_events_respects_max_results(api_client, monkeypatch):
+    """Event listing should pass max_results down to the manager."""
+    captured = {}
+
+    class FakeCalendarManager:
+        def list_events(self, max_results=50):
+            captured["max_results"] = max_results
+            return [{"title": f"Event {i}"} for i in range(max_results)]
+
+    _install_stub_module(monkeypatch, "calendar_manager", CalendarManager=FakeCalendarManager)
+
+    response = api_client.get("/api/calendar/events?max_results=5")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["count"] == 5
+    assert captured["max_results"] == 5
+
+
+def test_event_preview_update_edits_event(api_client):
+    """Single-event edits should persist back into the active upload cache."""
+    active_uploads.clear()
+    upload_id = "upload-123"
+    active_uploads[upload_id] = {
+        "status": "ready",
+        "events": [
+            {"title": "Midterm", "date": "2025-10-10", "type": "exam", "description": "old"}
+        ],
+    }
+
+    payload = {
+        "upload_id": upload_id,
+        "index": 0,
+        "field": "title",
+        "value": "Updated Midterm",
+    }
+    response = api_client.post("/api/events/preview/update", json=payload)
+    assert response.status_code == 200
+    assert active_uploads[upload_id]["events"][0]["title"] == "Updated Midterm"
+    assert response.json()["event"]["title"] == "Updated Midterm"
+
+
+def test_event_preview_bulk_rejects_indices(api_client):
+    """Bulk rejection should remove targeted events from the staging cache."""
+    active_uploads.clear()
+    upload_id = "upload-bulk"
+    active_uploads[upload_id] = {
+        "status": "ready",
+        "events": [
+            {"title": "Lecture 1"},
+            {"title": "Lecture 2"},
+            {"title": "Lecture 3"},
+        ],
+    }
+
+    payload = {
+        "upload_id": upload_id,
+        "action": "reject_indices",
+        "indices": [0, 2],
+    }
+    response = api_client.post("/api/events/preview/bulk", json=payload)
+    assert response.status_code == 200
+    assert response.json()["remaining"] == 1
+    assert len(active_uploads[upload_id]["events"]) == 1
 
 
 def main():

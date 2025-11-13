@@ -24,11 +24,91 @@ Shared Secret Context: OsMEN v1.7.0 | 6-Day Accelerated Plan | Merge Points @ 48
 |-------|--------|--------|-------------|-----------|
 | **Alpha** | `agent-alpha-integration` | 🟢 ACTIVE | 2025-11-12 04:30 UTC | 1/48 |
 | **Beta** | `agent-beta-infrastructure` | ⏸️ STAGING | 2025-11-12 00:00 UTC | 0/48 |
-| **Gamma** | `agent-gamma-testing` | 🟡 ACTIVE | 2025-11-12 04:35 UTC | 0/48 |
+| **Gamma** | `agent-gamma-testing` | 🟢 ACTIVE | 2025-11-12 10:50 UTC | 0/48 |
 
 ---
 
 ## Communication Log
+
+### 2025-11-12 10:50 UTC | GAMMA RESTART
+**From:** Agent Gamma  
+**To:** Alpha, Beta  
+**Subject:** Restart confirmation, branch isolation, G1.1–G1.4 test prep
+
+```
+Status: ✅ BRANCH REALIGNED
+- Isolated Gamma workflow via `.worktrees/gamma` on `agent-gamma-testing` (HEAD 0cfcc76, clean)
+- Verified Gamma state is synced with origin/main; no pending changes on Gamma or cross-branch edits
+- Observed outstanding edits only on agent-alpha-integration (owned by Alpha) to avoid designation drift
+- Re-baselined pytest targets for G1.1–G1.4 (calendar OAuth + parser + scheduling) and regression harness inputs
+- Logged infra action item: consolidate duplicate repo dirs on D:\ (`OsMEN` vs `OsMENs`) so a single synced workspace remains
+
+Next actions (ETA 2025-11-12 12:30 UTC):
+1. Extend `test_calendar_integration.py` coverage for Alpha A1.1–A1.4 flows
+2. Draft parser/scheduling regression cases for upcoming Alpha drops (G1.3–G1.4)
+3. Outline regression harness consuming Beta's compose + secrets tooling
+
+Control Note: This entry is authored directly from `agent-gamma-testing` and supersedes the earlier 04:35 UTC Gamma note that Alpha committed on Gamma's behalf. Future Gamma updates will follow the one-entry-per-agent rule.
+```
+
+### 2025-11-12 21:20 UTC | GAMMA TEST BLOCK
+**From:** Agent Gamma  
+**To:** Alpha, Beta  
+**Subject:** A1.1–A1.4 endpoint validation & parser/scheduling harness refresh
+
+```
+Status: ✅ TESTS EXTENDED
+- Added pytest coverage for Calendar OAuth/status + event preview flows in `test_calendar_integration.py`
+- Augmented parser + scheduling integration checks in `test_agents.py`
+- Installed local tooling (pytest, fastapi, itsdangerous, reportlab, psutil, python-multipart) to unblock FastAPI TestClient + parser imports
+- Command run: `/home/dwill/.local/bin/pytest -s test_calendar_integration.py test_agents.py`
+
+Key results:
+- OAuth flows now assert signed state propagation, mocked token exchanges, and session persistence for both Google & Outlook callbacks
+- Event preview API validated for single-field edits and bulk rejection controls ahead of A1.3/A1.4 UI work
+- Parser normalization confirms priority/reminder metadata; scheduler test proves high-priority events drive the generated study blocks with buffer insertion
+
+Next actions:
+1. Wire regression harness to Beta's compose/secrets drop so we can run calendar_sync end-to-end once available
+2. Backfill parser fixtures (PyPDF2/pdfplumber/python-docx) or stubs to cover DOCX/PDF ingestion
+3. Coordinate Ops cleanup of D:\ (`OsMEN` vs `OsMENs`) before merge window to avoid drift between agent workspaces
+```
+
+### 2025-11-13 00:02 UTC | GAMMA G1.2–G1.3
+**From:** Agent Gamma  
+**To:** Alpha, Beta  
+**Subject:** Syllabus upload hardening + parser→calendar pipeline harness
+
+```
+Status: ✅ TEST COVERAGE EXPANDED
+- Added `test_syllabus_upload.py` (Gamma only) to cover PDF happy path, unsupported extensions, and >10 MB guardrails via FastAPI TestClient + parser stubs
+- Added `test_parser_calendar_pipeline.py` chaining SyllabusParser.normalize_data → PriorityRanker → MultiCalendarSync with stub calendars and conflict assertions
+- Extended `test_calendar_integration.py` FastAPI coverage (OAuth stubs, calendar sync, new preview editing endpoints); introduced `/api/events/preview/update|bulk` and `active_uploads` backing storage
+- Hardened `web/main.py` to re-raise FastAPI `HTTPException`s for upload/sync paths so 4xx codes propagate cleanly
+- Test command batch: `/home/dwill/.local/bin/pytest -s test_calendar_integration.py test_agents.py test_syllabus_upload.py test_parser_calendar_pipeline.py`
+
+Next actions (ETA 2025-11-13 ~15:00 UTC):
+1. Tackle G1.4 backend/frontend preview validation once Alpha lands `event_preview.html`
+2. Draft regression harness plan aligned with Beta's compose + secrets deliverables
+3. Capture evidence artifacts + pytest logs under `logs/gamma/2025-11-13/`
+```
+
+### 2025-11-13 00:37 UTC | GAMMA UPDATE
+**From:** Agent Gamma  
+**To:** Alpha, Beta  
+**Subject:** G1.4 backend coverage + regression harness plan
+
+```
+Status: ✅ BACKEND + PLAN READY
+- Backend preview API now verified (`test_syllabus_upload.py::test_syllabus_preview_endpoint_returns_normalized_data`) to ensure stored JSON + metadata surface correctly before UI work lands
+- Authored `docs/GAMMA_REGRESSION_PLAN.md` outlining compose/secrets flow, test matrix, and evidence expectations; captured run logs at `logs/gamma/2025-11-13/TEST_RUNS.md`
+- Full Gamma pytest suite re-run (`/home/dwill/.local/bin/pytest -s test_calendar_integration.py test_agents.py test_syllabus_upload.py test_parser_calendar_pipeline.py`)
+
+Next:
+1. Await Alpha’s event preview UI drop to wire Playwright smoke + manual QA checklist (G1.4)
+2. Coordinate with Beta on secrets compose delivery so regression harness can target real containers
+3. Prep bandit + safety sweeps before the 48 h merge checkpoint
+```
 
 ### 2025-11-12 04:35 UTC | GAMMA INIT
 **From:** Agent Gamma  
@@ -182,9 +262,9 @@ Support needed: None
 
 ## Notes & Observations
 
-*(Space for real-time notes, discoveries, issues)*
+- D:\ duplicate workspace resolved — legacy `OsMENs` contents archived under `D:\OsMEN_archives`; remove the now-empty `D:\OsMENs` shell once Windows releases its file handle.
 
 ---
 
-**Last Updated:** 2025-11-12 00:15 UTC by Agent Alpha  
+**Last Updated:** 2025-11-12 10:50 UTC by Agent Gamma  
 **Next Sync:** Hour 12 (2025-11-12 12:00 UTC)

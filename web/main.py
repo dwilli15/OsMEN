@@ -55,6 +55,9 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 log_buffer = []
 MAX_LOG_BUFFER = 100
 
+# In-memory tracker for parsed syllabus previews
+active_uploads = {}
+
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
@@ -517,6 +520,8 @@ async def sync_calendar_events(request: Request, user: dict = Depends(check_auth
         
         return result
     
+    except HTTPException:
+        raise
     except Exception as e:
         add_log("ERROR", f"Calendar sync error: {e}", "calendar")
         raise HTTPException(status_code=500, detail=str(e))
@@ -580,6 +585,11 @@ async def upload_syllabus(request: Request, user: dict = Depends(check_auth)):
         
         with open(preview_path, 'w') as f:
             json.dump(normalized_data, f, indent=2)
+
+        active_uploads[preview_id] = {
+            "status": "ready",
+            "events": normalized_data.get("events", []).copy()
+        }
         
         add_log("INFO", f"Syllabus uploaded and parsed: {file.filename}", "syllabus")
         
@@ -590,6 +600,8 @@ async def upload_syllabus(request: Request, user: dict = Depends(check_auth)):
             "event_count": normalized_data.get('metadata', {}).get('total_events', 0)
         }
     
+    except HTTPException:
+        raise
     except Exception as e:
         add_log("ERROR", f"Syllabus upload error: {e}", "syllabus")
         raise HTTPException(status_code=500, detail=str(e))
@@ -625,6 +637,62 @@ async def event_preview_page(request: Request, preview_id: str, user: dict = Dep
             "preview_id": preview_id
         }
     )
+
+
+@app.post("/api/events/preview/update")
+async def update_preview_event(request: Request, user: dict = Depends(check_auth)):
+    """Update a single staged event field before calendar sync."""
+    data = await request.json()
+    upload_id = data.get("upload_id")
+    index = data.get("index")
+    field = data.get("field")
+    value = data.get("value")
+
+    record = active_uploads.get(upload_id)
+    if not record or record.get("status") != "ready":
+        raise HTTPException(status_code=404, detail="Upload not found or not ready")
+
+    events = record.get("events", [])
+    if index is None or index < 0 or index >= len(events):
+        raise HTTPException(status_code=400, detail="Invalid event index")
+
+    allowed_fields = {"title", "date", "type", "description"}
+    if field not in allowed_fields:
+        raise HTTPException(status_code=400, detail="Invalid field")
+
+    events[index][field] = value
+    add_log("INFO", f"Preview event updated ({field})", "preview")
+    return {"success": True, "event": events[index]}
+
+
+@app.post("/api/events/preview/bulk")
+async def bulk_preview_action(request: Request, user: dict = Depends(check_auth)):
+    """Bulk accept/reject staged preview events."""
+    data = await request.json()
+    upload_id = data.get("upload_id")
+    action = data.get("action")
+    indices = data.get("indices", [])
+
+    record = active_uploads.get(upload_id)
+    if not record or record.get("status") != "ready":
+        raise HTTPException(status_code=404, detail="Upload not found or not ready")
+
+    events = record.get("events", [])
+
+    if action == "accept_all":
+        add_log("INFO", f"All events accepted for {upload_id}", "preview")
+        return {"success": True, "remaining": len(events)}
+
+    if action == "reject_indices":
+        removed = 0
+        for idx in sorted(indices, reverse=True):
+            if 0 <= idx < len(events):
+                events.pop(idx)
+                removed += 1
+        add_log("INFO", f"Rejected {removed} events for {upload_id}", "preview")
+        return {"success": True, "remaining": len(events)}
+
+    raise HTTPException(status_code=400, detail="Invalid action")
 
 
 # ============================================================================
@@ -814,7 +882,7 @@ async def adjust_schedule_for_health(request: Request, user: dict = Depends(chec
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.logs/stream")
+@app.get("/logs/stream")
 async def stream_logs(request: Request, user: dict = Depends(check_auth)):
     """Server-Sent Events endpoint for live log streaming."""
     async def event_generator():
