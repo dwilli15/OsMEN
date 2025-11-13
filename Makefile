@@ -1,15 +1,18 @@
-.PHONY: help start stop restart logs status pull-models setup clean check-operational security-check test validate backup pre-commit-install
+.PHONY: help start stop restart logs status pull-models setup clean check-operational security-check test validate backup pre-commit-install setup-wizard validate-production start-web
 
 help:
 	@echo "OsMEN - Management Commands"
 	@echo ""
 	@echo "Setup & Deployment:"
 	@echo "  make setup             - Initial setup (copy .env, create dirs)"
+	@echo "  make setup-wizard      - Interactive setup wizard (recommended for first-time)"
 	@echo "  make pre-commit-install - Install pre-commit hooks"
 	@echo "  make validate          - Run all validation checks"
+	@echo "  make validate-production - Comprehensive production readiness check"
 	@echo ""
 	@echo "Service Management:"
-	@echo "  make start             - Start all services"
+	@echo "  make start             - Start all services (including web)"
+	@echo "  make start-web         - Start web dashboard only"
 	@echo "  make stop              - Stop all services"
 	@echo "  make restart           - Restart all services"
 	@echo "  make logs              - View all logs"
@@ -41,13 +44,27 @@ setup:
 	@echo "3. Run 'make start' to start services"
 	@echo "4. Run 'make validate' to verify everything is working"
 
+setup-wizard:
+	@echo "Starting interactive setup wizard..."
+	@python3 scripts/automation/setup_wizard.py
+
 start:
 	@echo "Starting OsMEN services..."
-	docker-compose up -d
+	docker compose up -d
 	@echo "Services started!"
-	@echo "Langflow: http://localhost:7860"
-	@echo "n8n: http://localhost:5678"
-	@echo "Qdrant: http://localhost:6333/dashboard"
+	@echo ""
+	@echo "Access points:"
+	@echo "  Agent Hub: http://localhost:8000 (run 'make start-web' separately if not using Docker web)"
+	@echo "  Langflow:  http://localhost:7860"
+	@echo "  n8n:       http://localhost:5678"
+	@echo "  Qdrant:    http://localhost:6333/dashboard"
+	@echo ""
+
+start-web:
+	@echo "Starting OsMEN Web Dashboard..."
+	@echo "Access at: http://localhost:8000"
+	@echo ""
+	@python3 start_web.py
 
 stop:
 	@echo "Stopping OsMEN services..."
@@ -119,6 +136,10 @@ validate: security-check test check-operational
 	@echo ""
 	@echo "Optional: Run 'make test-llm' to test LLM providers"
 	@echo ""
+
+validate-production:
+	@echo "Running comprehensive production readiness validation..."
+	@python3 scripts/automation/validate_production_ready.py
 
 pre-commit-install:
 	@echo "Installing pre-commit hooks..."

@@ -1040,11 +1040,231 @@ async def startup_event():
     add_log("INFO", f"Version: {app.version}", "web")
 
 
-# Shutdown event
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown."""
-    add_log("INFO", "OsMEN Web Dashboard shutting down", "web")
+# ============================================================================
+# HEALTH CHECK
+# ============================================================================
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Docker"""
+    return {"status": "healthy", "service": "osmen-web"}
+
+
+# ============================================================================
+# AGENT HUB - Comprehensive Agent Management Interface
+# ============================================================================
+
+@app.get("/", response_class=HTMLResponse)
+@app.get("/hub", response_class=HTMLResponse)
+async def agent_hub():
+    """Serve the main agent hub interface"""
+    ui_file = Path(__file__).parent / "agent_hub.html"
+    with open(ui_file, 'r') as f:
+        return HTMLResponse(content=f.read())
+
+
+@app.get("/api/agents")
+async def list_agents():
+    """List all agents (from Langflow flows)"""
+    try:
+        flows_dir = Path(__file__).parent.parent / "langflow" / "flows"
+        agents = []
+        
+        if flows_dir.exists():
+            for flow_file in flows_dir.glob("*.json"):
+                try:
+                    with open(flow_file, 'r') as f:
+                        flow = json.load(f)
+                        
+                        # Skip non-agent flows
+                        if flow_file.stem in ['knowledge_specialist']:
+                            continue
+                            
+                        agents.append({
+                            'id': flow_file.stem,
+                            'name': flow.get('name', flow_file.stem.replace('_', ' ').title()),
+                            'purpose': flow.get('description', 'No description'),
+                            'status': 'active',
+                            'capabilities': _extract_capabilities(flow),
+                            'icon': _get_agent_icon(flow_file.stem)
+                        })
+                except Exception as e:
+                    logger.error(f"Error loading flow {flow_file}: {e}")
+        
+        return agents
+    except Exception as e:
+        logger.error(f"Error listing agents: {e}")
+        return []
+
+
+@app.delete("/api/agents/{agent_id}")
+async def delete_agent(agent_id: str):
+    """Delete an agent"""
+    try:
+        flows_dir = Path(__file__).parent.parent / "langflow" / "flows"
+        workflows_dir = Path(__file__).parent.parent / "n8n" / "workflows"
+        
+        # Delete Langflow flow
+        flow_file = flows_dir / f"{agent_id}.json"
+        if flow_file.exists():
+            flow_file.unlink()
+        
+        # Delete n8n workflow
+        workflow_file = workflows_dir / f"{agent_id}_trigger.json"
+        if workflow_file.exists():
+            workflow_file.unlink()
+        
+        return {"status": "deleted", "agent_id": agent_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/workflows")
+async def list_workflows():
+    """List all n8n workflows"""
+    try:
+        workflows_dir = Path(__file__).parent.parent / "n8n" / "workflows"
+        workflows = []
+        
+        if workflows_dir.exists():
+            for workflow_file in workflows_dir.glob("*.json"):
+                try:
+                    with open(workflow_file, 'r') as f:
+                        workflow = json.load(f)
+                        workflows.append({
+                            'id': workflow.get('id', workflow_file.stem),
+                            'name': workflow.get('name', workflow_file.stem.replace('_', ' ').title()),
+                            'description': _extract_workflow_description(workflow),
+                            'trigger': _extract_trigger_type(workflow),
+                            'active': workflow.get('active', False)
+                        })
+                except Exception as e:
+                    logger.error(f"Error loading workflow {workflow_file}: {e}")
+        
+        return workflows
+    except Exception as e:
+        logger.error(f"Error listing workflows: {e}")
+        return []
+
+
+def _extract_capabilities(flow: dict) -> list:
+    """Extract capabilities from Langflow flow"""
+    capabilities = []
+    
+    # Look for system message that might contain capabilities
+    for node in flow.get('nodes', []):
+        if node.get('type') == 'ChatOllama':
+            system_msg = node.get('data', {}).get('system_message', '')
+            if 'capabilities include:' in system_msg.lower():
+                caps_text = system_msg.split('capabilities include:')[1]
+                capabilities = [c.strip() for c in caps_text.replace('.', '').split(',')]
+    
+    # Default capabilities if none found
+    if not capabilities:
+        capabilities = ['task_execution', 'llm_reasoning', 'memory_access']
+    
+    return capabilities[:5]  # Limit to 5
+
+
+def _get_agent_icon(agent_id: str) -> str:
+    """Get icon for agent type"""
+    icons = {
+        'boot_hardening': '🛡️',
+        'daily_brief': '📊',
+        'focus_guardrails': '🎯',
+        'security': '🔒',
+        'productivity': '⚡',
+        'research': '🔍',
+        'content': '🎨'
+    }
+    
+    for key, icon in icons.items():
+        if key in agent_id.lower():
+            return icon
+    
+    return '🤖'
+
+
+def _extract_workflow_description(workflow: dict) -> str:
+    """Extract description from n8n workflow"""
+    # Get first few nodes and create description
+    nodes = workflow.get('nodes', [])
+    if nodes:
+        triggers = [n for n in nodes if 'trigger' in n.get('type', '').lower()]
+        if triggers:
+            return f"Triggered workflow with {len(nodes)} steps"
+    return "Automated workflow"
+
+
+def _extract_trigger_type(workflow: dict) -> str:
+    """Extract trigger type from n8n workflow"""
+    nodes = workflow.get('nodes', [])
+    for node in nodes:
+        node_type = node.get('type', '').lower()
+        if 'schedule' in node_type:
+            params = node.get('parameters', {})
+            rule = params.get('rule', {})
+            interval = rule.get('interval', [{}])[0] if rule.get('interval') else {}
+            cron = interval.get('expression', 'Schedule')
+            return f"Cron: {cron}"
+        elif 'webhook' in node_type:
+            return "Webhook"
+        elif 'manual' in node_type:
+            return "Manual"
+    return "Unknown"
+
+
+# ============================================================================
+# INTAKE AGENT - Natural Language Agent Team Creation
+# ============================================================================
+
+@app.get("/intake-agent", response_class=HTMLResponse)
+async def intake_agent_ui():
+    """Serve the standalone intake agent UI (legacy)"""
+    ui_file = Path(__file__).parent / "intake_agent_ui.html"
+    with open(ui_file, 'r') as f:
+        return HTMLResponse(content=f.read())
+
+
+@app.post("/api/intake-agent/chat")
+async def intake_agent_chat(request: Request):
+    """
+    Handle intake agent conversation.
+    Processes natural language input and creates custom agent teams.
+    """
+    try:
+        # Import the intake agent
+        import sys
+        from pathlib import Path
+        
+        # Add agents directory to path
+        agents_dir = Path(__file__).parent.parent / "agents"
+        sys.path.insert(0, str(agents_dir))
+        
+        from intake_agent.intake_agent import IntakeAgent
+        
+        # Parse request
+        data = await request.json()
+        message = data.get('message', '')
+        context = data.get('context', {'stage': 'initial'})
+        history = data.get('history', [])
+        
+        # Process with intake agent
+        agent = IntakeAgent()
+        result = agent.process_message(message, context, history)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Intake agent error: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        return {
+            'response': f'I encountered an error: {str(e)}. Please try again.',
+            'context': context,
+            'isHtml': False
+        }
 
 
 if __name__ == "__main__":
