@@ -1,12 +1,14 @@
-.PHONY: help start stop restart logs status pull-models setup clean check-operational security-check test validate backup pre-commit-install
+.PHONY: help start stop restart logs status pull-models setup clean check-operational security-check test validate backup pre-commit-install setup-wizard validate-production
 
 help:
 	@echo "OsMEN - Management Commands"
 	@echo ""
 	@echo "Setup & Deployment:"
 	@echo "  make setup             - Initial setup (copy .env, create dirs)"
+	@echo "  make setup-wizard      - Interactive setup wizard (recommended for first-time)"
 	@echo "  make pre-commit-install - Install pre-commit hooks"
 	@echo "  make validate          - Run all validation checks"
+	@echo "  make validate-production - Comprehensive production readiness check"
 	@echo ""
 	@echo "Service Management:"
 	@echo "  make start             - Start all services"
@@ -40,6 +42,10 @@ setup:
 	@echo "2. Run 'make security-check' to validate configuration"
 	@echo "3. Run 'make start' to start services"
 	@echo "4. Run 'make validate' to verify everything is working"
+
+setup-wizard:
+	@echo "Starting interactive setup wizard..."
+	@python3 scripts/automation/setup_wizard.py
 
 start:
 	@echo "Starting OsMEN services..."
