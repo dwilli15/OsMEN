@@ -28,5 +28,6 @@
     "python": true
   },
   "continue.telemetryEnabled": false,
-  "continue.enableTabAutocomplete": true
+  "continue.enableTabAutocomplete": true,
+  "chat.mcp.serverSampling": {}
 }
