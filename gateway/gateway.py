@@ -20,7 +20,7 @@ import httpx
 import asyncpg
 import redis.asyncio as redis
 
-
+from rate_limiter import RateLimiter
 from resilience import retryable_llm_call
 
 # Configure logging
