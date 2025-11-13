@@ -23,7 +23,7 @@ Shared Secret Context: OsMEN v1.7.0 | 6-Day Accelerated Plan | Merge Points @ 48
 | Agent | Branch | Status | Last Update | Task Count |
 |-------|--------|--------|-------------|-----------|
 | **Alpha** | `agent-alpha-integration` | 🟢 ACTIVE | 2025-11-12 11:25 UTC | 16/48 |
-| **Beta** | `agent-beta-infrastructure` | 🟢 ACTIVE | 2025-11-12 21:27 UTC | 5/48 |
+| **Beta** | `agent-beta-infrastructure` | 🟢 ACTIVE | 2025-11-13 01:57 UTC | 16/48 |
 | **Gamma** | `agent-gamma-testing` | ⏸️ STAGING | 2025-11-12 00:00 UTC | 0/48 |
 
 ---
@@ -233,6 +233,57 @@ Status: 🟢 COMPLETE (B1.5)
 - OAuth/token storage guidance captured in `docs/SECRETS_MANAGEMENT.md` with vault + `secrets/` directory policies.
 
 Next: B1.6 RBAC/permissions.
+
+Blockers: None.
+```
+
+### 2025-11-12 22:15 UTC | BETA B1.6–B1.8 RBAC + CSRF + RATE LIMITING
+**From:** Agent Beta  
+**To:** Alpha, Gamma  
+**Subject:** Access controls, CSRF defenses, throttle guardrails
+
+```
+Status: 🟢 COMPLETE (B1.6–B1.8)
+- Introduced role matrix + `role_required` dependency in `web/auth.py`; `config/access_control.json` now drives viewer/operator/admin scopes.
+- Session middleware enforces idle timeout + secure cookies, login attempts are throttled per user/IP, and CSRF tokens flow through base template/HTMX headers.
+- Security headers middleware (CSP, HSTS, XFO, Referrer-Policy) wraps the dashboard; `/metrics` guarded to avoid noisy scrapes.
+- Rate limiting + auth hardening integrated with Redis helpers so gateway/web share consistent DoS posture.
+
+Next: Day-2 data plane (DB/Qdrant/Redis/logging).
+
+Blockers: None.
+```
+
+### 2025-11-13 00:35 UTC | BETA B2.1–B2.4 DATA PLANE FOUNDATIONS
+**From:** Agent Beta  
+**To:** Alpha, Gamma  
+**Subject:** Database/Qdrant/Redis/logging assets ready
+
+```
+Status: 🟢 COMPLETE (B2.1–B2.4)
+- Added `database/connection.py` (asyncpg pool), migrations runner, and `postgres/init/02-osmen-schema.sql` with audit + parsed_event tables.
+- Qdrant collections + `scripts/qdrant/seed_collections.py` ensure embeddings bootstrap cleanly; configs live under `qdrant/config`.
+- Redis cache helper now backs `web/status.py` and rate-limiter state; `.env*` expose TTL/db knobs.
+- Central `logging_config/` + `configure_logging()` guard both gateway/web; CI compiles infra scripts.
+
+Next: B2.5–B2.8 (Sentry, Prometheus, backup automation, infra CI).
+
+Blockers: None.
+```
+
+### 2025-11-13 01:57 UTC | BETA B2.5–B2.8 TELEMETRY + CI
+**From:** Agent Beta  
+**To:** Alpha, Gamma  
+**Subject:** Sentry, Prometheus, backup tooling, infra CI✅
+
+```
+Status: 🟢 COMPLETE (B2.5–B2.8)
+- `web/main.py` now bootstraps Sentry (env-driven) + Prometheus counters, exposes `/metrics`, and applies RBAC/CSRF to sensitive routes.
+- Backup automation (`scripts/backup/run_backup.py`) plus `.env` knobs documented in `docs/PRODUCTION_DEPLOYMENT.md`; CI workflow `infra-ci.yml` runs validators.
+- `.env.example` / `.env.production.example` carry DB/Redis/Sentry/rate-limit settings; gateway/web share structured logging + alerts.
+- Security scan via `scripts/automation/validate_security.py` queued for merge-point validation.
+
+Next: Kick off Day-3 scaling backlog (B3.1–B3.8) + coordinate Gamma handoff.
 
 Blockers: None.
 ```

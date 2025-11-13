@@ -17,6 +17,7 @@ secrets/
 
 # Logs
 logs/*
+backups/
 !logs/.gitkeep
 *.log
 
@@ -94,6 +95,8 @@ content/output/*
 *.backup
 backup/
 backups/
+!scripts/backup/
+!scripts/backup/**
 
 # Security and audit
 security_audit/

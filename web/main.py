@@ -3,24 +3,64 @@
 Main application entry point providing no-code interface for system management.
 """
 
-import os
-import json
 import asyncio
-from datetime import datetime
+import json
+import logging
+import os
+import time
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, Request, Depends, HTTPException, Form
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi import Depends, FastAPI, Form, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.middleware.cors import CORSMiddleware
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from .auth import get_current_user, login_user, logout_user, check_auth
-from .status import get_system_status, get_agent_health, get_service_health, get_memory_system_status
+from logging_config import configure_logging
+from .auth import (
+    ensure_csrf_token,
+    get_current_user,
+    login_user,
+    logout_user,
+    role_required,
+    validate_csrf,
+)
+from .status import (
+    get_agent_health,
+    get_memory_system_status,
+    get_service_health,
+    get_system_status,
+)
 from .agent_config import AgentConfigManager
 from .digest import DigestGenerator
+
+try:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+except ImportError:  # pragma: no cover - sentry optional in dev
+    sentry_sdk = None
+    FastApiIntegration = None
+
+configure_logging()
+logger = logging.getLogger(__name__)
+
+APP_VERSION = "1.7.0"
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
+SESSION_COOKIE_MAX_AGE = int(os.getenv("SESSION_COOKIE_MAX_AGE", "3600"))
+ENFORCE_HTTPS = os.getenv("ENFORCE_HTTPS", "false").lower() == "true"
+METRICS_ENABLED = os.getenv("PROMETHEUS_METRICS_ENABLED", "true").lower() == "true"
+
+SENTRY_DSN = os.getenv("SENTRY_DSN")
+SENTRY_ENVIRONMENT = os.getenv("SENTRY_ENVIRONMENT", ENVIRONMENT)
+SENTRY_TRACES_SAMPLE_RATE = float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.2"))
+SENTRY_RELEASE = os.getenv("SENTRY_RELEASE", f"osmen-web@{APP_VERSION}")
 
 # Initialize agent config manager and digest generator
 config_manager = AgentConfigManager()
@@ -30,12 +70,50 @@ digest_generator = DigestGenerator()
 app = FastAPI(
     title="OsMEN Dashboard",
     description="No-code interface for Jarvis-like AI assistant",
-    version="1.7.0"
+    version=APP_VERSION
 )
+
+if sentry_sdk and SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=SENTRY_ENVIRONMENT,
+        release=SENTRY_RELEASE,
+        traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
+        integrations=[FastApiIntegration()] if FastApiIntegration else None,
+    )
 
 # Add session middleware
 SECRET_KEY = os.getenv("WEB_SECRET_KEY", "dev-secret-key-change-in-production")
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+SESSION_COOKIE_SAMESITE = "none" if SESSION_COOKIE_SECURE else "lax"
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SECRET_KEY,
+    https_only=SESSION_COOKIE_SECURE,
+    max_age=SESSION_COOKIE_MAX_AGE,
+    same_site=SESSION_COOKIE_SAMESITE,
+)
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Apply common security headers to every response."""
+
+    def __init__(self, app):
+        super().__init__(app)
+        self.csp = os.getenv("WEB_CONTENT_SECURITY_POLICY", "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self'; font-src 'self';")
+
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        if ENFORCE_HTTPS:
+            response.headers.setdefault("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        response.headers.setdefault("Content-Security-Policy", self.csp)
+        return response
+
+PROMETHEUS_ENABLED = METRICS_ENABLED
+REQUEST_COUNT = Counter("osmen_web_requests_total", "Total dashboard HTTP requests", ["method", "path", "status"])
+REQUEST_LATENCY = Histogram("osmen_web_request_duration_seconds", "Dashboard HTTP request duration", ["path"])
 
 # Add CORS middleware
 app.add_middleware(
@@ -46,14 +124,45 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Security headers middleware
+app.add_middleware(SecurityHeadersMiddleware)
+
+if ENFORCE_HTTPS:
+    app.add_middleware(HTTPSRedirectMiddleware)
+
+if PROMETHEUS_ENABLED:
+    @app.middleware("http")
+    async def prometheus_middleware(request: Request, call_next):
+        if request.url.path == "/metrics":
+            return await call_next(request)
+        start = time.perf_counter()
+        response = await call_next(request)
+        duration = time.perf_counter() - start
+        REQUEST_COUNT.labels(request.method, request.url.path, str(response.status_code)).inc()
+        REQUEST_LATENCY.labels(request.url.path).observe(duration)
+        return response
+
 # Setup templates and static files
 BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 # Log buffer for live streaming
 log_buffer = []
 MAX_LOG_BUFFER = 100
+
+def template_context(request: Request, extra: Optional[dict] = None) -> dict:
+    ctx = {"request": request, "csrf_token": ensure_csrf_token(request)}
+    if extra:
+        ctx.update(extra)
+    return ctx
+
+
+ViewerRole = Depends(role_required("viewer"))
+OperatorRole = Depends(role_required("operator"))
+AdminRole = Depends(role_required("admin"))
+
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -68,17 +177,23 @@ async def root(request: Request):
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     """Login page."""
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse("login.html", template_context(request))
 
 
 @app.post("/login")
-async def login(request: Request, username: str = Form(...), password: str = Form(...)):
+async def login(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    csrf_token: str = Form(...)
+):
     """Handle login form submission."""
+    validate_csrf(request, csrf_token)
     if await login_user(request, username, password):
         return RedirectResponse(url="/dashboard", status_code=303)
     return templates.TemplateResponse(
-        "login.html", 
-        {"request": request, "error": "Invalid username or password"}
+        "login.html",
+        template_context(request, {"error": "Invalid username or password"})
     )
 
 
@@ -100,7 +215,7 @@ async def health_check():
     return {
         "status": "ok",
         "service": "OsMEN Dashboard",
-        "version": "1.7.0",
+        "version": APP_VERSION,
         "timestamp": datetime.now().isoformat()
     }
 
@@ -114,14 +229,12 @@ async def readiness_check():
     """
     # Check if critical files/directories exist
     critical_paths = [
-        Path("/home/runner/work/OsMEN/OsMEN/.copilot/memory.json"),
-        Path("/home/runner/work/OsMEN/OsMEN/agents"),
-        Path("/home/runner/work/OsMEN/OsMEN/web")
+        PROJECT_ROOT / ".copilot" / "memory.json",
+        PROJECT_ROOT / "agents",
+        PROJECT_ROOT / "web",
     ]
-    
-    all_ready = all(path.exists() for path in critical_paths)
-    
-    if not all_ready:
+
+    if not all(path.exists() for path in critical_paths):
         return {
             "status": "not_ready",
             "message": "Critical dependencies not available",
@@ -142,7 +255,7 @@ async def readiness_check():
     return {
         "status": "ready",
         "service": "OsMEN Dashboard",
-        "version": "1.7.0",
+        "version": APP_VERSION,
         "timestamp": datetime.now().isoformat()
     }
 
@@ -156,18 +269,25 @@ async def kubernetes_health():
     return await health_check()
 
 
+@app.get("/metrics")
+async def metrics_endpoint():
+    """Expose Prometheus metrics when enabled."""
+    if not PROMETHEUS_ENABLED:
+        raise HTTPException(status_code=404, detail="Metrics disabled")
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request, user: dict = Depends(check_auth)):
     """Main dashboard page."""
     status = await get_system_status()
     return templates.TemplateResponse(
         "dashboard.html",
-        {
-            "request": request,
+        template_context(request, {
             "user": user,
             "status": status,
-            "now": datetime.now()
-        }
+            "now": datetime.now(),
+        })
     )
 
 
@@ -190,25 +310,25 @@ async def services_api(user: dict = Depends(check_auth)):
 
 
 @app.get("/agents", response_class=HTMLResponse)
-async def agents_page(request: Request, user: dict = Depends(check_auth)):
+async def agents_page(request: Request, user: dict = Depends(OperatorRole)):
     """Agent configuration page."""
     return templates.TemplateResponse(
         "agents.html",
-        {
-            "request": request,
+        template_context(request, {
             "user": user,
             "agents": config_manager.get_all_agents(),
             "langflow_workflows": config_manager.get_langflow_workflows(),
             "n8n_workflows": config_manager.get_n8n_workflows(),
             "memory": config_manager.get_memory_settings(),
-            "notifications": config_manager.get_notification_settings()
-        }
+            "notifications": config_manager.get_notification_settings(),
+        })
     )
 
 
 @app.post("/api/agents/{agent_name}/toggle")
-async def toggle_agent(agent_name: str, user: dict = Depends(check_auth)):
+async def toggle_agent(agent_name: str, request: Request, user: dict = Depends(OperatorRole)):
     """Toggle agent enabled/disabled."""
+    validate_csrf(request, request.headers.get("X-CSRF-Token"))
     agent = config_manager.get_agent(agent_name)
     if agent:
         config_manager.toggle_agent(agent_name, not agent.get("enabled", False))
@@ -218,9 +338,10 @@ async def toggle_agent(agent_name: str, user: dict = Depends(check_auth)):
 
 
 @app.post("/api/memory/settings")
-async def update_memory_settings(request: Request, user: dict = Depends(check_auth)):
+async def update_memory_settings(request: Request, user: dict = Depends(OperatorRole)):
     """Update memory settings."""
     form_data = await request.form()
+    validate_csrf(request, form_data.get('csrf_token'))
     settings = {
         "conversation_retention_days": int(form_data.get("conversation_retention_days", 45)),
         "summary_retention_months": int(form_data.get("summary_retention_months", 12)),
@@ -233,9 +354,10 @@ async def update_memory_settings(request: Request, user: dict = Depends(check_au
 
 
 @app.post("/api/notifications/settings")
-async def update_notification_settings(request: Request, user: dict = Depends(check_auth)):
+async def update_notification_settings(request: Request, user: dict = Depends(OperatorRole)):
     """Update notification settings."""
     form_data = await request.form()
+    validate_csrf(request, form_data.get('csrf_token'))
     settings = {
         "email_enabled": form_data.get("email_enabled") == "on",
         "push_enabled": form_data.get("push_enabled") == "on",
@@ -251,21 +373,20 @@ async def update_notification_settings(request: Request, user: dict = Depends(ch
 
 
 @app.get("/digest", response_class=HTMLResponse)
-async def digest_page(request: Request, user: dict = Depends(check_auth)):
+async def digest_page(request: Request, user: dict = Depends(ViewerRole)):
     """Daily digest page."""
     date = request.query_params.get('date', datetime.now().strftime('%Y-%m-%d'))
     data = digest_generator.get_digest_data(date)
     return templates.TemplateResponse(
         "digest.html",
-        {
-            "request": request,
+        template_context(request, {
             "user": user,
             "date": date,
             "activities": data['activities'],
             "task_stats": data['task_statistics'],
             "procrastination": data['procrastination_insights'],
-            "health": data['health_correlations']
-        }
+            "health": data['health_correlations'],
+        })
     )
 
 
@@ -280,6 +401,7 @@ async def get_digest_data_api(request: Request, user: dict = Depends(check_auth)
 async def save_digest_feedback(request: Request, user: dict = Depends(check_auth)):
     """Save daily feedback."""
     form_data = await request.form()
+    validate_csrf(request, form_data.get('csrf_token'))
     date = form_data.get('date')
     feedback = {
         'mood': int(form_data.get('mood', 3)),

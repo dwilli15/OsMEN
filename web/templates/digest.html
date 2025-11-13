@@ -111,6 +111,7 @@
         <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-xl font-semibold mb-4">Daily Reflection</h2>
             <form hx-post="/api/digest/feedback" hx-target="#feedback-response" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <input type="hidden" name="date" value="{{ date }}">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
