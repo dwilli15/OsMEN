@@ -545,8 +545,17 @@ What would you like to do next?"""
         return flow
 
     def _register_agent_with_dashboard(self, agent_slug: str, agent: Dict, artifacts: Dict[str, Any]) -> Dict[str, Any]:
-        """Register agent configuration so it appears in the dashboard."""
+        """Register agent configuration so it appears in the dashboard.
 
+        Args:
+            agent_slug (str): URL-safe identifier for the agent.
+            agent (Dict): Agent configuration containing name, purpose, and capabilities.
+            artifacts (Dict[str, Any]): Generated artifacts including langflow and n8n definitions.
+
+        Returns:
+            Dict[str, Any]: Status dictionary with 'status' key ('success' or 'error') and
+                optional 'error' message.
+        """
         try:
             agent_metadata = {
                 'name': agent['name'],
