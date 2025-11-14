@@ -644,7 +644,7 @@ What would you like to do next?"""
                 if response.status_code < 400:
                     try:
                         data = response.json()
-                    except ValueError:
+                    except requests.exceptions.JSONDecodeError:
                         data = {}
                     return {'status': 'success', 'endpoint': url, 'response': data}
                 logger.debug(f"Langflow API error: {response.status_code}: {response.text}")
