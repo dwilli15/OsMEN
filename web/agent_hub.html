@@ -404,6 +404,106 @@
             border-color: #667eea;
         }
 
+        .structured-ui {
+            margin-top: 20px;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 15px 40px rgba(79, 114, 205, 0.12);
+        }
+
+        .team-review-panel h3 {
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .team-review-intro {
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+
+        .team-review-summary {
+            background: #f5f7ff;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .team-review-agents {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .agent-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .agent-row .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .agent-row label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        .agent-row input,
+        .agent-row textarea,
+        .agent-row select {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .agent-row input:focus,
+        .agent-row textarea:focus,
+        .agent-row select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);
+        }
+
+        .agent-row textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .agent-row .field-toggle {
+            align-items: center;
+            justify-content: center;
+        }
+
+        .team-review-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .team-review-action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .loading-message {
+            color: #6b7280;
+            text-align: center;
+            font-size: 14px;
+        }
+
         /* Workflows View */
         .workflow-list {
             background: white;
@@ -642,14 +742,17 @@
                         </div>
                     </div>
                     <div class="chat-input-container">
-                        <input 
-                            type="text" 
-                            id="chatInput" 
-                            placeholder="Describe what you need help with..." 
+                        <input
+                            type="text"
+                            id="chatInput"
+                            placeholder="Describe what you need help with..."
                             autocomplete="off"
                         />
                         <button class="btn btn-primary" onclick="sendChatMessage()">Send</button>
                     </div>
+                </div>
+                <div class="structured-ui" id="structuredUi" hidden>
+                    <div id="teamReviewContainer"></div>
                 </div>
             </div>
 
@@ -704,6 +807,9 @@
         let workflows = [];
         let conversationHistory = [];
         let agentContext = { stage: 'initial' };
+        let structuredUiLoaded = false;
+        let typePickerTemplate = '';
+        let newAgentCounter = 0;
 
         // Navigation
         document.querySelectorAll('.nav-item').forEach(item => {
@@ -744,6 +850,210 @@
             // Load data for specific views
             if (viewName === 'agents') loadAgents();
             if (viewName === 'workflows') loadWorkflows();
+        }
+
+        async function ensureReviewUi() {
+            const panel = document.getElementById('structuredUi');
+            if (!panel) return;
+
+            if (!structuredUiLoaded) {
+                const container = document.getElementById('teamReviewContainer');
+                container.innerHTML = '<p class="loading-message">Loading review tools…</p>';
+
+                const [formResponse, pickerResponse] = await Promise.all([
+                    fetch('/api/intake-agent/forms/team-review'),
+                    fetch('/api/intake-agent/forms/agent-type-picker')
+                ]);
+
+                if (!formResponse.ok || !pickerResponse.ok) {
+                    throw new Error('Unable to load review templates');
+                }
+
+                container.innerHTML = await formResponse.text();
+                typePickerTemplate = await pickerResponse.text();
+                structuredUiLoaded = true;
+                attachReviewFormEvents();
+            }
+        }
+
+        async function updateReviewUi(review) {
+            const panel = document.getElementById('structuredUi');
+            if (!panel) return;
+
+            if (!review || !review.agents || review.agents.length === 0) {
+                panel.hidden = true;
+                return;
+            }
+
+            await ensureReviewUi();
+
+            panel.hidden = false;
+            const summary = document.getElementById('teamReviewSummary');
+            if (summary) {
+                summary.innerHTML = review.summaryHtml || '';
+            }
+
+            populateTeamReviewAgents(review.agents);
+        }
+
+        function populateTeamReviewAgents(agents) {
+            const container = document.getElementById('teamReviewAgents');
+            if (!container) return;
+
+            container.innerHTML = '';
+            newAgentCounter = 0;
+
+            agents.forEach((agent, index) => {
+                const row = createAgentRow(agent, index, false);
+                container.appendChild(row);
+            });
+        }
+
+        function createAgentRow(agent = {}, index = 0, isNew = false) {
+            const row = document.createElement('div');
+            row.className = 'agent-row';
+            row.dataset.index = isNew ? 'new' : index;
+            row.dataset.isNew = isNew ? 'true' : 'false';
+
+            const capabilities = Array.isArray(agent.capabilities)
+                ? agent.capabilities.join(', ')
+                : (agent.capabilities || '');
+
+            row.innerHTML = `
+                <div class="field">
+                    <label>Name</label>
+                    <input type="text" class="agent-name" value="${agent.name || ''}" placeholder="Agent name" />
+                </div>
+                <div class="field">
+                    <label>Role</label>
+                    ${typePickerTemplate}
+                </div>
+                <div class="field">
+                    <label>Purpose</label>
+                    <textarea class="agent-purpose" rows="2" placeholder="What does this agent do?">${agent.purpose || ''}</textarea>
+                </div>
+                <div class="field">
+                    <label>Capabilities</label>
+                    <input type="text" class="agent-capabilities" value="${capabilities}" placeholder="Comma separated" />
+                </div>
+                <div class="field field-toggle">
+                    <label>Keep</label>
+                    <input type="checkbox" class="agent-keep" ${agent.keep === false ? '' : 'checked'} />
+                </div>
+            `;
+
+            const select = row.querySelector('.agent-type-select');
+            if (select) {
+                select.value = agent.type || 'specialist';
+            }
+
+            return row;
+        }
+
+        function collectReviewFormData() {
+            const rows = Array.from(document.querySelectorAll('#teamReviewAgents .agent-row'));
+            return rows.map((row, index) => {
+                const capabilitiesRaw = row.querySelector('.agent-capabilities')?.value || '';
+                const capabilities = capabilitiesRaw
+                    .split(',')
+                    .map(cap => cap.trim())
+                    .filter(Boolean);
+
+                const isNew = row.dataset.isNew === 'true';
+
+                return {
+                    index: isNew ? 'new' : Number(row.dataset.index ?? index),
+                    name: row.querySelector('.agent-name')?.value.trim() || '',
+                    type: row.querySelector('.agent-type-select')?.value || 'specialist',
+                    purpose: row.querySelector('.agent-purpose')?.value.trim() || '',
+                    capabilities,
+                    keep: row.querySelector('.agent-keep')?.checked !== false,
+                    action: isNew ? 'add' : 'update'
+                };
+            });
+        }
+
+        function attachReviewFormEvents() {
+            const addButton = document.getElementById('addAgentButton');
+            const updateButton = document.getElementById('updateTeamButton');
+            const deployButton = document.getElementById('deployTeamButton');
+
+            if (addButton) {
+                addButton.addEventListener('click', () => addAgentRow());
+            }
+
+            if (updateButton) {
+                updateButton.addEventListener('click', () => applyReviewChanges());
+            }
+
+            if (deployButton) {
+                deployButton.addEventListener('click', () => deployTeamFromUi());
+            }
+        }
+
+        async function addAgentRow() {
+            await ensureReviewUi();
+            const container = document.getElementById('teamReviewAgents');
+            if (!container) return;
+
+            newAgentCounter += 1;
+            const row = createAgentRow({ type: 'specialist', purpose: '', capabilities: [] }, newAgentCounter, true);
+            container.appendChild(row);
+        }
+
+        async function applyReviewChanges() {
+            try {
+                const modifications = {
+                    action: 'update',
+                    agents: collectReviewFormData()
+                };
+
+                const response = await fetch('/api/intake-agent/review', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        context: agentContext,
+                        modifications
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update team');
+                }
+
+                const data = await response.json();
+                addChatMessage(data.response, false, data.isHtml);
+                if (data.context) agentContext = data.context;
+                await updateReviewUi(data.review);
+            } catch (error) {
+                addChatMessage('Unable to apply changes right now. Please try again.', false);
+                console.error(error);
+            }
+        }
+
+        async function deployTeamFromUi() {
+            try {
+                const response = await fetch('/api/intake-agent/deploy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ context: agentContext })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Deployment failed');
+                }
+
+                const data = await response.json();
+                addChatMessage(data.response, false, data.isHtml);
+                if (data.context) agentContext = data.context;
+                if (data.agentsCreated) {
+                    setTimeout(() => loadAgents(), 1000);
+                }
+                await updateReviewUi(null);
+            } catch (error) {
+                addChatMessage('Deployment encountered an issue. Check logs and try again.', false);
+                console.error(error);
+            }
         }
 
         // Load agents
@@ -856,8 +1166,9 @@
 
                 const data = await response.json();
                 addChatMessage(data.response, false, data.isHtml);
-                
+
                 if (data.context) agentContext = data.context;
+                await updateReviewUi(data.review);
                 if (data.agentsCreated) {
                     // Refresh agents list
                     setTimeout(() => loadAgents(), 1000);

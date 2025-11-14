@@ -17,7 +17,9 @@
 
 ## Under Evaluation
 
-*No items currently under evaluation*
+- **LangGraph Workflow Export Bridge**
+  - **Focus:** Enable exporting OsMEN agent teams into LangGraph graphs for advanced orchestration
+  - **Questions:** Map capabilities? Maintain memory hand-off? Support hybrid Langflow/LangGraph deployments?
 
 ---
 
@@ -92,6 +94,44 @@ Automated weekly scan of AI/agent frameworks, tools, and patterns.
 - Proactive enhancement
 
 **Status:** Approved, planned for next version
+
+---
+
+### LLM Requirement Parser
+**Category:** Core Platform
+**Priority:** P0
+**Target:** v1.2.0
+
+**Description:**
+Use production LLMs to translate natural language intents into structured agent requirements (domain, automation level, cadence, KPIs).
+
+**Implementation Plan:**
+1. Define prompt + schema contracts
+2. Add resilient API client with fallback heuristics
+3. Wire intake agent state machine to LLM outputs
+4. Capture telemetry for parsing confidence
+5. Document operator overrides and testing matrix
+
+**Status:** In progress (beta shipping in Agent Hub)
+
+---
+
+### Agent Hub Structured Review UI
+**Category:** No-Code Experience
+**Priority:** P1
+**Target:** v1.3.0
+
+**Description:**
+Form-based controls inside the Agent Hub allowing non-technical users to adjust proposed agent teams without typing natural-language commands.
+
+**Implementation Plan:**
+1. Build reusable Jinja partials for selectors and review form
+2. Add FastAPI endpoints for template + structured modification APIs
+3. Render form inside Agent Hub with stateful JS helpers
+4. Sync structured edits back to intake agent context and files
+5. Gather usability feedback and refine accessibility styling
+
+**Status:** Beta released (feedback loop open)
 
 ---
 

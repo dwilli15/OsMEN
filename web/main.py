@@ -14,7 +14,7 @@ from typing import Optional
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
@@ -24,6 +24,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from logging_config import configure_logging
 from .auth import (
+    check_auth,
     ensure_csrf_token,
     get_current_user,
     login_user,
@@ -156,6 +157,19 @@ for module_dir in ['integrations', 'scheduling', 'parsers', 'reminders', 'health
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
+AGENT_TYPE_OPTIONS = [
+    ("coordinator", "Coordinator"),
+    ("specialist", "Specialist"),
+    ("automation", "Automation"),
+    ("monitor", "Monitor"),
+    ("analyst", "Analyst"),
+]
+
+INTAKE_AGENT_FORM_TEMPLATES = {
+    "team-review": ("team_review_form.html", {}),
+    "agent-type-picker": ("agent_type_picker.html", {"agent_types": AGENT_TYPE_OPTIONS}),
+}
+
 # Log buffer for live streaming
 log_buffer = []
 MAX_LOG_BUFFER = 100
@@ -170,6 +184,21 @@ def template_context(request: Request, extra: Optional[dict] = None) -> dict:
 ViewerRole = Depends(role_required("viewer"))
 OperatorRole = Depends(role_required("operator"))
 AdminRole = Depends(role_required("admin"))
+
+
+def get_intake_agent():
+    """Dynamically load the intake agent implementation."""
+
+    import sys
+
+    agents_dir = Path(__file__).parent.parent / "agents"
+    agents_path = str(agents_dir)
+    if agents_path not in sys.path:
+        sys.path.insert(0, agents_path)
+
+    from intake_agent.intake_agent import IntakeAgent  # pylint: disable=import-error
+
+    return IntakeAgent()
 
 # In-memory tracker for parsed syllabus previews
 active_uploads = {}
@@ -478,7 +507,7 @@ async def export_digest_json(request: Request, user: dict = Depends(check_auth))
 async def calendar_page(request: Request, user: dict = Depends(check_auth)):
     """Calendar management page."""
     # Import calendar manager
-    from calendar.calendar_manager import CalendarManager
+    from calendar_manager import CalendarManager
     
     manager = CalendarManager()
     status = manager.get_status()
@@ -500,7 +529,7 @@ async def google_calendar_oauth(request: Request, user: dict = Depends(check_aut
     """Initiate Google Calendar OAuth flow."""
     # Import Google Calendar integration
     import sys
-    from calendar.google_calendar import GoogleCalendarIntegration
+    from google_calendar import GoogleCalendarIntegration
     
     try:
         google_cal = GoogleCalendarIntegration()
@@ -524,7 +553,7 @@ async def google_calendar_callback(request: Request, code: str = None, user: dic
         raise HTTPException(status_code=400, detail="Authorization code required")
     
     import sys
-    from calendar.calendar_manager import CalendarManager
+    from calendar_manager import CalendarManager
     
     try:
         manager = CalendarManager()
@@ -554,7 +583,7 @@ async def outlook_calendar_oauth(request: Request, user: dict = Depends(check_au
     """Initiate Outlook Calendar OAuth flow."""
     # Import Outlook Calendar integration
     import sys
-    from calendar.outlook_calendar import OutlookCalendarIntegration
+    from outlook_calendar import OutlookCalendarIntegration
     
     try:
         outlook_cal = OutlookCalendarIntegration()
@@ -578,8 +607,8 @@ async def outlook_calendar_callback(request: Request, code: str = None, user: di
         raise HTTPException(status_code=400, detail="Authorization code required")
     
     import sys
-    from calendar.calendar_manager import CalendarManager
-    from calendar.outlook_calendar import OutlookCalendarIntegration
+    from calendar_manager import CalendarManager
+    from outlook_calendar import OutlookCalendarIntegration
     
     try:
         # Exchange code for access token
@@ -608,7 +637,7 @@ async def outlook_calendar_callback(request: Request, code: str = None, user: di
 async def list_calendar_events(request: Request, user: dict = Depends(check_auth)):
     """List calendar events."""
     import sys
-    from calendar.calendar_manager import CalendarManager
+    from calendar_manager import CalendarManager
     
     try:
         manager = CalendarManager()
@@ -626,7 +655,7 @@ async def list_calendar_events(request: Request, user: dict = Depends(check_auth
 async def sync_calendar_events(request: Request, user: dict = Depends(check_auth)):
     """Sync events to calendar (batch creation)."""
     import sys
-    from calendar.calendar_manager import CalendarManager
+    from calendar_manager import CalendarManager
     
     try:
         data = await request.json()
@@ -828,7 +857,7 @@ async def generate_schedule(request: Request, user: dict = Depends(check_auth)):
     
     try:
         # Get calendar events
-        from calendar.calendar_manager import CalendarManager
+        from calendar_manager import CalendarManager
         
         manager = CalendarManager()
         events = manager.list_events(max_results=100)
@@ -1041,16 +1070,6 @@ async def startup_event():
 
 
 # ============================================================================
-# HEALTH CHECK
-# ============================================================================
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint for Docker"""
-    return {"status": "healthy", "service": "osmen-web"}
-
-
-# ============================================================================
 # AGENT HUB - Comprehensive Agent Management Interface
 # ============================================================================
 
@@ -1061,6 +1080,18 @@ async def agent_hub():
     ui_file = Path(__file__).parent / "agent_hub.html"
     with open(ui_file, 'r') as f:
         return HTMLResponse(content=f.read())
+
+
+@app.get("/api/intake-agent/forms/{form_name}", response_class=HTMLResponse)
+async def intake_agent_form(form_name: str, request: Request):
+    """Serve partial templates used by the intake agent structured UI."""
+
+    template_info = INTAKE_AGENT_FORM_TEMPLATES.get(form_name)
+    if not template_info:
+        raise HTTPException(status_code=404, detail="Form not found")
+
+    template_name, extra = template_info
+    return templates.TemplateResponse(template_name, template_context(request, extra))
 
 
 @app.get("/api/agents")
@@ -1233,33 +1264,23 @@ async def intake_agent_chat(request: Request):
     Processes natural language input and creates custom agent teams.
     """
     try:
-        # Import the intake agent
-        import sys
-        from pathlib import Path
-        
-        # Add agents directory to path
-        agents_dir = Path(__file__).parent.parent / "agents"
-        sys.path.insert(0, str(agents_dir))
-        
-        from intake_agent.intake_agent import IntakeAgent
-        
         # Parse request
         data = await request.json()
         message = data.get('message', '')
         context = data.get('context', {'stage': 'initial'})
         history = data.get('history', [])
-        
+
         # Process with intake agent
-        agent = IntakeAgent()
+        agent = get_intake_agent()
         result = agent.process_message(message, context, history)
-        
+
         return result
         
     except Exception as e:
         logger.error(f"Intake agent error: {e}")
         import traceback
         traceback.print_exc()
-
+        
         return {
             'response': f'I encountered an error: {str(e)}. Please try again.',
             'context': context,
@@ -1267,38 +1288,36 @@ async def intake_agent_chat(request: Request):
         }
 
 
-@app.post("/api/intake-agent/deploy")
-async def intake_agent_deploy(request: Request):
-    """Deploy agents using the intake agent deployment pipeline."""
+@app.post("/api/intake-agent/review")
+async def intake_agent_review(request: Request):
+    """Apply structured modifications submitted via the Agent Hub UI."""
 
     try:
-        import sys
-        from pathlib import Path
+        data = await request.json()
+        context = data.get('context', {'stage': 'confirming'})
+        modifications = data.get('modifications', {})
 
-        agents_dir = Path(__file__).parent.parent / "agents"
-        sys.path.insert(0, str(agents_dir))
+        agent = get_intake_agent()
+        return agent.apply_structured_modifications(context, modifications)
+    except Exception as e:  # pragma: no cover - UI convenience
+        logger.error(f"Intake agent review error: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
-        from intake_agent.intake_agent import IntakeAgent
 
-        payload = await request.json()
-        context = payload.get('context', {})
+@app.post("/api/intake-agent/deploy")
+async def intake_agent_deploy(request: Request):
+    """Deploy the proposed agent team from structured UI controls."""
 
-        proposed_agents = payload.get('agents')
-        if proposed_agents:
-            context['proposedAgents'] = proposed_agents
+    try:
+        data = await request.json()
+        context = data.get('context', {'stage': 'confirming'})
 
-        if not context.get('proposedAgents'):
-            raise HTTPException(status_code=400, detail="No agents provided for deployment")
-
-        intake_agent = IntakeAgent()
-        result = intake_agent.deploy_agents(context)
-
-        return JSONResponse(result)
-    except HTTPException:
-        raise
-    except Exception as exc:
-        logger.error(f"Deployment error: {exc}")
-        raise HTTPException(status_code=500, detail=str(exc))
+        agent = get_intake_agent()
+        result = agent.deploy_team(context)
+        return result
+    except Exception as e:  # pragma: no cover - UI convenience
+        logger.error(f"Intake agent deploy error: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 if __name__ == "__main__":

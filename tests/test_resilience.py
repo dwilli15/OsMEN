@@ -8,12 +8,20 @@ import sys
 import os
 import asyncio
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
+
+import pytest
 import httpx
 
 # Add gateway to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'gateway'))
 
 from resilience import retryable_llm_call, is_retryable_http_error
+
+
+@pytest.fixture
+def anyio_backend():
+    """Limit AnyIO-backed tests to the asyncio backend for CI environments."""
+    return "asyncio"
 
 
 class TestRetryLogic:
@@ -67,7 +75,8 @@ class TestRetryLogic:
 
 class TestRetryDecorator:
     """Test the retry decorator functionality"""
-    
+
+    @pytest.mark.anyio
     async def test_retry_decorator_succeeds_first_try(self):
         """Test that decorator allows success on first try"""
         print("Testing decorator with successful first attempt...")
@@ -80,6 +89,7 @@ class TestRetryDecorator:
         assert result == "success", "Should succeed on first try"
         print("✓ PASS: Successful first attempt works")
     
+    @pytest.mark.anyio
     async def test_retry_decorator_retries_on_network_error(self):
         """Test that decorator retries on network errors"""
         print("Testing decorator retries on network error...")
@@ -99,6 +109,7 @@ class TestRetryDecorator:
         assert call_count == 2, "Should have retried once"
         print(f"✓ PASS: Retried {call_count - 1} time(s) before success")
     
+    @pytest.mark.anyio
     async def test_retry_decorator_exhausts_attempts(self):
         """Test that decorator exhausts all retry attempts"""
         print("Testing decorator exhausts retry attempts...")
@@ -118,6 +129,7 @@ class TestRetryDecorator:
             assert call_count == 3, f"Should have tried 3 times, tried {call_count}"
             print(f"✓ PASS: Exhausted all {call_count} attempts")
     
+    @pytest.mark.anyio
     async def test_retry_decorator_retries_on_retryable_status(self):
         """Test that decorator retries on retryable HTTP status codes"""
         print("Testing decorator retries on 503 error...")
@@ -139,6 +151,7 @@ class TestRetryDecorator:
         assert call_count == 2, "Should have retried once"
         print(f"✓ PASS: Retried on 503 error and succeeded")
     
+    @pytest.mark.anyio
     async def test_retry_decorator_does_not_retry_on_non_retryable_status(self):
         """Test that decorator does not retry on non-retryable HTTP status codes"""
         print("Testing decorator does not retry on 401 error...")
