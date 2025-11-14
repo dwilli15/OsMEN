@@ -24,6 +24,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from logging_config import configure_logging
 from .auth import (
+    check_auth,
     ensure_csrf_token,
     get_current_user,
     login_user,
@@ -506,7 +507,7 @@ async def export_digest_json(request: Request, user: dict = Depends(check_auth))
 async def calendar_page(request: Request, user: dict = Depends(check_auth)):
     """Calendar management page."""
     # Import calendar manager
-    from calendar.calendar_manager import CalendarManager
+    from calendar_manager import CalendarManager
     
     manager = CalendarManager()
     status = manager.get_status()
@@ -528,7 +529,7 @@ async def google_calendar_oauth(request: Request, user: dict = Depends(check_aut
     """Initiate Google Calendar OAuth flow."""
     # Import Google Calendar integration
     import sys
-    from calendar.google_calendar import GoogleCalendarIntegration
+    from google_calendar import GoogleCalendarIntegration
     
     try:
         google_cal = GoogleCalendarIntegration()
@@ -552,7 +553,7 @@ async def google_calendar_callback(request: Request, code: str = None, user: dic
         raise HTTPException(status_code=400, detail="Authorization code required")
     
     import sys
-    from calendar.calendar_manager import CalendarManager
+    from calendar_manager import CalendarManager
     
     try:
         manager = CalendarManager()
@@ -582,7 +583,7 @@ async def outlook_calendar_oauth(request: Request, user: dict = Depends(check_au
     """Initiate Outlook Calendar OAuth flow."""
     # Import Outlook Calendar integration
     import sys
-    from calendar.outlook_calendar import OutlookCalendarIntegration
+    from outlook_calendar import OutlookCalendarIntegration
     
     try:
         outlook_cal = OutlookCalendarIntegration()
@@ -606,8 +607,8 @@ async def outlook_calendar_callback(request: Request, code: str = None, user: di
         raise HTTPException(status_code=400, detail="Authorization code required")
     
     import sys
-    from calendar.calendar_manager import CalendarManager
-    from calendar.outlook_calendar import OutlookCalendarIntegration
+    from calendar_manager import CalendarManager
+    from outlook_calendar import OutlookCalendarIntegration
     
     try:
         # Exchange code for access token
@@ -636,7 +637,7 @@ async def outlook_calendar_callback(request: Request, code: str = None, user: di
 async def list_calendar_events(request: Request, user: dict = Depends(check_auth)):
     """List calendar events."""
     import sys
-    from calendar.calendar_manager import CalendarManager
+    from calendar_manager import CalendarManager
     
     try:
         manager = CalendarManager()
@@ -654,7 +655,7 @@ async def list_calendar_events(request: Request, user: dict = Depends(check_auth
 async def sync_calendar_events(request: Request, user: dict = Depends(check_auth)):
     """Sync events to calendar (batch creation)."""
     import sys
-    from calendar.calendar_manager import CalendarManager
+    from calendar_manager import CalendarManager
     
     try:
         data = await request.json()
@@ -856,7 +857,7 @@ async def generate_schedule(request: Request, user: dict = Depends(check_auth)):
     
     try:
         # Get calendar events
-        from calendar.calendar_manager import CalendarManager
+        from calendar_manager import CalendarManager
         
         manager = CalendarManager()
         events = manager.list_events(max_results=100)
