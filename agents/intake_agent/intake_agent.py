@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 
 import requests
+from requests.exceptions import JSONDecodeError
 
 from web.agent_config import AgentConfigManager
 
@@ -644,7 +645,7 @@ What would you like to do next?"""
                 if response.status_code < 400:
                     try:
                         data = response.json()
-                    except ValueError:
+                    except JSONDecodeError:
                         data = {}
                     return {'status': 'success', 'endpoint': url, 'response': data}
                 logger.debug(f"Langflow API error: {response.status_code}: {response.text}")
@@ -687,7 +688,7 @@ What would you like to do next?"""
             if response.status_code < 400:
                 try:
                     data = response.json()
-                except ValueError:
+                except JSONDecodeError:
                     data = {}
                 return {'status': 'success', 'endpoint': url, 'response': data}
 
