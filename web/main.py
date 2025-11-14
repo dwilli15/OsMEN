@@ -169,9 +169,9 @@ def template_context(request: Request, extra: Optional[dict] = None) -> dict:
     return ctx
 
 
-ViewerRole = role_required("viewer")
-OperatorRole = role_required("operator")
-AdminRole = role_required("admin")
+ViewerRole = Depends(role_required("viewer"))
+OperatorRole = Depends(role_required("operator"))
+AdminRole = Depends(role_required("admin"))
 
 # In-memory tracker for parsed syllabus previews
 active_uploads = {}
