@@ -407,7 +407,7 @@ What would you like to do next?"""
                 sync_status = self._synchronize_services(agent_slug, artifacts)
                 result['synchronization'] = sync_status
 
-                if registration_status.get('status') == 'success' and sync_status.get('status') != 'error':
+                if registration_status.get('status') == 'success' and sync_status.get('status') == 'success':
                     created_agents.append(agent)
                     result['status'] = 'success'
                     logger.info(f"Successfully deployed agent: {agent['name']}")
