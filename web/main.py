@@ -156,6 +156,19 @@ for module_dir in ['integrations', 'scheduling', 'parsers', 'reminders', 'health
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
+AGENT_TYPE_OPTIONS = [
+    ("coordinator", "Coordinator"),
+    ("specialist", "Specialist"),
+    ("automation", "Automation"),
+    ("monitor", "Monitor"),
+    ("analyst", "Analyst"),
+]
+
+INTAKE_AGENT_FORM_TEMPLATES = {
+    "team-review": ("team_review_form.html", {}),
+    "agent-type-picker": ("agent_type_picker.html", {"agent_types": AGENT_TYPE_OPTIONS}),
+}
+
 # Log buffer for live streaming
 log_buffer = []
 MAX_LOG_BUFFER = 100
@@ -170,6 +183,21 @@ def template_context(request: Request, extra: Optional[dict] = None) -> dict:
 ViewerRole = Depends(role_required("viewer"))
 OperatorRole = Depends(role_required("operator"))
 AdminRole = Depends(role_required("admin"))
+
+
+def get_intake_agent():
+    """Dynamically load the intake agent implementation."""
+
+    import sys
+
+    agents_dir = Path(__file__).parent.parent / "agents"
+    agents_path = str(agents_dir)
+    if agents_path not in sys.path:
+        sys.path.insert(0, agents_path)
+
+    from intake_agent.intake_agent import IntakeAgent  # pylint: disable=import-error
+
+    return IntakeAgent()
 
 # In-memory tracker for parsed syllabus previews
 active_uploads = {}
@@ -1041,16 +1069,6 @@ async def startup_event():
 
 
 # ============================================================================
-# HEALTH CHECK
-# ============================================================================
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint for Docker"""
-    return {"status": "healthy", "service": "osmen-web"}
-
-
-# ============================================================================
 # AGENT HUB - Comprehensive Agent Management Interface
 # ============================================================================
 
@@ -1061,6 +1079,18 @@ async def agent_hub():
     ui_file = Path(__file__).parent / "agent_hub.html"
     with open(ui_file, 'r') as f:
         return HTMLResponse(content=f.read())
+
+
+@app.get("/api/intake-agent/forms/{form_name}", response_class=HTMLResponse)
+async def intake_agent_form(form_name: str, request: Request):
+    """Serve partial templates used by the intake agent structured UI."""
+
+    template_info = INTAKE_AGENT_FORM_TEMPLATES.get(form_name)
+    if not template_info:
+        raise HTTPException(status_code=404, detail="Form not found")
+
+    template_name, extra = template_info
+    return templates.TemplateResponse(template_name, template_context(request, extra))
 
 
 @app.get("/api/agents")
@@ -1233,26 +1263,16 @@ async def intake_agent_chat(request: Request):
     Processes natural language input and creates custom agent teams.
     """
     try:
-        # Import the intake agent
-        import sys
-        from pathlib import Path
-        
-        # Add agents directory to path
-        agents_dir = Path(__file__).parent.parent / "agents"
-        sys.path.insert(0, str(agents_dir))
-        
-        from intake_agent.intake_agent import IntakeAgent
-        
         # Parse request
         data = await request.json()
         message = data.get('message', '')
         context = data.get('context', {'stage': 'initial'})
         history = data.get('history', [])
-        
+
         # Process with intake agent
-        agent = IntakeAgent()
+        agent = get_intake_agent()
         result = agent.process_message(message, context, history)
-        
+
         return result
         
     except Exception as e:
@@ -1265,6 +1285,38 @@ async def intake_agent_chat(request: Request):
             'context': context,
             'isHtml': False
         }
+
+
+@app.post("/api/intake-agent/review")
+async def intake_agent_review(request: Request):
+    """Apply structured modifications submitted via the Agent Hub UI."""
+
+    try:
+        data = await request.json()
+        context = data.get('context', {'stage': 'confirming'})
+        modifications = data.get('modifications', {})
+
+        agent = get_intake_agent()
+        return agent.apply_structured_modifications(context, modifications)
+    except Exception as e:  # pragma: no cover - UI convenience
+        logger.error(f"Intake agent review error: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.post("/api/intake-agent/deploy")
+async def intake_agent_deploy(request: Request):
+    """Deploy the proposed agent team from structured UI controls."""
+
+    try:
+        data = await request.json()
+        context = data.get('context', {'stage': 'confirming'})
+
+        agent = get_intake_agent()
+        result = agent.deploy_team(context)
+        return result
+    except Exception as e:  # pragma: no cover - UI convenience
+        logger.error(f"Intake agent deploy error: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 if __name__ == "__main__":

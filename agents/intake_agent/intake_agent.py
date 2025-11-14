@@ -13,6 +13,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
+try:
+    import requests
+except ImportError:  # pragma: no cover - requests is an optional runtime dependency
+    requests = None
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,11 +30,79 @@ class IntakeAgent:
     agent creation, goal setting, and team cohesion.
     """
     
-    def __init__(self):
-        self.project_root = Path(__file__).parent.parent.parent
+    def __init__(self, project_root: Optional[Path] = None):
+        """Create a new intake agent.
+
+        Args:
+            project_root: Optional override for the repository root. This is
+                primarily useful for tests so we can point the agent at a
+                temporary directory when generating Langflow and n8n assets.
+        """
+
+        base_root = Path(project_root) if project_root is not None else Path(__file__).parent.parent.parent
+        self.project_root = base_root
         self.agents_dir = self.project_root / "agents"
         self.langflow_dir = self.project_root / "langflow" / "flows"
         self.n8n_dir = self.project_root / "n8n" / "workflows"
+
+        # Ensure directories exist so deployments never fail because of missing folders
+        self.langflow_dir.mkdir(parents=True, exist_ok=True)
+        self.n8n_dir.mkdir(parents=True, exist_ok=True)
+
+        # LLM configuration
+        self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        self.openai_base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+        self.llm_model = os.getenv("INTAKE_AGENT_MODEL", os.getenv("OPENAI_MODEL", "gpt-4o-mini"))
+        self._llm_available = bool(self.openai_api_key)
+        self.system_prompt = (
+            "You are the OsMEN intake coordinator. You translate natural language "
+            "requests into structured agent orchestration plans. Always respond "
+            "with concise JSON data that the platform can use directly."
+        )
+
+        # Expanded domain catalogue for richer agent proposals
+        self.domain_specialists = {
+            "general": {
+                "name": "Operations Specialist",
+                "purpose": "Handles general automations and ensures smooth execution",
+                "capabilities": ["task_management", "workflow_automation", "status_reporting"],
+            },
+            "security": {
+                "name": "Security Monitor",
+                "purpose": "Monitors system security and detects threats",
+                "capabilities": ["security_scanning", "threat_detection", "firewall_management"],
+            },
+            "productivity": {
+                "name": "Productivity Manager",
+                "purpose": "Manages tasks, schedules, and workflows",
+                "capabilities": ["task_management", "scheduling", "reminder_system"],
+            },
+            "research": {
+                "name": "Research Analyst",
+                "purpose": "Gathers and analyzes information",
+                "capabilities": ["web_research", "data_analysis", "summarization"],
+            },
+            "content_creation": {
+                "name": "Content Creator",
+                "purpose": "Creates and edits content",
+                "capabilities": ["content_generation", "media_editing", "optimization"],
+            },
+            "marketing": {
+                "name": "Marketing Strategist",
+                "purpose": "Plans campaigns and tracks engagement metrics",
+                "capabilities": ["campaign_planning", "audience_research", "performance_reporting"],
+            },
+            "finance": {
+                "name": "Finance Analyst",
+                "purpose": "Monitors budgets and financial KPIs",
+                "capabilities": ["budget_tracking", "forecasting", "variance_analysis"],
+            },
+            "development": {
+                "name": "DevOps Specialist",
+                "purpose": "Automates build, test, and deployment workflows",
+                "capabilities": ["ci_cd", "infrastructure_as_code", "release_management"],
+            },
+        }
         
         # Conversation stages
         self.STAGES = {
@@ -54,8 +127,239 @@ class IntakeAgent:
         """
         stage = context.get('stage', 'initial')
         handler = self.STAGES.get(stage, self._handle_initial)
-        
+
         return handler(message, context, history)
+
+    # ------------------------------------------------------------------
+    # LLM + Fallback Utilities
+    # ------------------------------------------------------------------
+
+    def _call_llm(self, prompt: str, *, expect_json: bool = False, temperature: float = 0.2) -> Optional[str]:
+        """Call configured LLM provider and return response text."""
+
+        if not self._llm_available or requests is None:
+            logger.debug("LLM not configured; skipping call")
+            return None
+
+        try:
+            payload = {
+                "model": self.llm_model,
+                "messages": [
+                    {"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": temperature,
+            }
+
+            if expect_json:
+                payload["response_format"] = {"type": "json_object"}
+
+            response = requests.post(
+                f"{self.openai_base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.openai_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+                timeout=30,
+            )
+            response.raise_for_status()
+
+            data = response.json()
+            content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+
+            if expect_json:
+                content = self._clean_json_block(content)
+
+            return content.strip() if content else None
+        except Exception as exc:
+            logger.warning(f"LLM call failed: {exc}")
+            return None
+
+    @staticmethod
+    def _clean_json_block(content: str) -> str:
+        """Remove Markdown code fences from JSON responses."""
+
+        text = content.strip()
+        if text.startswith("```"):
+            lines = text.splitlines()
+            if lines and lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            text = "\n".join(lines).strip()
+            if text.lower().startswith("json"):
+                text = text[4:].strip()
+        return text
+
+    def _fallback_requirements(self, message: str) -> Dict[str, Any]:
+        """Fallback keyword-based requirement parsing."""
+
+        requirements = {
+            'domain': 'general',
+            'domain_label': 'General',
+            'keywords': [],
+        }
+
+        message_lower = message.lower()
+        domain_keywords = {
+            'security': ['security', 'firewall', 'protect', 'monitor', 'scan'],
+            'productivity': ['schedule', 'calendar', 'plan', 'organize', 'manage'],
+            'research': ['research', 'learn', 'study', 'analyze', 'investigate'],
+            'content_creation': ['content', 'video', 'media', 'edit', 'create'],
+            'marketing': ['campaign', 'marketing', 'audience', 'social', 'brand'],
+            'finance': ['budget', 'finance', 'expense', 'invoice', 'cash'],
+            'development': ['deploy', 'build', 'devops', 'release', 'codebase'],
+        }
+
+        for domain, keywords in domain_keywords.items():
+            if any(word in message_lower for word in keywords):
+                requirements['domain'] = domain
+                requirements['domain_label'] = domain.replace('_', ' ').title()
+                break
+
+        important_words = ['automate', 'monitor', 'analyze', 'create', 'manage', 'track', 'notify', 'report']
+        requirements['keywords'] = [word for word in important_words if word in message_lower]
+
+        return requirements
+
+    def _fallback_answer_parse(self, message: str) -> Dict[str, Any]:
+        """Heuristic interpretation of follow-up answers."""
+
+        info: Dict[str, Any] = {}
+        message_lower = message.lower()
+
+        if any(word in message_lower for word in ['automate', 'automation', 'automatic']):
+            info['goal'] = 'automation'
+        elif any(word in message_lower for word in ['monitor', 'observe', 'watch', 'track']):
+            info['goal'] = 'monitoring'
+        elif any(word in message_lower for word in ['analyze', 'report', 'audit', 'summarize']):
+            info['goal'] = 'analysis'
+
+        if any(word in message_lower for word in ['continuous', 'always', '24/7', 'realtime']):
+            info['frequency'] = 'continuous'
+        elif any(word in message_lower for word in ['hourly', 'every hour']):
+            info['frequency'] = 'hourly'
+        elif any(word in message_lower for word in ['daily', 'every day']):
+            info['frequency'] = 'daily'
+        elif any(word in message_lower for word in ['weekly', 'every week']):
+            info['frequency'] = 'weekly'
+        elif any(word in message_lower for word in ['on-demand', 'when i ask', 'manual']):
+            info['frequency'] = 'on-demand'
+
+        if any(word in message_lower for word in ['full automation', 'fully automatic', 'hands-off']):
+            info['automation_level'] = 'full'
+        elif any(word in message_lower for word in ['approval', 'semi', 'review first']):
+            info['automation_level'] = 'semi'
+        elif 'manual' in message_lower:
+            info['automation_level'] = 'manual'
+
+        return info
+
+    def _fallback_team_design(self, requirements: Dict) -> List[Dict[str, Any]]:
+        """Fallback deterministic team design."""
+
+        domain = requirements.get('domain', 'general')
+        goal = requirements.get('goal', 'automation')
+        frequency = requirements.get('frequency', 'daily')
+
+        domain_specialist = self.domain_specialists.get(domain, self.domain_specialists['general'])
+        agents: List[Dict[str, Any]] = [
+            {
+                'name': f"{requirements.get('domain_label', domain.replace('_', ' ').title())} Coordinator",
+                'type': 'coordinator',
+                'purpose': f"Routes tasks and coordinates the {domain.replace('_', ' ')} team",
+                'capabilities': ['task_routing', 'team_coordination', 'conflict_resolution'],
+                'priority': 1,
+            }
+        ]
+
+        agents.append({
+            'name': domain_specialist['name'],
+            'type': 'specialist',
+            'purpose': domain_specialist['purpose'],
+            'capabilities': domain_specialist['capabilities'],
+            'priority': 2,
+        })
+
+        if goal == 'automation':
+            agents.append({
+                'name': 'Automation Specialist',
+                'type': 'automation',
+                'purpose': 'Automates repetitive tasks and orchestrates triggers',
+                'capabilities': ['workflow_automation', 'trigger_management', 'task_execution'],
+                'priority': 3,
+            })
+
+        if goal == 'monitoring' and frequency in ['continuous', 'hourly']:
+            agents.append({
+                'name': 'Continuous Monitor',
+                'type': 'monitor',
+                'purpose': 'Continuously monitors systems and escalates anomalies',
+                'capabilities': ['real_time_monitoring', 'alerting', 'logging'],
+                'priority': 4,
+            })
+
+        return agents
+
+    def _fallback_modification_parse(self, message: str) -> Dict[str, Any]:
+        """Heuristic parsing of modification feedback."""
+
+        message_lower = message.lower()
+        result: Dict[str, Any] = {'agents': []}
+
+        if any(word in message_lower for word in ['remove', 'drop', 'no longer need']):
+            result['action'] = 'remove'
+        elif any(word in message_lower for word in ['add', 'include', 'another']):
+            result['action'] = 'add'
+        elif any(word in message_lower for word in ['change', 'modify', 'adjust', 'rename']):
+            result['action'] = 'update'
+        else:
+            result['action'] = 'none'
+
+        return result
+
+    def _generate_agent_name(self, agent_type: str) -> str:
+        """Generate a friendly agent name based on type."""
+
+        base_names = {
+            'coordinator': 'Coordination Lead',
+            'specialist': 'Specialist',
+            'monitor': 'Monitoring Agent',
+            'analyst': 'Insight Analyst',
+            'automation': 'Automation Specialist',
+        }
+        base = base_names.get(agent_type, 'Specialist')
+        suffix = datetime.utcnow().strftime('%H%M%S')
+        return f"{base} {suffix}"
+
+    def _is_affirmative(self, message: str) -> bool:
+        """Determine if message indicates approval."""
+
+        normalized = message.strip().lower()
+        positive_phrases = ['yes', 'looks good', 'sounds good', 'approved', 'ship it', 'go ahead', 'do it', 'deploy']
+        negative_phrases = ['no', 'not yet', 'wait', 'hold on', 'change', 'adjust', 'tweak']
+
+        if any(phrase in normalized for phrase in positive_phrases):
+            return True
+        if any(phrase in normalized for phrase in negative_phrases):
+            return False
+
+        llm_prompt = (
+            "Decide if the following message means the user approves proceeding with deployment. "
+            "Respond with JSON {\"approve\": true|false}.\n\n"
+            f"Message: {message}"
+        )
+
+        structured = self._call_llm(llm_prompt, expect_json=True)
+        if structured:
+            try:
+                data = json.loads(structured)
+                return bool(data.get('approve'))
+            except json.JSONDecodeError:
+                logger.debug("Affirmation parsing failed; defaulting to False")
+
+        return False
     
     def _handle_initial(self, message: str, context: Dict, history: List[Dict]) -> Dict[str, Any]:
         """Handle the initial user description of needs"""
@@ -70,18 +374,22 @@ class IntakeAgent:
         
         # Ask clarifying questions
         questions = self._generate_clarifying_questions(requirements)
-        
-        response = f"""Great! I understand you need help with: <strong>{requirements.get('domain', 'general tasks')}</strong>.<br><br>
+        context['clarifyingQuestions'] = questions
 
-To create the perfect team for you, I'd like to ask a few questions:<br><br>
+        question_html = ''.join(
+            f"<strong>{idx + 1}. {item['question']}</strong><br>"
+            f"<span style=\"color: #6b7280;\">{item['helper']}</span><br><br>"
+            for idx, item in enumerate(questions)
+        )
 
-<strong>1. What's your main goal?</strong> (e.g., "automate my daily workflow", "monitor my system security", "manage my projects")<br><br>
-
-<strong>2. How often do you need this done?</strong> (e.g., "continuously", "daily", "on-demand")<br><br>
-
-<strong>3. What level of automation do you want?</strong> (e.g., "fully automatic", "semi-automatic with my approval", "manual trigger only")<br><br>
-
-Just answer naturally - I'll understand! 😊"""
+        response = (
+            "Great! I understand you need help with: "
+            f"<strong>{requirements.get('domain_label', requirements.get('domain', 'general tasks').title())}</strong>."
+            "<br><br>"
+            "To create the perfect team for you, I'd like to ask a few quick questions:<br><br>"
+            f"{question_html}"
+            "Just answer naturally - I'll take it from here! 😊"
+        )
         
         return {
             'response': response,
@@ -118,10 +426,18 @@ Just answer naturally - I'll understand! 😊"""
 <strong>Does this team look good to you?</strong><br>
 Reply "yes" to create these agents, or tell me what you'd like to change!"""
             
+            summary_html = self._create_team_summary(proposed_agents)
+            context['teamSummary'] = summary_html
+
             return {
                 'response': response,
                 'context': context,
-                'isHtml': True
+                'isHtml': True,
+                'review': {
+                    'agents': proposed_agents,
+                    'requirements': requirements,
+                    'summaryHtml': summary_html
+                }
             }
         else:
             # Ask for more information
@@ -139,42 +455,47 @@ What specific tasks should the agents handle? (Be as detailed as you like - I ca
         """Handle user confirmation or modification requests"""
         
         message_lower = message.lower()
-        
-        if any(word in message_lower for word in ['yes', 'looks good', 'perfect', 'do it', 'create']):
+
+        if self._is_affirmative(message_lower):
             # User approved - deploy agents
             context['stage'] = 'deploying'
             return self._deploy_agents(context)
         else:
             # User wants modifications
             proposed_agents = context.get('proposedAgents', [])
-            
+
             # Modify based on feedback
             modifications = self._parse_modifications(message)
             updated_agents = self._apply_modifications(proposed_agents, modifications)
-            
+
             context['proposedAgents'] = updated_agents
             summary_html = self._create_team_summary(updated_agents)
-            
+            context['teamSummary'] = summary_html
+
             response = f"""I've updated your team based on your feedback:<br><br>
 
 {summary_html}
 
 <strong>How does this look now?</strong> Reply "yes" to create these agents!"""
-            
+
             return {
                 'response': response,
                 'context': context,
-                'isHtml': True
+                'isHtml': True,
+                'review': {
+                    'agents': updated_agents,
+                    'requirements': context.get('requirements', {}),
+                    'summaryHtml': summary_html
+                }
             }
-    
+
     def _handle_deploying(self, message: str, context: Dict, history: List[Dict]) -> Dict[str, Any]:
         """Deploy the agent team"""
-        # This method is called directly from _handle_confirming
-        pass
+        return self._deploy_agents(context)
     
     def _handle_complete(self, message: str, context: Dict, history: List[Dict]) -> Dict[str, Any]:
         """Handle post-deployment conversation"""
-        
+
         response = """Your agents are up and running! You can:<br><br>
 
 • <strong>View them in Langflow:</strong> <a href="http://localhost:7860" target="_blank">http://localhost:7860</a><br>
@@ -182,156 +503,178 @@ What specific tasks should the agents handle? (Be as detailed as you like - I ca
 • <strong>Create another team:</strong> Just tell me what you need!<br><br>
 
 What would you like to do next?"""
-        
+
         return {
             'response': response,
             'context': context,
             'isHtml': True
         }
+
+    # ------------------------------------------------------------------
+    # Structured UI entry points
+    # ------------------------------------------------------------------
+
+    def apply_structured_modifications(self, context: Dict, modifications: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply modifications coming from structured UI controls."""
+
+        proposed_agents = context.get('proposedAgents', [])
+        updated_agents = self._apply_modifications(proposed_agents, modifications)
+        context['proposedAgents'] = updated_agents
+        summary_html = self._create_team_summary(updated_agents)
+        context['teamSummary'] = summary_html
+
+        return {
+            'response': "I've updated your team configuration based on the changes you selected.",
+            'context': context,
+            'isHtml': True,
+            'review': {
+                'agents': updated_agents,
+                'requirements': context.get('requirements', {}),
+                'summaryHtml': summary_html
+            }
+        }
+
+    def deploy_team(self, context: Dict) -> Dict[str, Any]:
+        """Deploy agents directly from structured UI confirmation."""
+
+        context['stage'] = 'deploying'
+        return self._deploy_agents(context)
     
     def _analyze_requirements(self, message: str) -> Dict[str, Any]:
         """Analyze user's initial requirements"""
         
-        # Simple keyword-based analysis (in production, use LLM)
-        requirements = {
-            'domain': 'general',
-            'keywords': []
-        }
-        
-        message_lower = message.lower()
-        
-        # Detect domain
-        if any(word in message_lower for word in ['security', 'firewall', 'protect', 'monitor', 'scan']):
-            requirements['domain'] = 'security'
-        elif any(word in message_lower for word in ['schedule', 'calendar', 'plan', 'organize', 'manage']):
-            requirements['domain'] = 'productivity'
-        elif any(word in message_lower for word in ['research', 'learn', 'study', 'analyze', 'investigate']):
-            requirements['domain'] = 'research'
-        elif any(word in message_lower for word in ['content', 'video', 'media', 'edit', 'create']):
-            requirements['domain'] = 'content_creation'
-        
-        # Extract keywords
-        important_words = ['automate', 'monitor', 'analyze', 'create', 'manage', 'track', 'notify']
-        requirements['keywords'] = [word for word in important_words if word in message_lower]
-        
-        return requirements
+        llm_prompt = (
+            "Analyze the following user request and extract structured requirements for an automation "
+            "agent team. Respond with JSON containing: domain (snake_case), domain_label (title case), "
+            "goal (short phrase), frequency (continuous|daily|weekly|monthly|on-demand|adhoc), "
+            "automation_level (manual|semi|full), tasks (list of strings), success_metrics (list of strings), "
+            "and notes (string). If something is unclear, leave it empty instead of guessing.\n\n"
+            f"Request: {message}"
+        )
+
+        structured = self._call_llm(llm_prompt, expect_json=True)
+        if structured:
+            try:
+                data = json.loads(structured)
+                data.setdefault('domain', data.get('domain', 'general'))
+                data.setdefault('domain_label', data.get('domain_label', data['domain'].replace('_', ' ').title()))
+                data.setdefault('tasks', data.get('tasks', []))
+                data.setdefault('notes', data.get('notes', ''))
+                data.setdefault('keywords', data.get('keywords', []))
+                return data
+            except json.JSONDecodeError:
+                logger.warning("LLM returned invalid JSON for requirements; using heuristic fallback")
+
+        return self._fallback_requirements(message)
     
-    def _generate_clarifying_questions(self, requirements: Dict) -> List[str]:
+    def _generate_clarifying_questions(self, requirements: Dict) -> List[Dict[str, str]]:
         """Generate questions based on initial requirements"""
-        
-        questions = [
-            "What's your main goal?",
-            "How often do you need this?",
-            "What level of automation do you want?"
+
+        questions: List[Dict[str, str]] = [
+            {
+                'question': "What's your main goal?",
+                'helper': 'Feel free to describe the outcome you expect in natural language.',
+            },
+            {
+                'question': "How often should this run?",
+                'helper': 'For example: continuously, daily, weekly, or only when you ask.',
+            },
+            {
+                'question': "How hands-off do you want it to be?",
+                'helper': 'Choose between full automation, approval required, or manual triggers.',
+            },
         ]
-        
+
+        llm_prompt = (
+            "You are collecting clarification questions for an automation project. Suggest up to two "
+            "additional follow-up questions tailored to this requirement summary. Respond with JSON "
+            "array under key 'questions', each item having 'question' and 'helper'.\n\n"
+            f"Requirements: {json.dumps(requirements)}"
+        )
+
+        structured = self._call_llm(llm_prompt, expect_json=True)
+        if structured:
+            try:
+                data = json.loads(structured)
+                extras = data.get('questions', [])
+                for item in extras[:2]:
+                    if isinstance(item, dict) and 'question' in item and 'helper' in item:
+                        questions.append({
+                            'question': item['question'],
+                            'helper': item['helper'],
+                        })
+            except json.JSONDecodeError:
+                logger.debug("Failed to parse LLM-generated questions; using defaults")
+
         return questions
     
     def _parse_user_answers(self, message: str) -> Dict[str, Any]:
         """Parse user's answers to questions"""
         
-        info = {}
-        message_lower = message.lower()
-        
-        # Detect goal
-        if 'automate' in message_lower or 'automatic' in message_lower:
-            info['goal'] = 'automation'
-        elif 'monitor' in message_lower or 'track' in message_lower:
-            info['goal'] = 'monitoring'
-        elif 'analyze' in message_lower or 'report' in message_lower:
-            info['goal'] = 'analysis'
-        
-        # Detect frequency
-        if 'continuous' in message_lower or 'always' in message_lower or '24/7' in message_lower:
-            info['frequency'] = 'continuous'
-        elif 'daily' in message_lower or 'every day' in message_lower:
-            info['frequency'] = 'daily'
-        elif 'hourly' in message_lower or 'every hour' in message_lower:
-            info['frequency'] = 'hourly'
-        elif 'on-demand' in message_lower or 'when I ask' in message_lower or 'manual' in message_lower:
-            info['frequency'] = 'on-demand'
-        
-        # Detect automation level
-        if 'fully automatic' in message_lower or 'complete' in message_lower:
-            info['automation_level'] = 'full'
-        elif 'semi' in message_lower or 'approval' in message_lower:
-            info['automation_level'] = 'semi'
-        elif 'manual' in message_lower:
-            info['automation_level'] = 'manual'
-        
-        return info
+        llm_prompt = (
+            "Interpret the user's response while gathering requirements for an automation agent team. "
+            "Return JSON with keys: goal, frequency, automation_level, tasks (list of strings), "
+            "success_metrics (list of strings), blockers (list of strings). Leave entries empty if not provided.\n\n"
+            f"Response: {message}"
+        )
+
+        structured = self._call_llm(llm_prompt, expect_json=True)
+        if structured:
+            try:
+                data = json.loads(structured)
+                return {k: v for k, v in data.items() if v}
+            except json.JSONDecodeError:
+                logger.debug("Failed to parse LLM interpretation; using heuristic fallback")
+
+        return self._fallback_answer_parse(message)
     
     def _has_sufficient_info(self, requirements: Dict) -> bool:
         """Check if we have enough info to design a team"""
         
         required_fields = ['domain', 'goal', 'frequency']
-        return all(field in requirements for field in required_fields)
+        return all(requirements.get(field) for field in required_fields)
     
     def _design_agent_team(self, requirements: Dict) -> List[Dict[str, Any]]:
         """Design a custom agent team based on requirements"""
         
-        agents = []
-        domain = requirements.get('domain', 'general')
-        goal = requirements.get('goal', 'automation')
-        frequency = requirements.get('frequency', 'daily')
-        
-        # Create coordinator agent (always needed)
-        agents.append({
-            'name': f'{domain.title()} Coordinator',
-            'type': 'coordinator',
-            'purpose': f'Routes tasks and coordinates the {domain} team',
-            'capabilities': ['task_routing', 'team_coordination', 'conflict_resolution']
-        })
-        
-        # Add domain-specific specialist
-        if domain == 'security':
-            agents.append({
-                'name': 'Security Monitor',
-                'type': 'specialist',
-                'purpose': 'Monitors system security and detects threats',
-                'capabilities': ['security_scanning', 'threat_detection', 'firewall_management']
-            })
-        elif domain == 'productivity':
-            agents.append({
-                'name': 'Productivity Manager',
-                'type': 'specialist',
-                'purpose': 'Manages tasks, schedules, and workflows',
-                'capabilities': ['task_management', 'scheduling', 'reminder_system']
-            })
-        elif domain == 'research':
-            agents.append({
-                'name': 'Research Assistant',
-                'type': 'specialist',
-                'purpose': 'Gathers and analyzes information',
-                'capabilities': ['web_research', 'data_analysis', 'summarization']
-            })
-        elif domain == 'content_creation':
-            agents.append({
-                'name': 'Content Creator',
-                'type': 'specialist',
-                'purpose': 'Creates and edits content',
-                'capabilities': ['content_generation', 'media_editing', 'optimization']
-            })
-        
-        # Add automation agent if needed
-        if goal == 'automation':
-            agents.append({
-                'name': 'Automation Specialist',
-                'type': 'specialist',
-                'purpose': 'Automates repetitive tasks',
-                'capabilities': ['workflow_automation', 'trigger_management', 'task_execution']
-            })
-        
-        # Add monitoring agent if needed
-        if goal == 'monitoring' and frequency in ['continuous', 'hourly']:
-            agents.append({
-                'name': 'Continuous Monitor',
-                'type': 'monitor',
-                'purpose': 'Continuously monitors and alerts',
-                'capabilities': ['real_time_monitoring', 'alerting', 'logging']
-            })
-        
-        return agents
+        llm_prompt = (
+            "Design a specialized multi-agent team for the OsMEN automation platform. "
+            "Given the structured requirements below, propose between two and four agents (always include a coordinator). "
+            "Return JSON with an 'agents' array. Each agent must include: name, type "
+            "(coordinator|specialist|monitor|analyst|automation), purpose, capabilities (list of strings), and priority (int).\n\n"
+            f"Requirements: {json.dumps(requirements)}"
+        )
+
+        structured = self._call_llm(llm_prompt, expect_json=True)
+        if structured:
+            try:
+                data = json.loads(structured)
+                agents = data.get('agents', [])
+                cleaned: List[Dict[str, Any]] = []
+                for agent in agents:
+                    if not isinstance(agent, dict):
+                        continue
+                    if not {'name', 'type', 'purpose'} <= agent.keys():
+                        continue
+                    capabilities = agent.get('capabilities') or []
+                    if isinstance(capabilities, str):
+                        capabilities = [cap.strip() for cap in capabilities.split(',') if cap.strip()]
+
+                    cleaned.append({
+                        'name': agent['name'],
+                        'type': agent.get('type', 'specialist'),
+                        'purpose': agent['purpose'],
+                        'capabilities': capabilities,
+                        'priority': agent.get('priority', len(cleaned) + 1)
+                    })
+
+                if cleaned:
+                    cleaned.sort(key=lambda item: item.get('priority', 999))
+                    return cleaned
+            except json.JSONDecodeError:
+                logger.warning("Failed to parse LLM-designed team; using fallback templates")
+
+        return self._fallback_team_design(requirements)
     
     def _create_team_summary(self, agents: List[Dict]) -> str:
         """Create HTML summary of proposed agent team"""
@@ -339,9 +682,15 @@ What would you like to do next?"""
         summary = '<div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin: 10px 0;">'
         
         for i, agent in enumerate(agents, 1):
+            capabilities = agent.get('capabilities', [])
+            if isinstance(capabilities, str):
+                capabilities = [capabilities]
             summary += f'<div style="margin: 10px 0;"><strong>{i}. {agent["name"]}</strong><br>'
             summary += f'<span style="color: #666;">Purpose: {agent["purpose"]}</span><br>'
-            summary += f'<span style="color: #667eea; font-size: 0.9em;">Capabilities: {", ".join(agent["capabilities"])}</span></div>'
+            summary += (
+                f'<span style="color: #667eea; font-size: 0.9em;">Capabilities: '
+                f"{', '.join(capabilities)}</span></div>"
+            )
         
         summary += '</div>'
         
@@ -350,23 +699,86 @@ What would you like to do next?"""
     def _parse_modifications(self, message: str) -> Dict[str, Any]:
         """Parse user's modification requests"""
         
-        modifications = {}
-        message_lower = message.lower()
-        
-        if 'add' in message_lower or 'need' in message_lower or 'want' in message_lower:
-            modifications['action'] = 'add'
-        elif 'remove' in message_lower or 'don\'t need' in message_lower:
-            modifications['action'] = 'remove'
-        elif 'change' in message_lower or 'modify' in message_lower:
-            modifications['action'] = 'modify'
-        
-        return modifications
-    
+        llm_prompt = (
+            "The user is providing feedback about a proposed multi-agent team. "
+            "Summarize the requested changes in JSON. Use keys: action (add|remove|update|approve|none), "
+            "agents (list). Each agent entry should include: name (if referenced), index (if provided), "
+            "type, purpose, capabilities (list of strings), keep (boolean), and action (add|remove|update). "
+            "Also include approval true/false if the user explicitly approves deployment.\n\n"
+            f"Feedback: {message}"
+        )
+
+        structured = self._call_llm(llm_prompt, expect_json=True)
+        if structured:
+            try:
+                data = json.loads(structured)
+                if data.get('approval') is True:
+                    return {'action': 'approve'}
+                return data
+            except json.JSONDecodeError:
+                logger.debug("Failed to parse modification feedback; using fallback")
+
+        return self._fallback_modification_parse(message)
+
     def _apply_modifications(self, agents: List[Dict], modifications: Dict) -> List[Dict]:
         """Apply user's requested modifications to agent team"""
-        
-        # Simple implementation - in production, use LLM to understand modifications
-        return agents
+
+        if not modifications:
+            return agents
+
+        if modifications.get('action') == 'approve':
+            return agents
+
+        updated_agents: List[Dict[str, Any]] = []
+        lookup = {idx: agent for idx, agent in enumerate(agents)}
+
+        structured_agents = modifications.get('agents') or []
+
+        for idx, agent in lookup.items():
+            directive = next(
+                (
+                    item
+                    for item in structured_agents
+                    if item.get('index') == idx or item.get('name') == agent.get('name')
+                ),
+                None,
+            )
+
+            if directive:
+                if directive.get('keep') is False or directive.get('action') == 'remove':
+                    continue
+
+                updated_agent = agent.copy()
+                for field in ['name', 'type', 'purpose']:
+                    if directive.get(field):
+                        updated_agent[field] = directive[field]
+
+                capabilities = directive.get('capabilities')
+                if isinstance(capabilities, list) and capabilities:
+                    updated_agent['capabilities'] = capabilities
+
+                updated_agents.append(updated_agent)
+            else:
+                updated_agents.append(agent)
+
+        # Add new agents requested by the user
+        for directive in structured_agents:
+            if directive.get('action') == 'add' or directive.get('index') in (None, 'new'):
+                if directive.get('keep') is False:
+                    continue
+                name = directive.get('name') or self._generate_agent_name(directive.get('type', 'specialist'))
+                new_agent = {
+                    'name': name,
+                    'type': directive.get('type', 'specialist'),
+                    'purpose': directive.get('purpose', 'Assists the coordinator'),
+                    'capabilities': directive.get('capabilities', ['task_execution']),
+                }
+                updated_agents.append(new_agent)
+
+        if not updated_agents:
+            return agents
+
+        return updated_agents
     
     def _deploy_agents(self, context: Dict) -> Dict[str, Any]:
         """Deploy the designed agent team"""
