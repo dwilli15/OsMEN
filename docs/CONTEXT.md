@@ -10,6 +10,7 @@
 - **PR:** `copilot/featurephase1-completion` - Enterprise-grade resilience complete
 - **Next Phase:** Memory & Automation System Implementation
 - **Status:** Planning → Implementation
+- 🔄 Intake agent modernization underway (LLM-driven requirement parsing + structured Agent Hub review UI)
 
 ### Recent Accomplishments
 - ✅ PR #18: Add comprehensive TODO list, implement Quick Wins, and create Accelerated 6-Day Production Plan with 3-Agent Distribution (merged 2025-11-11)
@@ -74,7 +75,7 @@
 **Components:**
 - Live log streaming
 - Daily email summaries
-- Agent configuration UI
+- Agent configuration UI _(beta live in Agent Hub review panel)_
 - Daily digest review
 - Approval workflows
 
@@ -184,3 +185,4 @@
 ---
 
 *This file is automatically updated by the system to maintain context continuity.*
+- ✅ Agent Hub now supports guided team review with form-based adjustments (beta 2025-11-12)
