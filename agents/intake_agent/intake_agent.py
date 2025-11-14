@@ -682,7 +682,8 @@ What would you like to do next?"""
         url = f"{base_url.rstrip('/')}/rest/workflows"
 
         try:
-            response = requests.post(url, json=workflow_payload, headers=headers, timeout=10)
+            timeout = int(os.getenv('N8N_API_TIMEOUT', '30'))
+            response = requests.post(url, json=workflow_payload, headers=headers, timeout=timeout)
             if response.status_code < 400:
                 try:
                     data = response.json()
