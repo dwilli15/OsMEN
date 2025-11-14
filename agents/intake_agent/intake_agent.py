@@ -638,7 +638,8 @@ What would you like to do next?"""
                     except ValueError:
                         data = {}
                     return {'status': 'success', 'endpoint': url, 'response': data}
-                last_error = f"{response.status_code}: {response.text}"
+                logger.debug(f"Langflow API error: {response.status_code}: {response.text}")
+                last_error = f"{response.status_code}: Langflow import failed"
             except requests.RequestException as exc:
                 last_error = str(exc)
 
