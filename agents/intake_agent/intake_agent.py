@@ -11,7 +11,11 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
+
+import requests
+
+from web.agent_config import AgentConfigManager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +34,11 @@ class IntakeAgent:
         self.agents_dir = self.project_root / "agents"
         self.langflow_dir = self.project_root / "langflow" / "flows"
         self.n8n_dir = self.project_root / "n8n" / "workflows"
+
+        self.langflow_dir.mkdir(parents=True, exist_ok=True)
+        self.n8n_dir.mkdir(parents=True, exist_ok=True)
+
+        self.config_manager = AgentConfigManager()
         
         # Conversation stages
         self.STAGES = {
@@ -170,7 +179,7 @@ What specific tasks should the agents handle? (Be as detailed as you like - I ca
     def _handle_deploying(self, message: str, context: Dict, history: List[Dict]) -> Dict[str, Any]:
         """Deploy the agent team"""
         # This method is called directly from _handle_confirming
-        pass
+        return self._deploy_agents(context)
     
     def _handle_complete(self, message: str, context: Dict, history: List[Dict]) -> Dict[str, Any]:
         """Handle post-deployment conversation"""
@@ -368,56 +377,118 @@ What would you like to do next?"""
         # Simple implementation - in production, use LLM to understand modifications
         return agents
     
+    def deploy_agents(self, context: Dict) -> Dict[str, Any]:
+        """Public wrapper for deploying agents."""
+
+        return self._deploy_agents(context)
+
     def _deploy_agents(self, context: Dict) -> Dict[str, Any]:
-        """Deploy the designed agent team"""
-        
+        """Deploy the designed agent team and synchronize services."""
+
         proposed_agents = context.get('proposedAgents', [])
-        
-        # Create agents
-        created_agents = []
+
+        deployment_results: List[Dict[str, Any]] = []
+        created_agents: List[Dict[str, Any]] = []
+
         for agent in proposed_agents:
+            agent_slug = agent['name'].lower().replace(' ', '_')
+            result: Dict[str, Any] = {
+                'name': agent['name'],
+                'slug': agent_slug,
+            }
+
             try:
-                self._create_agent_files(agent)
-                created_agents.append(agent)
-                logger.info(f"Created agent: {agent['name']}")
-            except Exception as e:
-                logger.error(f"Failed to create agent {agent['name']}: {e}")
-        
+                files, artifacts = self._create_agent_files(agent)
+                result['files'] = files
+
+                registration_status = self._register_agent_with_dashboard(agent_slug, agent, artifacts)
+                result['registration'] = registration_status
+
+                sync_status = self._synchronize_services(agent_slug, artifacts)
+                result['synchronization'] = sync_status
+
+                if registration_status.get('status') == 'success' and sync_status.get('status') != 'error':
+                    created_agents.append(agent)
+                    result['status'] = 'success'
+                    logger.info(f"Successfully deployed agent: {agent['name']}")
+                else:
+                    result['status'] = 'partial'
+                    logger.warning(f"Agent {agent['name']} deployed with warnings")
+            except Exception as exc:
+                result['status'] = 'error'
+                result['error'] = str(exc)
+                logger.error(f"Failed to deploy agent {agent['name']}: {exc}")
+
+            deployment_results.append(result)
+
+        success_count = len([r for r in deployment_results if r.get('status') == 'success'])
+        error_count = len([r for r in deployment_results if r.get('status') == 'error'])
+
+        if error_count == 0 and success_count == len(deployment_results):
+            overall_status = 'success'
+            response_message = f"🎉 Success! I've created {success_count} agent(s) for your team. They're synchronized and ready to help!"
+        elif success_count == 0 and deployment_results:
+            overall_status = 'failed'
+            response_message = "⚠️ I wasn't able to deploy any agents. Please review the errors and try again."
+        elif not deployment_results:
+            overall_status = 'skipped'
+            response_message = "ℹ️ No agents were provided for deployment."
+        else:
+            overall_status = 'partial'
+            response_message = (
+                f"⚠️ I deployed {success_count} agent(s), but some steps need attention."
+            )
+
         context['stage'] = 'complete'
         context['createdAgents'] = created_agents
-        
+        context['deploymentResults'] = deployment_results
+        context['deploymentStatus'] = overall_status
+
         return {
-            'response': f'🎉 Success! I\'ve created {len(created_agents)} agent(s) for your team. They\'re now active and ready to help!',
+            'response': response_message,
             'context': context,
-            'agentsCreated': created_agents
+            'agentsCreated': created_agents,
+            'deploymentResults': deployment_results,
+            'deploymentStatus': overall_status
         }
     
-    def _create_agent_files(self, agent: Dict):
-        """Create the actual agent files (Langflow flow + n8n workflow)"""
-        
+    def _create_agent_files(self, agent: Dict) -> Tuple[Dict[str, str], Dict[str, Any]]:
+        """Create the actual agent files (Langflow flow + n8n workflow)."""
+
         agent_name = agent['name'].lower().replace(' ', '_')
-        
+
         # Create Langflow flow
         langflow_flow = self._generate_langflow_flow(agent)
         langflow_file = self.langflow_dir / f"{agent_name}.json"
-        
+
         with open(langflow_file, 'w') as f:
             json.dump(langflow_flow, f, indent=2)
-        
+
+        files = {'langflow': str(langflow_file)}
+        artifacts = {'langflow': langflow_flow}
+
         # Create n8n workflow if needed
         if agent.get('type') != 'coordinator':
             n8n_workflow = self._generate_n8n_workflow(agent)
             n8n_file = self.n8n_dir / f"{agent_name}_trigger.json"
-            
+
             with open(n8n_file, 'w') as f:
                 json.dump(n8n_workflow, f, indent=2)
-        
+
+            files['n8n'] = str(n8n_file)
+            artifacts['n8n'] = n8n_workflow
+
         logger.info(f"Created files for agent: {agent['name']}")
+
+        return files, artifacts
     
     def _generate_langflow_flow(self, agent: Dict) -> Dict:
         """Generate Langflow flow definition for an agent"""
-        
+
+        agent_slug = agent['name'].lower().replace(' ', '_')
+
         flow = {
+            "id": agent_slug,
             "name": agent['name'],
             "description": agent['purpose'],
             "nodes": [
@@ -470,8 +541,148 @@ What would you like to do next?"""
                 }
             ]
         }
-        
+
         return flow
+
+    def _register_agent_with_dashboard(self, agent_slug: str, agent: Dict, artifacts: Dict[str, Any]) -> Dict[str, Any]:
+        """Register agent configuration so it appears in the dashboard."""
+
+        try:
+            agent_metadata = {
+                'name': agent['name'],
+                'purpose': agent.get('purpose', ''),
+                'capabilities': agent.get('capabilities', []),
+                'enabled': True,
+            }
+            self.config_manager.register_agent(agent_slug, agent_metadata)
+
+            langflow_record = {
+                'id': agent_slug,
+                'name': artifacts['langflow'].get('name', agent['name']),
+                'description': artifacts['langflow'].get('description', agent.get('purpose', '')),
+                'enabled': True,
+                'trigger': 'manual'
+            }
+            self.config_manager.register_langflow_workflow(langflow_record)
+
+            if 'n8n' in artifacts:
+                n8n_record = {
+                    'id': f"{agent_slug}_trigger",
+                    'name': artifacts['n8n'].get('name', f"{agent['name']} Trigger"),
+                    'description': artifacts['n8n'].get('description', agent.get('purpose', 'Automated workflow')),
+                    'enabled': True,
+                    'trigger': 'schedule'
+                }
+                self.config_manager.register_n8n_workflow(n8n_record)
+
+            return {'status': 'success'}
+        except Exception as exc:
+            logger.error(f"Failed to register agent {agent['name']} with dashboard: {exc}")
+            return {'status': 'error', 'error': str(exc)}
+
+    def _synchronize_services(self, agent_slug: str, artifacts: Dict[str, Any]) -> Dict[str, Any]:
+        """Import generated definitions into Langflow and n8n services."""
+
+        langflow_status = self._sync_langflow_flow(agent_slug, artifacts.get('langflow'))
+        n8n_status = self._sync_n8n_workflow(agent_slug, artifacts.get('n8n'))
+
+        statuses = {'langflow': langflow_status}
+        if n8n_status:
+            statuses['n8n'] = n8n_status
+
+        if any(s.get('status') == 'error' for s in statuses.values()):
+            statuses['status'] = 'error'
+        elif any(s.get('status') == 'partial' for s in statuses.values()):
+            statuses['status'] = 'partial'
+        else:
+            statuses['status'] = 'success'
+
+        return statuses
+
+    def _sync_langflow_flow(self, agent_slug: str, flow: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """Import Langflow flow via API when available."""
+
+        if not flow:
+            return {'status': 'error', 'error': 'Missing Langflow flow definition'}
+
+        langflow_cfg = self.config_manager.config.get('langflow', {})
+        if not langflow_cfg.get('enabled', True):
+            return {'status': 'skipped', 'reason': 'Langflow disabled'}
+
+        base_url = os.getenv('LANGFLOW_API_URL') or langflow_cfg.get('base_url')
+        api_key = os.getenv('LANGFLOW_API_KEY') or langflow_cfg.get('api_key')
+
+        if not base_url:
+            return {'status': 'skipped', 'reason': 'Langflow URL not configured'}
+
+        headers = {'Content-Type': 'application/json'}
+        if api_key:
+            headers['x-api-key'] = api_key
+
+        flow_payload = dict(flow)
+        flow_payload.setdefault('id', agent_slug)
+
+        endpoints = [
+            ('POST', f"{base_url.rstrip('/')}/api/v1/flows/import", {'flows': [flow_payload]}),
+            ('POST', f"{base_url.rstrip('/')}/api/v1/flows/", flow_payload),
+            ('PUT', f"{base_url.rstrip('/')}/api/v1/flows/{agent_slug}", flow_payload),
+        ]
+
+        last_error = None
+        for method, url, payload in endpoints:
+            try:
+                response = requests.request(method, url, json=payload, headers=headers, timeout=10)
+                if response.status_code < 400:
+                    try:
+                        data = response.json()
+                    except ValueError:
+                        data = {}
+                    return {'status': 'success', 'endpoint': url, 'response': data}
+                last_error = f"{response.status_code}: {response.text}"
+            except requests.RequestException as exc:
+                last_error = str(exc)
+
+        return {'status': 'error', 'error': last_error or 'Langflow import failed'}
+
+    def _sync_n8n_workflow(self, agent_slug: str, workflow: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Import n8n workflow via API when available."""
+
+        if workflow is None:
+            return None
+
+        n8n_cfg = self.config_manager.config.get('n8n', {})
+        if not n8n_cfg.get('enabled', True):
+            return {'status': 'skipped', 'reason': 'n8n disabled'}
+
+        base_url = os.getenv('N8N_API_URL') or n8n_cfg.get('base_url')
+        api_key = os.getenv('N8N_API_KEY') or n8n_cfg.get('api_key')
+
+        if not base_url:
+            return {'status': 'skipped', 'reason': 'n8n URL not configured'}
+
+        headers = {'Content-Type': 'application/json'}
+        if api_key:
+            headers['X-N8N-API-KEY'] = api_key
+
+        workflow_payload = dict(workflow)
+        workflow_payload.setdefault('active', True)
+        workflow_payload.setdefault('settings', {})
+        workflow_payload.setdefault('connections', workflow.get('connections', {}))
+
+        url = f"{base_url.rstrip('/')}/rest/workflows"
+
+        try:
+            response = requests.post(url, json=workflow_payload, headers=headers, timeout=10)
+            if response.status_code < 400:
+                try:
+                    data = response.json()
+                except ValueError:
+                    data = {}
+                return {'status': 'success', 'endpoint': url, 'response': data}
+
+            return {'status': 'error', 'error': f"{response.status_code}: {response.text}"}
+        except requests.RequestException as exc:
+            return {'status': 'error', 'error': str(exc)}
     
     def _generate_n8n_workflow(self, agent: Dict) -> Dict:
         """Generate n8n workflow definition for an agent"""
@@ -479,7 +690,9 @@ What would you like to do next?"""
         agent_name_slug = agent['name'].lower().replace(' ', '_')
         
         workflow = {
+            "id": f"{agent_name_slug}_trigger",
             "name": f"{agent['name']} Trigger",
+            "description": agent.get('purpose', 'Automated workflow'),
             "nodes": [
                 {
                     "parameters": {
@@ -547,10 +760,9 @@ What would you like to do next?"""
                 }
             },
             "active": True,
-            "settings": {},
-            "id": f"{agent_name_slug}_trigger"
+            "settings": {}
         }
-        
+
         return workflow
 
 

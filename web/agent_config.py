@@ -114,10 +114,25 @@ class AgentConfigManager:
             self.config["agents"] = {}
         if agent_name not in self.config["agents"]:
             self.config["agents"][agent_name] = self._default_agent_config()
-        
+
         self.config["agents"][agent_name].update(updates)
         self.save_config()
-    
+
+    def register_agent(self, agent_name: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """Create or update an agent entry and ensure it's enabled."""
+
+        if "agents" not in self.config:
+            self.config["agents"] = {}
+
+        agent_config = self.config["agents"].get(agent_name, self._default_agent_config())
+        agent_config.update(metadata)
+        agent_config["enabled"] = metadata.get("enabled", True)
+
+        self.config["agents"][agent_name] = agent_config
+        self.save_config()
+
+        return agent_config
+
     def _default_agent_config(self) -> Dict[str, Any]:
         """Default config for new agent"""
         return {
@@ -150,7 +165,29 @@ class AgentConfigManager:
             "added_at": datetime.now().isoformat()
         })
         self.save_config()
-    
+
+    def register_langflow_workflow(self, workflow: Dict[str, Any]) -> Dict[str, Any]:
+        """Upsert LangFlow workflow configuration entry."""
+
+        if "langflow" not in self.config:
+            self.config["langflow"] = {"workflows": []}
+
+        workflows = self.config["langflow"].setdefault("workflows", [])
+        workflows = [w for w in workflows if w.get("id") != workflow.get("id")]
+        record = {
+            "id": workflow.get("id"),
+            "name": workflow.get("name"),
+            "description": workflow.get("description", ""),
+            "enabled": workflow.get("enabled", True),
+            "trigger": workflow.get("trigger", "manual"),
+            "added_at": datetime.now().isoformat()
+        }
+        workflows.append(record)
+        self.config["langflow"]["workflows"] = workflows
+        self.save_config()
+
+        return record
+
     def add_n8n_workflow(self, workflow: Dict[str, Any]):
         """Add n8n workflow configuration"""
         if "n8n" not in self.config:
@@ -164,6 +201,28 @@ class AgentConfigManager:
             "added_at": datetime.now().isoformat()
         })
         self.save_config()
+
+    def register_n8n_workflow(self, workflow: Dict[str, Any]) -> Dict[str, Any]:
+        """Upsert n8n workflow configuration entry."""
+
+        if "n8n" not in self.config:
+            self.config["n8n"] = {"workflows": []}
+
+        workflows = self.config["n8n"].setdefault("workflows", [])
+        workflows = [w for w in workflows if w.get("id") != workflow.get("id")]
+        record = {
+            "id": workflow.get("id"),
+            "name": workflow.get("name"),
+            "description": workflow.get("description", ""),
+            "enabled": workflow.get("enabled", True),
+            "trigger": workflow.get("trigger", "manual"),
+            "added_at": datetime.now().isoformat()
+        }
+        workflows.append(record)
+        self.config["n8n"]["workflows"] = workflows
+        self.save_config()
+
+        return record
     
     def update_memory_settings(self, settings: Dict[str, Any]):
         """Update memory system settings"""

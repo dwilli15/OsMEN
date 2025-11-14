@@ -14,7 +14,7 @@ from typing import Optional
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse, Response, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
@@ -1259,12 +1259,46 @@ async def intake_agent_chat(request: Request):
         logger.error(f"Intake agent error: {e}")
         import traceback
         traceback.print_exc()
-        
+
         return {
             'response': f'I encountered an error: {str(e)}. Please try again.',
             'context': context,
             'isHtml': False
         }
+
+
+@app.post("/api/intake-agent/deploy")
+async def intake_agent_deploy(request: Request):
+    """Deploy agents using the intake agent deployment pipeline."""
+
+    try:
+        import sys
+        from pathlib import Path
+
+        agents_dir = Path(__file__).parent.parent / "agents"
+        sys.path.insert(0, str(agents_dir))
+
+        from intake_agent.intake_agent import IntakeAgent
+
+        payload = await request.json()
+        context = payload.get('context', {})
+
+        proposed_agents = payload.get('agents')
+        if proposed_agents:
+            context['proposedAgents'] = proposed_agents
+
+        if not context.get('proposedAgents'):
+            raise HTTPException(status_code=400, detail="No agents provided for deployment")
+
+        intake_agent = IntakeAgent()
+        result = intake_agent.deploy_agents(context)
+
+        return JSONResponse(result)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Deployment error: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 if __name__ == "__main__":
