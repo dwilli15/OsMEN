@@ -40,7 +40,6 @@ from .status import (
 )
 from .agent_config import AgentConfigManager
 from .digest import DigestGenerator
-from calendar_manager import CalendarManager
 
 try:
     import sentry_sdk
