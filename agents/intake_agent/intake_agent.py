@@ -667,7 +667,7 @@ What would you like to do next?"""
         workflow_payload = dict(workflow)
         workflow_payload.setdefault('active', True)
         workflow_payload.setdefault('settings', {})
-        workflow_payload.setdefault('connections', workflow.get('connections', {}))
+        workflow_payload.setdefault('connections', {})
 
         url = f"{base_url.rstrip('/')}/rest/workflows"
 
