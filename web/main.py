@@ -10,11 +10,17 @@ import os
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse, Response, StreamingResponse
+from fastapi.responses import (
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+    Response,
+    StreamingResponse,
+)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
@@ -23,6 +29,8 @@ from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from logging_config import configure_logging
+
+from .agent_config import AgentConfigManager
 from .auth import (
     check_auth,
     ensure_csrf_token,
@@ -32,14 +40,13 @@ from .auth import (
     role_required,
     validate_csrf,
 )
+from .digest import DigestGenerator
 from .status import (
     get_agent_health,
     get_memory_system_status,
     get_service_health,
     get_system_status,
 )
-from .agent_config import AgentConfigManager
-from .digest import DigestGenerator
 
 try:
     import sentry_sdk
@@ -67,11 +74,43 @@ SENTRY_RELEASE = os.getenv("SENTRY_RELEASE", f"osmen-web@{APP_VERSION}")
 config_manager = AgentConfigManager()
 digest_generator = DigestGenerator()
 
+
+# Validation helpers
+def _validate_proposed_agents_payload(proposed_agents: Any) -> List[Dict[str, Any]]:
+    """Validate proposed agents payload before deployment."""
+
+    if not isinstance(proposed_agents, list):
+        raise HTTPException(status_code=400, detail="Agents payload must be a list")
+
+    sanitized_agents: List[Dict[str, Any]] = []
+    for idx, agent in enumerate(proposed_agents):
+        if not isinstance(agent, dict):
+            raise HTTPException(
+                status_code=400, detail=f"Agent entry {idx} must be an object"
+            )
+
+        name = agent.get("name")
+        if not isinstance(name, str) or not name.strip():
+            raise HTTPException(
+                status_code=400, detail=f"Agent entry {idx} missing required 'name'"
+            )
+
+        if any(invalid in name for invalid in ("/", "\\", "..")):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Agent '{name}' contains invalid path characters",
+            )
+
+        sanitized_agents.append(agent)
+
+    return sanitized_agents
+
+
 # Initialize FastAPI app
 app = FastAPI(
     title="OsMEN Dashboard",
     description="No-code interface for Jarvis-like AI assistant",
-    version=APP_VERSION
+    version=APP_VERSION,
 )
 
 if sentry_sdk and SENTRY_DSN:
@@ -94,27 +133,45 @@ app.add_middleware(
     same_site=SESSION_COOKIE_SAMESITE,
 )
 
+
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Apply common security headers to every response."""
 
     def __init__(self, app):
         super().__init__(app)
-        self.csp = os.getenv("WEB_CONTENT_SECURITY_POLICY", "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self'; font-src 'self';")
+        self.csp = os.getenv(
+            "WEB_CONTENT_SECURITY_POLICY",
+            "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self'; font-src 'self';",
+        )
 
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         if ENFORCE_HTTPS:
-            response.headers.setdefault("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
+            response.headers.setdefault(
+                "Strict-Transport-Security",
+                "max-age=63072000; includeSubDomains; preload",
+            )
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
-        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-        response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        response.headers.setdefault(
+            "Referrer-Policy", "strict-origin-when-cross-origin"
+        )
+        response.headers.setdefault(
+            "Permissions-Policy", "camera=(), microphone=(), geolocation=()"
+        )
         response.headers.setdefault("Content-Security-Policy", self.csp)
         return response
 
+
 PROMETHEUS_ENABLED = METRICS_ENABLED
-REQUEST_COUNT = Counter("osmen_web_requests_total", "Total dashboard HTTP requests", ["method", "path", "status"])
-REQUEST_LATENCY = Histogram("osmen_web_request_duration_seconds", "Dashboard HTTP request duration", ["path"])
+REQUEST_COUNT = Counter(
+    "osmen_web_requests_total",
+    "Total dashboard HTTP requests",
+    ["method", "path", "status"],
+)
+REQUEST_LATENCY = Histogram(
+    "osmen_web_request_duration_seconds", "Dashboard HTTP request duration", ["path"]
+)
 
 # Add CORS middleware
 app.add_middleware(
@@ -132,6 +189,7 @@ if ENFORCE_HTTPS:
     app.add_middleware(HTTPSRedirectMiddleware)
 
 if PROMETHEUS_ENABLED:
+
     @app.middleware("http")
     async def prometheus_middleware(request: Request, call_next):
         if request.url.path == "/metrics":
@@ -139,40 +197,50 @@ if PROMETHEUS_ENABLED:
         start = time.perf_counter()
         response = await call_next(request)
         duration = time.perf_counter() - start
-        REQUEST_COUNT.labels(request.method, request.url.path, str(response.status_code)).inc()
+        REQUEST_COUNT.labels(
+            request.method, request.url.path, str(response.status_code)
+        ).inc()
         REQUEST_LATENCY.labels(request.url.path).observe(duration)
         return response
 
-# Setup templates and static files
+
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent
 
 # Add project directories to Python path for proper imports
 import sys
-for module_dir in ['integrations', 'scheduling', 'parsers', 'reminders', 'health_integration']:
+
+for module_dir in [
+    "integrations",
+    "scheduling",
+    "parsers",
+    "reminders",
+    "health_integration",
+]:
     module_path = str(PROJECT_ROOT / module_dir)
     if module_path not in sys.path:
         sys.path.insert(0, module_path)
 
+# Add .copilot directory for memory/conversation system
+COPILOT_DIR = PROJECT_ROOT / ".copilot"
+if COPILOT_DIR.exists():
+    copilot_path = str(COPILOT_DIR)
+    if copilot_path not in sys.path:
+        sys.path.insert(0, copilot_path)
+    try:  # pragma: no cover - optional in some environments
+        from conversation_store import ConversationStore  # type: ignore
+    except Exception:  # pragma: no cover - fail gracefully if missing
+        ConversationStore = None  # type: ignore
+else:  # pragma: no cover - development without memory system
+    ConversationStore = None  # type: ignore
+
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
-
-AGENT_TYPE_OPTIONS = [
-    ("coordinator", "Coordinator"),
-    ("specialist", "Specialist"),
-    ("automation", "Automation"),
-    ("monitor", "Monitor"),
-    ("analyst", "Analyst"),
-]
-
-INTAKE_AGENT_FORM_TEMPLATES = {
-    "team-review": ("team_review_form.html", {}),
-    "agent-type-picker": ("agent_type_picker.html", {"agent_types": AGENT_TYPE_OPTIONS}),
-}
 
 # Log buffer for live streaming
 log_buffer = []
 MAX_LOG_BUFFER = 100
+
 
 def template_context(request: Request, extra: Optional[dict] = None) -> dict:
     ctx = {"request": request, "csrf_token": ensure_csrf_token(request)}
@@ -185,24 +253,8 @@ ViewerRole = Depends(role_required("viewer"))
 OperatorRole = Depends(role_required("operator"))
 AdminRole = Depends(role_required("admin"))
 
-
-def get_intake_agent():
-    """Dynamically load the intake agent implementation."""
-
-    import sys
-
-    agents_dir = Path(__file__).parent.parent / "agents"
-    agents_path = str(agents_dir)
-    if agents_path not in sys.path:
-        sys.path.insert(0, agents_path)
-
-    from intake_agent.intake_agent import IntakeAgent  # pylint: disable=import-error
-
-    return IntakeAgent()
-
 # In-memory tracker for parsed syllabus previews
 active_uploads = {}
-
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -225,7 +277,7 @@ async def login(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
-    csrf_token: str = Form(...)
+    csrf_token: str = Form(...),
 ):
     """Handle login form submission."""
     validate_csrf(request, csrf_token)
@@ -233,7 +285,7 @@ async def login(
         return RedirectResponse(url="/dashboard", status_code=303)
     return templates.TemplateResponse(
         "login.html",
-        template_context(request, {"error": "Invalid username or password"})
+        template_context(request, {"error": "Invalid username or password"}),
     )
 
 
@@ -256,7 +308,7 @@ async def health_check():
         "status": "ok",
         "service": "OsMEN Dashboard",
         "version": APP_VERSION,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
 
 
@@ -278,25 +330,25 @@ async def readiness_check():
         return {
             "status": "not_ready",
             "message": "Critical dependencies not available",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
-    
+
     # Check memory system
     memory_status = await get_memory_system_status()
     memory_ok = memory_status.get("status") in ["healthy", "not_initialized"]
-    
+
     if not memory_ok:
         return {
             "status": "not_ready",
             "message": "Memory system error",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
-    
+
     return {
         "status": "ready",
         "service": "OsMEN Dashboard",
         "version": APP_VERSION,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
 
 
@@ -323,11 +375,14 @@ async def dashboard(request: Request, user: dict = Depends(check_auth)):
     status = await get_system_status()
     return templates.TemplateResponse(
         "dashboard.html",
-        template_context(request, {
-            "user": user,
-            "status": status,
-            "now": datetime.now(),
-        })
+        template_context(
+            request,
+            {
+                "user": user,
+                "status": status,
+                "now": datetime.now(),
+            },
+        ),
     )
 
 
@@ -354,26 +409,34 @@ async def agents_page(request: Request, user: dict = Depends(OperatorRole)):
     """Agent configuration page."""
     return templates.TemplateResponse(
         "agents.html",
-        template_context(request, {
-            "user": user,
-            "agents": config_manager.get_all_agents(),
-            "langflow_workflows": config_manager.get_langflow_workflows(),
-            "n8n_workflows": config_manager.get_n8n_workflows(),
-            "memory": config_manager.get_memory_settings(),
-            "notifications": config_manager.get_notification_settings(),
-        })
+        template_context(
+            request,
+            {
+                "user": user,
+                "agents": config_manager.get_all_agents(),
+                "langflow_workflows": config_manager.get_langflow_workflows(),
+                "n8n_workflows": config_manager.get_n8n_workflows(),
+                "memory": config_manager.get_memory_settings(),
+                "notifications": config_manager.get_notification_settings(),
+            },
+        ),
     )
 
 
 @app.post("/api/agents/{agent_name}/toggle")
-async def toggle_agent(agent_name: str, request: Request, user: dict = Depends(OperatorRole)):
+async def toggle_agent(
+    agent_name: str, request: Request, user: dict = Depends(OperatorRole)
+):
     """Toggle agent enabled/disabled."""
     validate_csrf(request, request.headers.get("X-CSRF-Token"))
     agent = config_manager.get_agent(agent_name)
     if agent:
         config_manager.toggle_agent(agent_name, not agent.get("enabled", False))
         add_log("INFO", f"Agent {agent_name} toggled", "config")
-        return {"success": True, "enabled": config_manager.get_agent(agent_name).get("enabled")}
+        return {
+            "success": True,
+            "enabled": config_manager.get_agent(agent_name).get("enabled"),
+        }
     return {"success": False, "error": "Agent not found"}
 
 
@@ -381,12 +444,14 @@ async def toggle_agent(agent_name: str, request: Request, user: dict = Depends(O
 async def update_memory_settings(request: Request, user: dict = Depends(OperatorRole)):
     """Update memory settings."""
     form_data = await request.form()
-    validate_csrf(request, form_data.get('csrf_token'))
+    validate_csrf(request, form_data.get("csrf_token"))
     settings = {
-        "conversation_retention_days": int(form_data.get("conversation_retention_days", 45)),
+        "conversation_retention_days": int(
+            form_data.get("conversation_retention_days", 45)
+        ),
         "summary_retention_months": int(form_data.get("summary_retention_months", 12)),
         "context_window_size": int(form_data.get("context_window_size", 8000)),
-        "auto_summarize": form_data.get("auto_summarize") == "on"
+        "auto_summarize": form_data.get("auto_summarize") == "on",
     }
     config_manager.update_memory_settings(settings)
     add_log("INFO", "Memory settings updated", "config")
@@ -394,18 +459,20 @@ async def update_memory_settings(request: Request, user: dict = Depends(Operator
 
 
 @app.post("/api/notifications/settings")
-async def update_notification_settings(request: Request, user: dict = Depends(OperatorRole)):
+async def update_notification_settings(
+    request: Request, user: dict = Depends(OperatorRole)
+):
     """Update notification settings."""
     form_data = await request.form()
-    validate_csrf(request, form_data.get('csrf_token'))
+    validate_csrf(request, form_data.get("csrf_token"))
     settings = {
         "email_enabled": form_data.get("email_enabled") == "on",
         "push_enabled": form_data.get("push_enabled") == "on",
         "dashboard_enabled": form_data.get("dashboard_enabled") == "on",
         "quiet_hours": {
             "start": form_data.get("quiet_hours_start", "22:00"),
-            "end": form_data.get("quiet_hours_end", "08:00")
-        }
+            "end": form_data.get("quiet_hours_end", "08:00"),
+        },
     }
     config_manager.update_notification_settings(settings)
     add_log("INFO", "Notification settings updated", "config")
@@ -415,25 +482,28 @@ async def update_notification_settings(request: Request, user: dict = Depends(Op
 @app.get("/digest", response_class=HTMLResponse)
 async def digest_page(request: Request, user: dict = Depends(ViewerRole)):
     """Daily digest page."""
-    date = request.query_params.get('date', datetime.now().strftime('%Y-%m-%d'))
+    date = request.query_params.get("date", datetime.now().strftime("%Y-%m-%d"))
     data = digest_generator.get_digest_data(date)
     return templates.TemplateResponse(
         "digest.html",
-        template_context(request, {
-            "user": user,
-            "date": date,
-            "activities": data['activities'],
-            "task_stats": data['task_statistics'],
-            "procrastination": data['procrastination_insights'],
-            "health": data['health_correlations'],
-        })
+        template_context(
+            request,
+            {
+                "user": user,
+                "date": date,
+                "activities": data["activities"],
+                "task_stats": data["task_statistics"],
+                "procrastination": data["procrastination_insights"],
+                "health": data["health_correlations"],
+            },
+        ),
     )
 
 
 @app.get("/api/digest/data")
 async def get_digest_data_api(request: Request, user: dict = Depends(check_auth)):
     """Get digest data API."""
-    date = request.query_params.get('date')
+    date = request.query_params.get("date")
     return digest_generator.get_digest_data(date)
 
 
@@ -441,19 +511,21 @@ async def get_digest_data_api(request: Request, user: dict = Depends(check_auth)
 async def save_digest_feedback(request: Request, user: dict = Depends(check_auth)):
     """Save daily feedback."""
     form_data = await request.form()
-    validate_csrf(request, form_data.get('csrf_token'))
-    date = form_data.get('date')
+    validate_csrf(request, form_data.get("csrf_token"))
+    date = form_data.get("date")
     feedback = {
-        'mood': int(form_data.get('mood', 3)),
-        'productivity': int(form_data.get('productivity', 3)),
-        'challenges': form_data.get('challenges', ''),
-        'wins': form_data.get('wins', ''),
-        'improvements': form_data.get('improvements', '')
+        "mood": int(form_data.get("mood", 3)),
+        "productivity": int(form_data.get("productivity", 3)),
+        "challenges": form_data.get("challenges", ""),
+        "wins": form_data.get("wins", ""),
+        "improvements": form_data.get("improvements", ""),
     }
     success = digest_generator.save_feedback(date, feedback)
     if success:
         add_log("INFO", f"Daily reflection saved for {date}", "digest")
-        return HTMLResponse("<div class='text-green-600'>Reflection saved successfully!</div>")
+        return HTMLResponse(
+            "<div class='text-green-600'>Reflection saved successfully!</div>"
+        )
     return HTMLResponse("<div class='text-red-600'>Failed to save reflection</div>")
 
 
@@ -461,19 +533,18 @@ async def save_digest_feedback(request: Request, user: dict = Depends(check_auth
 async def export_digest_pdf(request: Request, user: dict = Depends(check_auth)):
     """Export digest as PDF."""
     import tempfile
+
     from fastapi.responses import FileResponse
-    
-    date = request.query_params.get('date', datetime.now().strftime('%Y-%m-%d'))
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+
+    date = request.query_params.get("date", datetime.now().strftime("%Y-%m-%d"))
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
     temp_file.close()
-    
+
     success = digest_generator.export_pdf(date, temp_file.name)
     if success:
         add_log("INFO", f"Digest PDF exported for {date}", "digest")
         return FileResponse(
-            temp_file.name,
-            media_type='application/pdf',
-            filename=f'digest_{date}.pdf'
+            temp_file.name, media_type="application/pdf", filename=f"digest_{date}.pdf"
         )
     raise HTTPException(status_code=500, detail="Failed to generate PDF")
 
@@ -482,19 +553,20 @@ async def export_digest_pdf(request: Request, user: dict = Depends(check_auth)):
 async def export_digest_json(request: Request, user: dict = Depends(check_auth)):
     """Export digest as JSON."""
     import tempfile
+
     from fastapi.responses import FileResponse
-    
-    date = request.query_params.get('date', datetime.now().strftime('%Y-%m-%d'))
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.json')
+
+    date = request.query_params.get("date", datetime.now().strftime("%Y-%m-%d"))
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
     temp_file.close()
-    
+
     success = digest_generator.export_json(date, temp_file.name)
     if success:
         add_log("INFO", f"Digest JSON exported for {date}", "digest")
         return FileResponse(
             temp_file.name,
-            media_type='application/json',
-            filename=f'digest_{date}.json'
+            media_type="application/json",
+            filename=f"digest_{date}.json",
         )
     raise HTTPException(status_code=500, detail="Failed to generate JSON")
 
@@ -503,24 +575,25 @@ async def export_digest_json(request: Request, user: dict = Depends(check_auth))
 # Calendar Integration Endpoints (Agent Alpha - Task A1.1)
 # ============================================================================
 
+
 @app.get("/calendar", response_class=HTMLResponse)
 async def calendar_page(request: Request, user: dict = Depends(check_auth)):
     """Calendar management page."""
     # Import calendar manager
-    from calendar_manager import CalendarManager
-    
+    from calendar.calendar_manager import CalendarManager
+
     manager = CalendarManager()
     status = manager.get_status()
-    
+
     return templates.TemplateResponse(
         "calendar_setup.html",
         {
             "request": request,
             "user": user,
             "status": status,
-            "connected_calendars": status.get('configured_providers', []),
-            "primary_provider": status.get('primary_provider')
-        }
+            "connected_calendars": status.get("configured_providers", []),
+            "primary_provider": status.get("primary_provider"),
+        },
     )
 
 
@@ -529,50 +602,55 @@ async def google_calendar_oauth(request: Request, user: dict = Depends(check_aut
     """Initiate Google Calendar OAuth flow."""
     # Import Google Calendar integration
     import sys
-    from google_calendar import GoogleCalendarIntegration
-    
+    from calendar.google_calendar import GoogleCalendarIntegration
+
     try:
         google_cal = GoogleCalendarIntegration()
         auth_url = google_cal.get_authorization_url()
-        
+
         if auth_url:
             add_log("INFO", "Google Calendar OAuth initiated", "calendar")
             return {"auth_url": auth_url, "success": True}
         else:
             raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
-    
+
     except Exception as e:
         add_log("ERROR", f"Google Calendar OAuth error: {e}", "calendar")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/calendar/google/callback")
-async def google_calendar_callback(request: Request, code: str = None, user: dict = Depends(check_auth)):
+async def google_calendar_callback(
+    request: Request, code: str = None, user: dict = Depends(check_auth)
+):
     """Handle Google Calendar OAuth callback."""
     if not code:
         raise HTTPException(status_code=400, detail="Authorization code required")
-    
+
     import sys
-    from calendar_manager import CalendarManager
-    
+    from calendar.calendar_manager import CalendarManager
+
     try:
         manager = CalendarManager()
-        
+
         # Exchange code for credentials
-        credentials_path = BASE_DIR.parent / ".copilot" / "calendar" / "google_credentials.json"
-        token_path = BASE_DIR.parent / ".copilot" / "calendar" / "google_token.json"
-        
-        success = manager.add_google_calendar(
-            credentials_path=str(credentials_path),
-            token_path=str(token_path)
+        credentials_path = (
+            BASE_DIR.parent / ".copilot" / "calendar" / "google_credentials.json"
         )
-        
+        token_path = BASE_DIR.parent / ".copilot" / "calendar" / "google_token.json"
+
+        success = manager.add_google_calendar(
+            credentials_path=str(credentials_path), token_path=str(token_path)
+        )
+
         if success:
             add_log("INFO", "Google Calendar connected successfully", "calendar")
             return RedirectResponse(url="/calendar?status=success")
         else:
-            raise HTTPException(status_code=500, detail="Failed to connect Google Calendar")
-    
+            raise HTTPException(
+                status_code=500, detail="Failed to connect Google Calendar"
+            )
+
     except Exception as e:
         add_log("ERROR", f"Google Calendar callback error: {e}", "calendar")
         return RedirectResponse(url="/calendar?status=error")
@@ -583,51 +661,57 @@ async def outlook_calendar_oauth(request: Request, user: dict = Depends(check_au
     """Initiate Outlook Calendar OAuth flow."""
     # Import Outlook Calendar integration
     import sys
-    from outlook_calendar import OutlookCalendarIntegration
-    
+    from calendar.outlook_calendar import OutlookCalendarIntegration
+
     try:
         outlook_cal = OutlookCalendarIntegration()
         auth_url = outlook_cal.get_authorization_url()
-        
+
         if auth_url:
             add_log("INFO", "Outlook Calendar OAuth initiated", "calendar")
             return {"auth_url": auth_url, "success": True}
         else:
             raise HTTPException(status_code=500, detail="Failed to generate OAuth URL")
-    
+
     except Exception as e:
         add_log("ERROR", f"Outlook Calendar OAuth error: {e}", "calendar")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/calendar/outlook/callback")
-async def outlook_calendar_callback(request: Request, code: str = None, user: dict = Depends(check_auth)):
+async def outlook_calendar_callback(
+    request: Request, code: str = None, user: dict = Depends(check_auth)
+):
     """Handle Outlook Calendar OAuth callback."""
     if not code:
         raise HTTPException(status_code=400, detail="Authorization code required")
-    
+
     import sys
-    from calendar_manager import CalendarManager
-    from outlook_calendar import OutlookCalendarIntegration
-    
+    from calendar.calendar_manager import CalendarManager
+    from calendar.outlook_calendar import OutlookCalendarIntegration
+
     try:
         # Exchange code for access token
         outlook_cal = OutlookCalendarIntegration()
         access_token = outlook_cal.exchange_code_for_token(code)
-        
+
         if not access_token:
-            raise HTTPException(status_code=500, detail="Failed to exchange code for token")
-        
+            raise HTTPException(
+                status_code=500, detail="Failed to exchange code for token"
+            )
+
         # Add to calendar manager
         manager = CalendarManager()
         success = manager.add_outlook_calendar(access_token)
-        
+
         if success:
             add_log("INFO", "Outlook Calendar connected successfully", "calendar")
             return RedirectResponse(url="/calendar?status=success")
         else:
-            raise HTTPException(status_code=500, detail="Failed to connect Outlook Calendar")
-    
+            raise HTTPException(
+                status_code=500, detail="Failed to connect Outlook Calendar"
+            )
+
     except Exception as e:
         add_log("ERROR", f"Outlook Calendar callback error: {e}", "calendar")
         return RedirectResponse(url="/calendar?status=error")
@@ -637,15 +721,15 @@ async def outlook_calendar_callback(request: Request, code: str = None, user: di
 async def list_calendar_events(request: Request, user: dict = Depends(check_auth)):
     """List calendar events."""
     import sys
-    from calendar_manager import CalendarManager
-    
+    from calendar.calendar_manager import CalendarManager
+
     try:
         manager = CalendarManager()
-        max_results = int(request.query_params.get('max_results', 50))
+        max_results = int(request.query_params.get("max_results", 50))
         events = manager.list_events(max_results=max_results)
-        
+
         return {"events": events, "count": len(events)}
-    
+
     except Exception as e:
         add_log("ERROR", f"Error listing events: {e}", "calendar")
         raise HTTPException(status_code=500, detail=str(e))
@@ -655,22 +739,26 @@ async def list_calendar_events(request: Request, user: dict = Depends(check_auth
 async def sync_calendar_events(request: Request, user: dict = Depends(check_auth)):
     """Sync events to calendar (batch creation)."""
     import sys
-    from calendar_manager import CalendarManager
-    
+    from calendar.calendar_manager import CalendarManager
+
     try:
         data = await request.json()
-        events = data.get('events', [])
-        
+        events = data.get("events", [])
+
         if not events:
             raise HTTPException(status_code=400, detail="No events provided")
-        
+
         manager = CalendarManager()
         result = manager.create_events_batch(events)
-        
-        add_log("INFO", f"Calendar sync: {result['successful']}/{result['total']} events created", "calendar")
-        
+
+        add_log(
+            "INFO",
+            f"Calendar sync: {result['successful']}/{result['total']} events created",
+            "calendar",
+        )
+
         return result
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -682,74 +770,77 @@ async def sync_calendar_events(request: Request, user: dict = Depends(check_auth
 # Syllabus Upload and Processing (Agent Alpha - Task A1.2, A1.3)
 # ============================================================================
 
+
 @app.post("/api/syllabus/upload")
 async def upload_syllabus(request: Request, user: dict = Depends(check_auth)):
     """Upload and process syllabus file."""
-    from fastapi import UploadFile, File
-    import tempfile
     import sys
-    
+    import tempfile
+
+    from fastapi import File, UploadFile
     from syllabus.syllabus_parser import SyllabusParser
-    
+
     try:
         form = await request.form()
-        file: UploadFile = form.get('file')
-        
+        file: UploadFile = form.get("file")
+
         if not file:
             raise HTTPException(status_code=400, detail="No file uploaded")
-        
+
         # Validate file type
-        allowed_extensions = ['.pdf', '.docx', '.doc']
+        allowed_extensions = [".pdf", ".docx", ".doc"]
         file_extension = Path(file.filename).suffix.lower()
-        
+
         if file_extension not in allowed_extensions:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported file type. Allowed: {', '.join(allowed_extensions)}"
+                detail=f"Unsupported file type. Allowed: {', '.join(allowed_extensions)}",
             )
-        
+
         # Validate file size (max 10MB)
         max_size = 10 * 1024 * 1024
         file_content = await file.read()
-        
+
         if len(file_content) > max_size:
             raise HTTPException(status_code=400, detail="File too large (max 10MB)")
-        
+
         # Save to temp file for processing
-        with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            delete=False, suffix=file_extension
+        ) as temp_file:
             temp_file.write(file_content)
             temp_file_path = temp_file.name
-        
+
         # Parse syllabus
         parser = SyllabusParser()
         parsed_data = parser.parse(temp_file_path)
         normalized_data = parser.normalize_data(parsed_data)
-        
+
         # Clean up temp file
         Path(temp_file_path).unlink()
-        
+
         # Store parsed data for preview
         preview_id = f"syllabus_{datetime.now().timestamp()}"
         preview_path = BASE_DIR.parent / "content" / "inbox" / f"{preview_id}.json"
         preview_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        with open(preview_path, 'w') as f:
+
+        with open(preview_path, "w") as f:
             json.dump(normalized_data, f, indent=2)
 
         active_uploads[preview_id] = {
             "status": "ready",
-            "events": normalized_data.get("events", []).copy()
+            "events": normalized_data.get("events", []).copy(),
         }
-        
+
         add_log("INFO", f"Syllabus uploaded and parsed: {file.filename}", "syllabus")
-        
+
         return {
             "success": True,
             "preview_id": preview_id,
-            "course": normalized_data.get('course', {}),
-            "event_count": normalized_data.get('metadata', {}).get('total_events', 0)
+            "course": normalized_data.get("course", {}),
+            "event_count": normalized_data.get("metadata", {}).get("total_events", 0),
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -762,30 +853,28 @@ async def get_syllabus_preview(preview_id: str, user: dict = Depends(check_auth)
     """Get parsed syllabus data for preview."""
     try:
         preview_path = BASE_DIR.parent / "content" / "inbox" / f"{preview_id}.json"
-        
+
         if not preview_path.exists():
             raise HTTPException(status_code=404, detail="Preview not found")
-        
-        with open(preview_path, 'r') as f:
+
+        with open(preview_path, "r") as f:
             data = json.load(f)
-        
+
         return data
-    
+
     except Exception as e:
         add_log("ERROR", f"Preview retrieval error: {e}", "syllabus")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/events/preview/{preview_id}", response_class=HTMLResponse)
-async def event_preview_page(request: Request, preview_id: str, user: dict = Depends(check_auth)):
+async def event_preview_page(
+    request: Request, preview_id: str, user: dict = Depends(check_auth)
+):
     """Event preview and editing page."""
     return templates.TemplateResponse(
         "event_preview.html",
-        {
-            "request": request,
-            "user": user,
-            "preview_id": preview_id
-        }
+        {"request": request, "user": user, "preview_id": preview_id},
     )
 
 
@@ -849,39 +938,40 @@ async def bulk_preview_action(request: Request, user: dict = Depends(check_auth)
 # Scheduling Engine Integration (Agent Alpha - Task A1.6)
 # ============================================================================
 
+
 @app.get("/api/schedule/generate")
 async def generate_schedule(request: Request, user: dict = Depends(check_auth)):
     """Generate optimal schedule from calendar events."""
-    from scheduling.schedule_optimizer import ScheduleOptimizer
     from scheduling.priority_ranker import PriorityRanker
-    
+    from scheduling.schedule_optimizer import ScheduleOptimizer
+
     try:
         # Get calendar events
-        from calendar_manager import CalendarManager
-        
+        from calendar.calendar_manager import CalendarManager
+
         manager = CalendarManager()
         events = manager.list_events(max_results=100)
-        
+
         if not events:
             return {"schedule": [], "message": "No events to schedule"}
-        
+
         # Calculate priorities
         ranker = PriorityRanker()
         for event in events:
-            event['calculated_priority'] = ranker.calculate_priority(event)
-        
+            event["calculated_priority"] = ranker.calculate_priority(event)
+
         # Generate optimized schedule
         optimizer = ScheduleOptimizer()
         schedule = optimizer.optimize(events)
-        
+
         add_log("INFO", f"Schedule generated with {len(schedule)} items", "scheduling")
-        
+
         return {
             "schedule": schedule,
             "event_count": len(events),
-            "optimized_count": len(schedule)
+            "optimized_count": len(schedule),
         }
-    
+
     except Exception as e:
         add_log("ERROR", f"Schedule generation error: {e}", "scheduling")
         raise HTTPException(status_code=500, detail=str(e))
@@ -890,38 +980,33 @@ async def generate_schedule(request: Request, user: dict = Depends(check_auth)):
 @app.get("/tasks", response_class=HTMLResponse)
 async def tasks_page(request: Request, user: dict = Depends(check_auth)):
     """Tasks and scheduling page."""
-    return templates.TemplateResponse(
-        "tasks.html",
-        {
-            "request": request,
-            "user": user
-        }
-    )
+    return templates.TemplateResponse("tasks.html", {"request": request, "user": user})
 
 
 # ============================================================================
 # Reminder Integration (Agent Alpha - Task A2.1)
 # ============================================================================
 
+
 @app.post("/api/reminders/create")
 async def create_reminder(request: Request, user: dict = Depends(check_auth)):
     """Create reminder for a task."""
     from adaptive_reminders import AdaptiveReminderSystem
-    
+
     try:
         data = await request.json()
-        task = data.get('task')
-        
+        task = data.get("task")
+
         if not task:
             raise HTTPException(status_code=400, detail="Task data required")
-        
+
         reminder_system = AdaptiveReminderSystem()
         reminder = reminder_system.create_reminder(task)
-        
+
         add_log("INFO", f"Reminder created for task: {task.get('title')}", "reminders")
-        
+
         return reminder
-    
+
     except Exception as e:
         add_log("ERROR", f"Reminder creation error: {e}", "reminders")
         raise HTTPException(status_code=500, detail=str(e))
@@ -931,36 +1016,38 @@ async def create_reminder(request: Request, user: dict = Depends(check_auth)):
 async def get_due_reminders(request: Request, user: dict = Depends(check_auth)):
     """Get reminders that are due now."""
     from adaptive_reminders import AdaptiveReminderSystem
-    
+
     try:
         reminder_system = AdaptiveReminderSystem()
         due_reminders = reminder_system.get_due_reminders()
-        
+
         return {"reminders": due_reminders, "count": len(due_reminders)}
-    
+
     except Exception as e:
         add_log("ERROR", f"Error getting due reminders: {e}", "reminders")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/reminders/{reminder_id}/snooze")
-async def snooze_reminder(reminder_id: str, request: Request, user: dict = Depends(check_auth)):
+async def snooze_reminder(
+    reminder_id: str, request: Request, user: dict = Depends(check_auth)
+):
     """Snooze a reminder."""
     from adaptive_reminders import AdaptiveReminderSystem
-    
+
     try:
         data = await request.json()
-        duration_hours = data.get('duration_hours')
-        
+        duration_hours = data.get("duration_hours")
+
         reminder_system = AdaptiveReminderSystem()
         success = reminder_system.snooze_reminder(reminder_id, duration_hours)
-        
+
         if success:
             add_log("INFO", f"Reminder snoozed: {reminder_id}", "reminders")
             return {"success": True}
         else:
             raise HTTPException(status_code=404, detail="Reminder not found")
-    
+
     except Exception as e:
         add_log("ERROR", f"Snooze error: {e}", "reminders")
         raise HTTPException(status_code=500, detail=str(e))
@@ -970,50 +1057,51 @@ async def snooze_reminder(reminder_id: str, request: Request, user: dict = Depen
 # Health Integration (Agent Alpha - Task A2.4, A2.5)
 # ============================================================================
 
+
 @app.get("/health", response_class=HTMLResponse)
 async def health_page(request: Request, user: dict = Depends(check_auth)):
     """Health data and integration page."""
-    return templates.TemplateResponse(
-        "health.html",
-        {
-            "request": request,
-            "user": user
-        }
-    )
+    return templates.TemplateResponse("health.html", {"request": request, "user": user})
 
 
 @app.get("/api/health/status")
 async def get_health_status(request: Request, user: dict = Depends(check_auth)):
     """Get health status summary."""
     from schedule_adjuster import HealthBasedScheduleAdjuster
-    
+
     try:
         adjuster = HealthBasedScheduleAdjuster()
         status = adjuster.get_health_status_summary()
-        
+
         return status
-    
+
     except Exception as e:
         add_log("ERROR", f"Health status error: {e}", "health")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/health/adjust_schedule")
-async def adjust_schedule_for_health(request: Request, user: dict = Depends(check_auth)):
+async def adjust_schedule_for_health(
+    request: Request, user: dict = Depends(check_auth)
+):
     """Adjust schedule based on health data."""
     from schedule_adjuster import HealthBasedScheduleAdjuster
-    
+
     try:
         data = await request.json()
-        schedule = data.get('schedule', [])
-        
+        schedule = data.get("schedule", [])
+
         adjuster = HealthBasedScheduleAdjuster()
         adjusted_schedule = adjuster.adjust_schedule_for_health(schedule)
-        
-        add_log("INFO", f"Schedule adjusted for health ({len(adjusted_schedule)} items)", "health")
-        
+
+        add_log(
+            "INFO",
+            f"Schedule adjusted for health ({len(adjusted_schedule)} items)",
+            "health",
+        )
+
         return {"schedule": adjusted_schedule}
-    
+
     except Exception as e:
         add_log("ERROR", f"Schedule adjustment error: {e}", "health")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1022,28 +1110,29 @@ async def adjust_schedule_for_health(request: Request, user: dict = Depends(chec
 @app.get("/logs/stream")
 async def stream_logs(request: Request, user: dict = Depends(check_auth)):
     """Server-Sent Events endpoint for live log streaming."""
+
     async def event_generator():
         # Send initial logs from buffer
         for log in log_buffer[-50:]:  # Last 50 logs
             yield f"data: {json.dumps(log)}\n\n"
-        
+
         # Keep connection alive and send new logs
         while True:
             if await request.is_disconnected():
                 break
-            
+
             # In production, this would tail actual log files
             # For now, send heartbeat
             await asyncio.sleep(1)
             yield f"data: {json.dumps({'type': 'heartbeat', 'timestamp': datetime.now().isoformat()})}\n\n"
-    
+
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-        }
+        },
     )
 
 
@@ -1054,11 +1143,53 @@ def add_log(level: str, message: str, source: str = "system"):
         "timestamp": datetime.now().isoformat(),
         "level": level,
         "message": message,
-        "source": source
+        "source": source,
     }
     log_buffer.append(log_entry)
     if len(log_buffer) > MAX_LOG_BUFFER:
         log_buffer = log_buffer[-MAX_LOG_BUFFER:]
+
+
+def _cleanup_conversations(days: int) -> int:
+    """Run conversation retention cleanup in a worker thread."""
+    if ConversationStore is None:
+        return 0
+    store = ConversationStore()
+    return store.cleanup_old_conversations(days=days)
+
+
+async def _conversation_retention_worker() -> None:
+    """Background task to enforce conversation retention and summaries.
+
+    Uses the ConversationStore SQLite backend to prune old entries while
+    preserving high-level summaries, aligned with memory settings.
+    """
+    if ConversationStore is None:
+        logger.info("Conversation store not available; retention worker disabled")
+        return
+
+    # Small initial delay to avoid blocking startup
+    await asyncio.sleep(5)
+
+    interval_seconds = int(
+        os.getenv("CONVERSATION_CLEANUP_INTERVAL_SECONDS", str(24 * 60 * 60))
+    )
+
+    while True:
+        try:
+            memory_cfg = config_manager.config.get("memory", {})
+            retention_days = int(memory_cfg.get("conversation_retention_days", 45))
+
+            deleted = await asyncio.to_thread(_cleanup_conversations, retention_days)
+            if deleted:
+                logger.info(
+                    "Conversation retention cleanup removed %s old conversations",
+                    deleted,
+                )
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger.error("Conversation retention cleanup failed: %s", exc)
+
+        await asyncio.sleep(interval_seconds)
 
 
 # Startup event
@@ -1068,30 +1199,36 @@ async def startup_event():
     add_log("INFO", "OsMEN Web Dashboard started", "web")
     add_log("INFO", f"Version: {app.version}", "web")
 
+    # Start background retention worker for conversation history
+    try:
+        asyncio.create_task(_conversation_retention_worker())
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.error("Failed to start retention worker: %s", exc)
+
+
+# ============================================================================
+# HEALTH CHECK
+# ============================================================================
+
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Docker"""
+    return {"status": "healthy", "service": "osmen-web"}
+
 
 # ============================================================================
 # AGENT HUB - Comprehensive Agent Management Interface
 # ============================================================================
+
 
 @app.get("/", response_class=HTMLResponse)
 @app.get("/hub", response_class=HTMLResponse)
 async def agent_hub():
     """Serve the main agent hub interface"""
     ui_file = Path(__file__).parent / "agent_hub.html"
-    with open(ui_file, 'r') as f:
+    with open(ui_file, "r") as f:
         return HTMLResponse(content=f.read())
-
-
-@app.get("/api/intake-agent/forms/{form_name}", response_class=HTMLResponse)
-async def intake_agent_form(form_name: str, request: Request):
-    """Serve partial templates used by the intake agent structured UI."""
-
-    template_info = INTAKE_AGENT_FORM_TEMPLATES.get(form_name)
-    if not template_info:
-        raise HTTPException(status_code=404, detail="Form not found")
-
-    template_name, extra = template_info
-    return templates.TemplateResponse(template_name, template_context(request, extra))
 
 
 @app.get("/api/agents")
@@ -1100,28 +1237,32 @@ async def list_agents():
     try:
         flows_dir = Path(__file__).parent.parent / "langflow" / "flows"
         agents = []
-        
+
         if flows_dir.exists():
             for flow_file in flows_dir.glob("*.json"):
                 try:
-                    with open(flow_file, 'r') as f:
+                    with open(flow_file, "r") as f:
                         flow = json.load(f)
-                        
+
                         # Skip non-agent flows
-                        if flow_file.stem in ['knowledge_specialist']:
+                        if flow_file.stem in ["knowledge_specialist"]:
                             continue
-                            
-                        agents.append({
-                            'id': flow_file.stem,
-                            'name': flow.get('name', flow_file.stem.replace('_', ' ').title()),
-                            'purpose': flow.get('description', 'No description'),
-                            'status': 'active',
-                            'capabilities': _extract_capabilities(flow),
-                            'icon': _get_agent_icon(flow_file.stem)
-                        })
+
+                        agents.append(
+                            {
+                                "id": flow_file.stem,
+                                "name": flow.get(
+                                    "name", flow_file.stem.replace("_", " ").title()
+                                ),
+                                "purpose": flow.get("description", "No description"),
+                                "status": "active",
+                                "capabilities": _extract_capabilities(flow),
+                                "icon": _get_agent_icon(flow_file.stem),
+                            }
+                        )
                 except Exception as e:
                     logger.error(f"Error loading flow {flow_file}: {e}")
-        
+
         return agents
     except Exception as e:
         logger.error(f"Error listing agents: {e}")
@@ -1134,17 +1275,17 @@ async def delete_agent(agent_id: str):
     try:
         flows_dir = Path(__file__).parent.parent / "langflow" / "flows"
         workflows_dir = Path(__file__).parent.parent / "n8n" / "workflows"
-        
+
         # Delete Langflow flow
         flow_file = flows_dir / f"{agent_id}.json"
         if flow_file.exists():
             flow_file.unlink()
-        
+
         # Delete n8n workflow
         workflow_file = workflows_dir / f"{agent_id}_trigger.json"
         if workflow_file.exists():
             workflow_file.unlink()
-        
+
         return {"status": "deleted", "agent_id": agent_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -1156,22 +1297,26 @@ async def list_workflows():
     try:
         workflows_dir = Path(__file__).parent.parent / "n8n" / "workflows"
         workflows = []
-        
+
         if workflows_dir.exists():
             for workflow_file in workflows_dir.glob("*.json"):
                 try:
-                    with open(workflow_file, 'r') as f:
+                    with open(workflow_file, "r") as f:
                         workflow = json.load(f)
-                        workflows.append({
-                            'id': workflow.get('id', workflow_file.stem),
-                            'name': workflow.get('name', workflow_file.stem.replace('_', ' ').title()),
-                            'description': _extract_workflow_description(workflow),
-                            'trigger': _extract_trigger_type(workflow),
-                            'active': workflow.get('active', False)
-                        })
+                        workflows.append(
+                            {
+                                "id": workflow.get("id", workflow_file.stem),
+                                "name": workflow.get(
+                                    "name", workflow_file.stem.replace("_", " ").title()
+                                ),
+                                "description": _extract_workflow_description(workflow),
+                                "trigger": _extract_trigger_type(workflow),
+                                "active": workflow.get("active", False),
+                            }
+                        )
                 except Exception as e:
                     logger.error(f"Error loading workflow {workflow_file}: {e}")
-        
+
         return workflows
     except Exception as e:
         logger.error(f"Error listing workflows: {e}")
@@ -1181,47 +1326,49 @@ async def list_workflows():
 def _extract_capabilities(flow: dict) -> list:
     """Extract capabilities from Langflow flow"""
     capabilities = []
-    
+
     # Look for system message that might contain capabilities
-    for node in flow.get('nodes', []):
-        if node.get('type') == 'ChatOllama':
-            system_msg = node.get('data', {}).get('system_message', '')
-            if 'capabilities include:' in system_msg.lower():
-                caps_text = system_msg.split('capabilities include:')[1]
-                capabilities = [c.strip() for c in caps_text.replace('.', '').split(',')]
-    
+    for node in flow.get("nodes", []):
+        if node.get("type") == "ChatOllama":
+            system_msg = node.get("data", {}).get("system_message", "")
+            if "capabilities include:" in system_msg.lower():
+                caps_text = system_msg.split("capabilities include:")[1]
+                capabilities = [
+                    c.strip() for c in caps_text.replace(".", "").split(",")
+                ]
+
     # Default capabilities if none found
     if not capabilities:
-        capabilities = ['task_execution', 'llm_reasoning', 'memory_access']
-    
+        capabilities = ["task_execution", "llm_reasoning", "memory_access"]
+
     return capabilities[:5]  # Limit to 5
 
 
 def _get_agent_icon(agent_id: str) -> str:
     """Get icon for agent type"""
     icons = {
-        'boot_hardening': '🛡️',
-        'daily_brief': '📊',
-        'focus_guardrails': '🎯',
-        'security': '🔒',
-        'productivity': '⚡',
-        'research': '🔍',
-        'content': '🎨'
+        "boot_hardening": "🛡️",
+        "daily_brief": "📊",
+        "focus_guardrails": "🎯",
+        "security": "🔒",
+        "productivity": "⚡",
+        "research": "🔍",
+        "content": "🎨",
     }
-    
+
     for key, icon in icons.items():
         if key in agent_id.lower():
             return icon
-    
-    return '🤖'
+
+    return "🤖"
 
 
 def _extract_workflow_description(workflow: dict) -> str:
     """Extract description from n8n workflow"""
     # Get first few nodes and create description
-    nodes = workflow.get('nodes', [])
+    nodes = workflow.get("nodes", [])
     if nodes:
-        triggers = [n for n in nodes if 'trigger' in n.get('type', '').lower()]
+        triggers = [n for n in nodes if "trigger" in n.get("type", "").lower()]
         if triggers:
             return f"Triggered workflow with {len(nodes)} steps"
     return "Automated workflow"
@@ -1229,18 +1376,18 @@ def _extract_workflow_description(workflow: dict) -> str:
 
 def _extract_trigger_type(workflow: dict) -> str:
     """Extract trigger type from n8n workflow"""
-    nodes = workflow.get('nodes', [])
+    nodes = workflow.get("nodes", [])
     for node in nodes:
-        node_type = node.get('type', '').lower()
-        if 'schedule' in node_type:
-            params = node.get('parameters', {})
-            rule = params.get('rule', {})
-            interval = rule.get('interval', [{}])[0] if rule.get('interval') else {}
-            cron = interval.get('expression', 'Schedule')
+        node_type = node.get("type", "").lower()
+        if "schedule" in node_type:
+            params = node.get("parameters", {})
+            rule = params.get("rule", {})
+            interval = rule.get("interval", [{}])[0] if rule.get("interval") else {}
+            cron = interval.get("expression", "Schedule")
             return f"Cron: {cron}"
-        elif 'webhook' in node_type:
+        elif "webhook" in node_type:
             return "Webhook"
-        elif 'manual' in node_type:
+        elif "manual" in node_type:
             return "Manual"
     return "Unknown"
 
@@ -1249,11 +1396,12 @@ def _extract_trigger_type(workflow: dict) -> str:
 # INTAKE AGENT - Natural Language Agent Team Creation
 # ============================================================================
 
+
 @app.get("/intake-agent", response_class=HTMLResponse)
 async def intake_agent_ui():
     """Serve the standalone intake agent UI (legacy)"""
     ui_file = Path(__file__).parent / "intake_agent_ui.html"
-    with open(ui_file, 'r') as f:
+    with open(ui_file, "r") as f:
         return HTMLResponse(content=f.read())
 
 
@@ -1264,64 +1412,324 @@ async def intake_agent_chat(request: Request):
     Processes natural language input and creates custom agent teams.
     """
     try:
+        # Import the intake agent
+        import sys
+        from pathlib import Path
+
+        # Add agents directory to path
+        agents_dir = Path(__file__).parent.parent / "agents"
+        agents_dir_str = str(agents_dir)
+        if agents_dir_str not in sys.path:
+            sys.path.insert(0, agents_dir_str)
+
+        from intake_agent.intake_agent import IntakeAgent
+
         # Parse request
         data = await request.json()
-        message = data.get('message', '')
-        context = data.get('context', {'stage': 'initial'})
-        history = data.get('history', [])
+        message = data.get("message", "")
+        context = data.get("context", {"stage": "initial"})
+        history = data.get("history", [])
+        session_id = data.get("session_id")
 
         # Process with intake agent
-        agent = get_intake_agent()
+        agent = IntakeAgent()
         result = agent.process_message(message, context, history)
 
+        # Persist this turn into the conversation store for retention/history
+        if ConversationStore is not None and message and result.get("response"):
+            try:
+                await asyncio.to_thread(
+                    _save_intake_conversation_turn,
+                    message,
+                    result,
+                    session_id,
+                )
+            except Exception as store_exc:  # pragma: no cover - defensive logging
+                logger.error("Failed to persist intake conversation: %s", store_exc)
+
         return result
-        
+
     except Exception as e:
         logger.error(f"Intake agent error: {e}")
         import traceback
+
         traceback.print_exc()
-        
+
         return {
-            'response': f'I encountered an error: {str(e)}. Please try again.',
-            'context': context,
-            'isHtml': False
+            "response": f"I encountered an error: {str(e)}. Please try again.",
+            "context": context,
+            "isHtml": False,
         }
 
 
-@app.post("/api/intake-agent/review")
-async def intake_agent_review(request: Request):
-    """Apply structured modifications submitted via the Agent Hub UI."""
+def _save_intake_conversation_turn(
+    user_message: str, result: Dict[str, Any], session_id: Optional[str]
+) -> None:
+    """Store a single intake-agent turn in the conversation store.
+
+    This uses the shared ConversationStore SQLite backend and tags
+    rows so we can later filter by agent and session.
+    """
+    if ConversationStore is None:
+        return
 
     try:
-        data = await request.json()
-        context = data.get('context', {'stage': 'confirming'})
-        modifications = data.get('modifications', {})
+        store = ConversationStore()
+    except Exception as exc:  # pragma: no cover
+        logger.error("Unable to initialize ConversationStore: %s", exc)
+        return
 
-        agent = get_intake_agent()
-        return agent.apply_structured_modifications(context, modifications)
-    except Exception as e:  # pragma: no cover - UI convenience
-        logger.error(f"Intake agent review error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    context = result.get("context") or {}
+    metadata: Dict[str, Any] = {
+        "ui": "intake-agent",
+        "session_id": session_id,
+        "stage": context.get("stage"),
+    }
+    if result.get("agentsCreated"):
+        metadata["agents_created"] = True
+
+    store.add_conversation(
+        user_message=user_message,
+        agent_response=result.get("response", ""),
+        agent_name="intake_agent",
+        context=context,
+        metadata=metadata,
+    )
 
 
 @app.post("/api/intake-agent/deploy")
-async def intake_agent_deploy(request: Request):
-    """Deploy the proposed agent team from structured UI controls."""
+async def intake_agent_deploy(request: Request, user: dict = Depends(OperatorRole)):
+    """Deploy agents using the intake agent deployment pipeline."""
 
     try:
-        data = await request.json()
-        context = data.get('context', {'stage': 'confirming'})
+        import sys
 
-        agent = get_intake_agent()
-        result = agent.deploy_team(context)
-        return result
-    except Exception as e:  # pragma: no cover - UI convenience
-        logger.error(f"Intake agent deploy error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        agents_dir = Path(__file__).parent.parent / "agents"
+        agents_dir_str = str(agents_dir)
+        if agents_dir_str not in sys.path:
+            sys.path.insert(0, agents_dir_str)
+
+        from intake_agent.intake_agent import IntakeAgent
+
+        payload = await request.json()
+        context = payload.get("context", {})
+        if not isinstance(context, dict):
+            raise HTTPException(
+                status_code=400, detail="Context payload must be an object"
+            )
+
+        proposed_agents = payload.get("agents")
+        if proposed_agents is not None:
+            context["proposedAgents"] = _validate_proposed_agents_payload(
+                proposed_agents
+            )
+
+        if not context.get("proposedAgents"):
+            raise HTTPException(
+                status_code=400, detail="No agents provided for deployment"
+            )
+
+        intake_agent = IntakeAgent()
+        result = intake_agent.deploy_agents(context)
+
+        return JSONResponse(result)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Deployment error: {exc}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get("/api/intake-agent/history")
+async def intake_agent_history(limit: int = 100):
+    """Retrieve recent intake-agent conversation history and recent sessions.
+
+    Data is sourced from the ConversationStore SQLite backend and limited to
+    entries tagged with the intake agent.
+    """
+    if ConversationStore is None:
+        raise HTTPException(
+            status_code=500, detail="Conversation store is not configured"
+        )
+
+    def _load_history_data(max_rows: int) -> Dict[str, Any]:
+        store = ConversationStore()
+        rows = store.get_conversations(limit=max_rows)
+
+        # Filter to intake agent turns only
+        intake_rows = [r for r in rows if r.get("agent_name") == "intake_agent"]
+
+        history: List[Dict[str, Any]] = []
+        for row in reversed(intake_rows):  # oldest first for replay
+            raw_context = row.get("context")
+            raw_metadata = row.get("metadata")
+            parsed_context: Optional[Dict[str, Any]] = None
+            parsed_metadata: Optional[Dict[str, Any]] = None
+
+            if raw_context:
+                try:
+                    parsed_context = json.loads(raw_context)
+                except Exception:
+                    parsed_context = None
+            if raw_metadata:
+                try:
+                    parsed_metadata = json.loads(raw_metadata)
+                except Exception:
+                    parsed_metadata = None
+
+            history.append(
+                {
+                    "id": row.get("id"),
+                    "timestamp": row.get("timestamp"),
+                    "user_message": row.get("user_message"),
+                    "agent_response": row.get("agent_response"),
+                    "context": parsed_context,
+                    "metadata": parsed_metadata,
+                }
+            )
+
+        # Aggregate into recent session cards using session_id metadata
+        sessions: Dict[str, Dict[str, Any]] = {}
+        for item in history:
+            meta = item.get("metadata") or {}
+            session_id = meta.get("session_id") or f"legacy-{item['id']}"
+
+            session = sessions.get(session_id)
+            timestamp = item.get("timestamp")
+            if session is None:
+                session = {
+                    "session_id": session_id,
+                    "started_at": timestamp,
+                    "updated_at": timestamp,
+                    "first_user_message": item.get("user_message"),
+                    "last_agent_response": item.get("agent_response"),
+                    "message_count": 1,
+                    "stage": (item.get("context") or {}).get("stage"),
+                }
+                sessions[session_id] = session
+            else:
+                session["updated_at"] = timestamp
+                session["last_agent_response"] = item.get("agent_response")
+                session["message_count"] = session.get("message_count", 0) + 1
+                ctx = item.get("context") or {}
+                if ctx.get("stage"):
+                    session["stage"] = ctx["stage"]
+
+        recent_sessions = sorted(
+            sessions.values(),
+            key=lambda s: (s.get("updated_at") or ""),
+            reverse=True,
+        )[:10]
+
+        return {"history": history, "recent": recent_sessions}
+
+    payload = await asyncio.to_thread(_load_history_data, min(limit, 1000))
+    return JSONResponse(payload)
+
+
+@app.get("/api/intake-agent/history/{session_id}")
+async def intake_agent_session_history(session_id: str):
+    """Retrieve full history for a specific intake-agent session."""
+    if ConversationStore is None:
+        raise HTTPException(
+            status_code=500, detail="Conversation store is not configured"
+        )
+
+    def _load_session_data(target_session: str) -> List[Dict[str, Any]]:
+        store = ConversationStore()
+        rows = store.get_conversations(limit=1000)
+        intake_rows = [r for r in rows if r.get("agent_name") == "intake_agent"]
+
+        items: List[Dict[str, Any]] = []
+        for row in reversed(intake_rows):  # oldest first
+            raw_metadata = row.get("metadata")
+            raw_context = row.get("context")
+            parsed_metadata: Optional[Dict[str, Any]] = None
+            parsed_context: Optional[Dict[str, Any]] = None
+
+            if raw_metadata:
+                try:
+                    parsed_metadata = json.loads(raw_metadata)
+                except Exception:
+                    parsed_metadata = None
+
+            meta = parsed_metadata or {}
+            if meta.get("session_id") != target_session:
+                continue
+
+            if raw_context:
+                try:
+                    parsed_context = json.loads(raw_context)
+                except Exception:
+                    parsed_context = None
+
+            items.append(
+                {
+                    "id": row.get("id"),
+                    "timestamp": row.get("timestamp"),
+                    "user_message": row.get("user_message"),
+                    "agent_response": row.get("agent_response"),
+                    "context": parsed_context,
+                    "metadata": parsed_metadata,
+                }
+            )
+
+        return items
+
+    history = await asyncio.to_thread(_load_session_data, session_id)
+    return JSONResponse({"session_id": session_id, "history": history})
+
+
+@app.get("/api/intake-agent/summaries")
+async def intake_agent_summaries():
+    """Expose high-level conversation summaries from the memory system."""
+    if ConversationStore is None:
+        raise HTTPException(
+            status_code=500, detail="Conversation store is not configured"
+        )
+
+    def _load_summaries() -> List[Dict[str, Any]]:
+        store = ConversationStore()
+        rows = store.get_summaries()
+        summaries: List[Dict[str, Any]] = []
+
+        for row in rows:
+            key_topics: List[str] = []
+            decisions: List[str] = []
+
+            if row.get("key_topics"):
+                try:
+                    key_topics = json.loads(row["key_topics"])
+                except Exception:
+                    key_topics = []
+            if row.get("decisions_made"):
+                try:
+                    decisions = json.loads(row["decisions_made"])
+                except Exception:
+                    decisions = []
+
+            summaries.append(
+                {
+                    "id": row.get("id"),
+                    "start_date": row.get("start_date"),
+                    "end_date": row.get("end_date"),
+                    "summary": row.get("summary"),
+                    "conversation_count": row.get("conversation_count"),
+                    "key_topics": key_topics,
+                    "decisions_made": decisions,
+                    "created_at": row.get("created_at"),
+                }
+            )
+
+        return summaries
+
+    summaries = await asyncio.to_thread(_load_summaries)
+    return JSONResponse({"summaries": summaries})
 
 
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.getenv("WEB_PORT", "8000"))
     host = os.getenv("WEB_HOST", "0.0.0.0")
     uvicorn.run(app, host=host, port=port)

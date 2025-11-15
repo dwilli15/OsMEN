@@ -54,6 +54,57 @@
             background: #f7f9fc;
         }
 
+        .recent-conversations {
+            padding: 20px 30px 10px 30px;
+            background: #f7f9fc;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .recent-conversations h3 {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .recent-conversations-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .conversation-card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 10px 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+            cursor: pointer;
+            flex: 1 1 260px;
+            min-width: 0;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .conversation-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+        }
+
+        .conversation-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conversation-meta {
+            font-size: 0.75em;
+            color: #718096;
+            display: flex;
+            justify-content: space-between;
+        }
+
         .message {
             margin-bottom: 20px;
             display: flex;
@@ -236,6 +287,11 @@
             <p>Let's build a custom AI team tailored to your needs</p>
         </div>
 
+        <div class="recent-conversations" id="recentConversations" style="display: none;">
+            <h3>Recent Conversations</h3>
+            <div class="recent-conversations-list" id="recentConversationsList"></div>
+        </div>
+
         <div class="chat-container" id="chatContainer">
             <div class="message agent">
                 <div class="message-avatar">🤖</div>
@@ -266,6 +322,9 @@
         const sendButton = document.getElementById('sendButton');
         
         let conversationHistory = [];
+        let sessionId = (window.crypto && window.crypto.randomUUID)
+            ? window.crypto.randomUUID()
+            : 'session-' + Date.now() + '-' + Math.random().toString(36).slice(2);
         let agentContext = {
             stage: 'initial', // initial, gathering_requirements, confirming, deploying
             requirements: {},
@@ -278,6 +337,12 @@
                 sendMessage();
             }
         });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
 
         function addMessage(text, isUser = false, isHtml = false) {
             const messageDiv = document.createElement('div');
@@ -330,6 +395,110 @@
             }
         }
 
+        async function loadConversation(sessionToLoad) {
+            try {
+                const response = await fetch(`/api/intake-agent/history/${encodeURIComponent(sessionToLoad)}`);
+                if (!response.ok) {
+                    console.error('Failed to load session history', response.status);
+                    return;
+                }
+                const data = await response.json();
+                const items = data.history || [];
+
+                chatContainer.innerHTML = '';
+                conversationHistory = [];
+                sessionId = data.session_id || sessionToLoad;
+
+                let lastContext = agentContext;
+
+                items.forEach(item => {
+                    if (item.user_message) {
+                        addMessage(item.user_message, true);
+                        conversationHistory.push({ role: 'user', content: item.user_message });
+                    }
+                    if (item.agent_response) {
+                        const isHtml = item.metadata && item.metadata.isHtml;
+                        addMessage(item.agent_response, false, isHtml);
+                        conversationHistory.push({ role: 'agent', content: item.agent_response });
+                    }
+                    if (item.context) {
+                        lastContext = item.context;
+                    }
+                });
+
+                if (lastContext) {
+                    agentContext = lastContext;
+                }
+            } catch (err) {
+                console.error('Error loading conversation session', err);
+            }
+        }
+
+        async function loadRecentConversations() {
+            try {
+                const response = await fetch('/api/intake-agent/history?limit=200');
+                if (!response.ok) {
+                    return;
+                }
+                const data = await response.json();
+                const history = data.history || [];
+                const recent = data.recent || [];
+
+                const recentContainer = document.getElementById('recentConversations');
+                const listEl = document.getElementById('recentConversationsList');
+
+                if (recent.length > 0) {
+                    recentContainer.style.display = 'block';
+                    listEl.innerHTML = '';
+
+                    recent.forEach(conv => {
+                        const card = document.createElement('div');
+                        card.className = 'conversation-card';
+                        const title = conv.first_user_message || 'Untitled conversation';
+                        const startedAt = conv.started_at ? new Date(conv.started_at).toLocaleString() : '';
+
+                        card.innerHTML = `
+                            <div class="conversation-title">${escapeHtml(title)}</div>
+                            <div class="conversation-meta">
+                                <span>${escapeHtml(startedAt)}</span>
+                                <span>${(conv.message_count || 0)} messages</span>
+                            </div>
+                        `;
+
+                        card.addEventListener('click', () => {
+                            loadConversation(conv.session_id);
+                        });
+
+                        listEl.appendChild(card);
+                    });
+                }
+
+                if (history.length > 0) {
+                    chatContainer.innerHTML = '';
+                    conversationHistory = [];
+
+                    history.forEach(item => {
+                        if (item.user_message) {
+                            addMessage(item.user_message, true);
+                            conversationHistory.push({ role: 'user', content: item.user_message });
+                        }
+                        if (item.agent_response) {
+                            const isHtml = item.metadata && item.metadata.isHtml;
+                            addMessage(item.agent_response, false, isHtml);
+                            conversationHistory.push({ role: 'agent', content: item.agent_response });
+                        }
+                    });
+
+                    const lastWithContext = [...history].reverse().find(h => h.context);
+                    if (lastWithContext && lastWithContext.context) {
+                        agentContext = lastWithContext.context;
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load recent conversations', err);
+            }
+        }
+
         async function sendMessage() {
             const message = userInput.value.trim();
             if (!message) return;
@@ -355,7 +524,8 @@
                     body: JSON.stringify({
                         message: message,
                         context: agentContext,
-                        history: conversationHistory
+                        history: conversationHistory,
+                        session_id: sessionId
                     })
                 });
 
@@ -403,9 +573,10 @@
             addMessage(summaryHtml, false, true);
         }
 
-        // Auto-focus input on load
+        // Auto-focus input and load history on load
         window.addEventListener('load', () => {
             userInput.focus();
+            loadRecentConversations();
         });
     </script>
 </body>
