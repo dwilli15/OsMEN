@@ -6,25 +6,42 @@
 [![Security Validated](https://img.shields.io/badge/security-validated-success.svg)](scripts/automation/validate_security.py)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-A **production-ready** local-first no/low-code agent hub combining Langflow reasoning graphs with n8n automation fabric, powered by local LLM via Ollama or cloud providers.
+A **production-ready** local-first **no-code agent team orchestration** platform combining Langflow reasoning graphs with n8n automation fabric, powered by Codex CLI, Copilot CLI, local LLMs, and cloud providers.
 
 ## 🎯 Overview
 
-OsMEN provides a complete agent orchestration platform for:
+OsMEN provides a complete **no-code agent team orchestration** platform for:
+- 🤖 **Personal Assistant**: Task management, scheduling, reminders, and productivity
+- 🎨 **Content Creation**: Image generation and video processing
+- 📧 **Email & Contact Management**: Automated email workflows and contact sync
+- 📚 **Syllabus to Calendar**: Build weekly todos and calendar items from syllabuses
+- 🎤 **Live Captioning**: Real-time transcription for Zoom and meetings
+- 📖 **Audiobook Creator**: Convert ebooks to audiobooks with voice cloning
+- 🎙️ **Podcast Creator**: Generate podcasts from knowledge bases
 - 🛡️ **Boot Hardening**: System security and boot integrity monitoring
 - 📊 **Daily Briefing**: Comprehensive morning briefs with system status
 - 🎯 **Focus Guardrails**: Productivity management and distraction blocking
-- 📝 **Content Editing**: Media processing and content management (coming soon)
-- 🔍 **Research Intelligence**: Information gathering and analysis (coming soon)
+- 💻 **OS Optimization**: System customization and performance tuning
+- 🔒 **Security Operations**: White hat operations and security monitoring
+- 📝 **Knowledge Management**: Obsidian, Notion, and multi-source knowledge bases
 
 ## 🏗️ Architecture
 
-**Core Components:**
+**No-Code Agent Team Orchestration:**
+- **Codex CLI Integration**: OpenAI Codex as model source and agent
+- **Copilot CLI Integration**: GitHub Copilot for code assistance and suggestions
 - **Langflow**: Visual reasoning graph builder with coordinator + specialist agents
 - **n8n**: Workflow automation with triggers and subflows
 - **LLM Agents**: Production agents (OpenAI, Copilot, Amazon Q, Claude) + Local (LM Studio, Ollama)
 - **Qdrant**: Vector database for agent memory
-- **Tool Layer**: Simplewall, Sysinternals, FFmpeg integrations
+- **Tool Layer**: Codex CLI, Copilot CLI, Zoom, Audiblez, Vibevoice, Simplewall, Sysinternals, FFmpeg, Obsidian, Notion
+
+**Agent Teams:**
+1. **Personal Productivity Team**: Personal Assistant, Focus Guardrails, Daily Brief
+2. **Content Creation Team**: Content Creator, Audiobook Creator, Podcast Creator
+3. **Communication Team**: Email Manager, Live Caption, Contact Management
+4. **Knowledge Team**: Knowledge Management, Syllabus Parser, Research Intel
+5. **System Team**: OS Optimizer, Boot Hardening, Security Operations
 
 **Flexible deployment** - Use production cloud agents or run locally for privacy.
 
@@ -133,26 +150,139 @@ See **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)** for complet
 
 ## 🔧 Key Features
 
+### No-Code Agent Orchestration
+- **Visual workflow builder** with Langflow for agent reasoning
+- **Automated triggers** with n8n for scheduled and event-based execution
+- **Agent teams** for collaborative task completion
+- **Multi-model support** with Codex CLI, Copilot CLI, and cloud/local LLMs
+
 ### Model Context Protocol (MCP)
 - **Standardized tool integration** for LLM agents
 - **Tool discovery and execution** via REST API
-- **Built-in tools**: Obsidian, Simplewall, Sysinternals, FFmpeg
+- **Built-in tools**: Codex CLI, Copilot CLI, Obsidian, Simplewall, Sysinternals, FFmpeg, Zoom, Audiblez, Vibevoice
 - **MCP Server**: http://localhost:8081
 
-### Obsidian Integration
-- **Knowledge management** with full Obsidian vault access
-- **Note operations**: Create, read, search, update
-- **Graph analysis**: Export knowledge graph and find backlinks
-- **Agent integration**: Knowledge Management Specialist
+### Personal Assistant Capabilities
+- Task management and prioritization
+- Calendar integration (Google, Outlook)
+- Reminder system with notifications
+- Weekly schedule generation from syllabuses
+- Contact and email management
+
+### Content Creation Suite
+- **Image Generation**: AI-powered image creation from text prompts
+- **Video Processing**: FFmpeg integration for editing and conversion
+- **Audiobook Creation**: Convert ebooks to audiobooks with Audiblez/Vibevoice
+- **Voice Cloning**: Setup and manage voice profiles for narration
+- **Podcast Generation**: Create podcasts from knowledge base content
+
+### Communication & Collaboration
+- **Live Captioning**: Real-time transcription for Zoom and meetings
+- **Email Automation**: Smart rules and automated workflows
+- **Contact Management**: Unified contact database with tagging
+
+### Knowledge Management
+- **Obsidian Integration**: Full vault access and note operations
+- **Notion Integration**: Sync and manage Notion databases
+- **Multi-source Knowledge Bases**: Build from syllabuses, interests, and more
+- **Knowledge Graph**: Analyze connections and find insights
 - **Automated workflows**: n8n webhook for note capture
 
-## 🎯 MVP Features
+### System Operations
+- **OS Optimization**: Performance tuning and customization
+- **Security Operations**: White hat monitoring and vulnerability assessment
+- **Boot Hardening**: System security and integrity verification
+- **Compliance Monitoring**: Automated security checks
 
-### Knowledge Management Agent
-- Create and organize notes in Obsidian
-- Search and retrieve knowledge
-- Find connections between notes
-- Generate summaries and insights
+## 🎯 Agent Capabilities
+
+### Personal Assistant Agent
+- Create and manage tasks with priorities
+- Set reminders and notifications
+- Schedule calendar events
+- Generate daily summaries
+- Integrate with Google/Outlook calendars
+
+```bash
+python agents/personal_assistant/personal_assistant_agent.py
+```
+
+### Content Creator Agent
+- Generate images from text prompts
+- Process and edit videos
+- Convert media formats
+- Create thumbnails
+- Apply filters and effects
+
+```bash
+python agents/content_creator/content_creator_agent.py
+```
+
+### Email Manager Agent
+- Manage contacts with tags
+- Send automated emails
+- Create email rules
+- Search and filter contacts
+- Batch operations
+
+```bash
+python agents/email_manager/email_manager_agent.py
+```
+
+### Live Caption Agent
+- Real-time meeting transcription
+- Multi-language support
+- Speaker identification
+- Transcript export
+- Zoom integration
+
+```bash
+python agents/live_caption/live_caption_agent.py
+```
+
+### Audiobook Creator Agent
+- Convert ebooks to audiobooks
+- Voice cloning for narration
+- Multi-format support (epub, pdf, txt)
+- Chapter-based splitting
+- Audiblez and Vibevoice integration
+
+```bash
+python agents/audiobook_creator/audiobook_creator_agent.py
+```
+
+### Podcast Creator Agent
+- Generate podcasts from knowledge base
+- Create podcast series
+- Add intro/outro music
+- Multi-voice narration
+- Episode management
+
+```bash
+python agents/podcast_creator/podcast_creator_agent.py
+```
+
+### OS Optimizer Agent
+- System performance analysis
+- Apply optimizations
+- Custom system configurations
+- Cleanup and maintenance
+- Performance monitoring
+
+```bash
+python agents/os_optimizer/os_optimizer_agent.py
+```
+
+### Security Operations Agent
+- Security scanning
+- Vulnerability assessment
+- Event logging and monitoring
+- Compliance checking
+- Security posture reporting
+
+```bash
+python agents/security_ops/security_ops_agent.py
+```
 
 ### Boot Hardening Agent
 - Automated daily security checks
@@ -186,7 +316,42 @@ python agents/daily_brief/daily_brief_agent.py
 python agents/focus_guardrails/focus_guardrails_agent.py
 ```
 
+### Knowledge Management Agent
+- Create and organize notes in Obsidian/Notion
+- Search and retrieve knowledge
+- Find connections between notes
+- Generate summaries and insights
+- Build knowledge bases from syllabuses
+
+```bash
+python agents/knowledge_management/knowledge_agent.py
+```
+
 ## 🛠️ Tool Integrations
+
+### Codex CLI
+- Code generation from natural language
+- Code completion and suggestions
+- Code explanation and documentation
+- Code review and quality checks
+
+### Copilot CLI
+- Command line assistance
+- Shell command suggestions
+- Git command help
+- Code context suggestions
+
+### Zoom
+- Meeting transcription
+- Live caption generation
+- Recording processing
+- Participant management
+
+### Audiblez & Vibevoice
+- Text-to-speech conversion
+- Voice cloning
+- Audiobook generation
+- Multi-language support
 
 ### Simplewall
 - Firewall rule management
@@ -205,9 +370,15 @@ python agents/focus_guardrails/focus_guardrails_agent.py
 - Thumbnail generation
 - Content optimization
 
+### Obsidian & Notion
+- Note creation and management
+- Knowledge graph building
+- Search and retrieval
+- Automated organization
+
 ## 📊 Project Status
 
-**Current Version**: MVP (Minimum Viable Product)
+**Current Version**: v2.0 (No-Code Agent Team Orchestration)
 
 **Operational Status**: ✅ [See detailed status](STATUS.md)
 
@@ -215,25 +386,40 @@ python agents/focus_guardrails/focus_guardrails_agent.py
 - Core infrastructure (Docker Compose)
 - Langflow coordinator + specialist agents
 - n8n automation workflows
-- Ollama local LLM integration
+- Codex CLI integration
+- Copilot CLI integration
+- Personal Assistant agent
+- Content Creator agent
+- Email Manager agent
+- Live Caption agent
+- Audiobook Creator agent
+- Podcast Creator agent
+- OS Optimizer agent
+- Security Operations agent
+- Boot Hardening agent
+- Daily Brief agent
+- Focus Guardrails agent
+- Knowledge Management agent
+- Ollama/LM Studio local LLM integration
 - Qdrant vector memory storage
-- Boot hardening agent
-- Daily brief agent
-- Focus guardrails agent
-- Tool layer integrations
+- Tool layer integrations (Codex, Copilot, Zoom, Audiblez, Vibevoice, Simplewall, Sysinternals, FFmpeg)
+- Obsidian and Notion integration
 - Comprehensive documentation
+- Automated test suite
 
 🚧 **In Progress:**
-- Content editing pipeline
-- Research intelligence agent
-- Web dashboard
-- Additional specialist agents
+- Zoom API live integration
+- Audiblez/Vibevoice full integration
+- Enhanced voice cloning workflows
+- Advanced podcast generation templates
+- Web dashboard enhancements
 
 📋 **Planned:**
-- Grad planning assistant
-- Project management agent
-- Personal knowledge management
+- Mobile companion app
 - Advanced analytics dashboard
+- Multi-user collaboration
+- Enterprise security features
+- Plugin marketplace
 
 ## 🤝 Contributing
 
@@ -248,13 +434,18 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 Built with:
 - [Langflow](https://github.com/logspace-ai/langflow) - Visual LLM flow builder
 - [n8n](https://github.com/n8n-io/n8n) - Workflow automation
-- [OpenAI](https://openai.com/) - Production LLM (GPT-4, Codex)
-- [GitHub Copilot](https://github.com/features/copilot) - AI pair programmer
+- [OpenAI](https://openai.com/) - GPT-4, Codex CLI for code generation
+- [GitHub Copilot](https://github.com/features/copilot) - Copilot CLI for development assistance
 - [Amazon Q](https://aws.amazon.com/q/) - AWS AI assistant
 - [Anthropic Claude](https://www.anthropic.com/) - Advanced reasoning
 - [LM Studio](https://lmstudio.ai/) - Local LLM runtime (primary local option)
 - [Ollama](https://github.com/ollama/ollama) - Local LLM runtime (secondary local option)
 - [Qdrant](https://github.com/qdrant/qdrant) - Vector database
+- [Zoom](https://zoom.us/) - Video conferencing and live transcription
+- [Audiblez](https://github.com/audiblez) - Audiobook creation
+- [Vibevoice Community](https://github.com/vibevoice-community) - Voice cloning
+- [Obsidian](https://obsidian.md/) - Knowledge management
+- [Notion](https://notion.so/) - Collaborative workspace
 - [Simplewall](https://www.henrypp.org/product/simplewall) - Firewall tool
 - [Sysinternals](https://docs.microsoft.com/sysinternals) - System utilities
 - [FFmpeg](https://ffmpeg.org/) - Media processing
