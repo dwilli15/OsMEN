@@ -34,6 +34,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# OAuth tokens and credentials
+tokens/
+*.token.json
+*_oauth_token.json
+
 .Python
 env/
 venv/
