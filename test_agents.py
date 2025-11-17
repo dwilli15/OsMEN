@@ -300,6 +300,316 @@ def test_schedule_optimizer_with_normalized_events():
         return False
 
 
+def test_personal_assistant():
+    """Test Personal Assistant Agent"""
+    print("\n" + "="*50)
+    print("Testing Personal Assistant Agent")
+    print("="*50)
+    
+    try:
+        from agents.personal_assistant.personal_assistant_agent import PersonalAssistantAgent
+        
+        agent = PersonalAssistantAgent()
+        
+        # Test task creation
+        task = agent.create_task("Test task", priority="high")
+        if "id" not in task or "title" not in task:
+            raise ValueError("Task creation failed")
+        
+        # Test reminder setting
+        reminder = agent.set_reminder("Test reminder", datetime.now().isoformat())
+        if "id" not in reminder:
+            raise ValueError("Reminder creation failed")
+        
+        # Generate report
+        report = agent.generate_assistant_report()
+        required_keys = ['timestamp', 'overall_status', 'statistics']
+        for key in required_keys:
+            if key not in report:
+                raise ValueError(f"Missing required key in report: {key}")
+        
+        print("✅ Personal Assistant Agent: PASS")
+        print(f"Status: {report['overall_status']}")
+        print(f"Tasks: {report['statistics']['total_tasks']}")
+        
+        return True
+    except Exception as e:
+        print(f"❌ Personal Assistant Agent: FAIL - {e}")
+        return False
+
+
+def test_content_creator():
+    """Test Content Creator Agent"""
+    print("\n" + "="*50)
+    print("Testing Content Creator Agent")
+    print("="*50)
+    
+    try:
+        from agents.content_creator.content_creator_agent import ContentCreatorAgent
+        
+        agent = ContentCreatorAgent()
+        
+        # Test image generation
+        image = agent.generate_image("Test prompt", style="realistic")
+        if "id" not in image or "type" not in image:
+            raise ValueError("Image generation failed")
+        
+        # Generate report
+        report = agent.generate_creator_report()
+        required_keys = ['timestamp', 'overall_status', 'statistics']
+        for key in required_keys:
+            if key not in report:
+                raise ValueError(f"Missing required key in report: {key}")
+        
+        print("✅ Content Creator Agent: PASS")
+        print(f"Status: {report['overall_status']}")
+        print(f"Content Created: {report['statistics']['total_content_created']}")
+        
+        return True
+    except Exception as e:
+        print(f"❌ Content Creator Agent: FAIL - {e}")
+        return False
+
+
+def test_email_manager():
+    """Test Email Manager Agent"""
+    print("\n" + "="*50)
+    print("Testing Email Manager Agent")
+    print("="*50)
+    
+    try:
+        from agents.email_manager.email_manager_agent import EmailManagerAgent
+        
+        agent = EmailManagerAgent()
+        
+        # Test contact addition
+        contact = agent.add_contact("Test User", "test@example.com")
+        if "id" not in contact or "email" not in contact:
+            raise ValueError("Contact creation failed")
+        
+        # Generate report
+        report = agent.generate_email_report()
+        required_keys = ['timestamp', 'overall_status', 'statistics']
+        for key in required_keys:
+            if key not in report:
+                raise ValueError(f"Missing required key in report: {key}")
+        
+        print("✅ Email Manager Agent: PASS")
+        print(f"Status: {report['overall_status']}")
+        print(f"Contacts: {report['statistics']['total_contacts']}")
+        
+        return True
+    except Exception as e:
+        print(f"❌ Email Manager Agent: FAIL - {e}")
+        return False
+
+
+def test_live_caption():
+    """Test Live Caption Agent"""
+    print("\n" + "="*50)
+    print("Testing Live Caption Agent")
+    print("="*50)
+    
+    try:
+        from agents.live_caption.live_caption_agent import LiveCaptionAgent
+        
+        agent = LiveCaptionAgent()
+        
+        # Test session start
+        session = agent.start_caption_session("test-meeting", "Test Meeting")
+        if "id" not in session or "status" not in session:
+            raise ValueError("Session start failed")
+        
+        # Generate report
+        report = agent.generate_caption_report()
+        required_keys = ['timestamp', 'overall_status', 'statistics']
+        for key in required_keys:
+            if key not in report:
+                raise ValueError(f"Missing required key in report: {key}")
+        
+        print("✅ Live Caption Agent: PASS")
+        print(f"Status: {report['overall_status']}")
+        print(f"Sessions: {report['statistics']['total_sessions']}")
+        
+        return True
+    except Exception as e:
+        print(f"❌ Live Caption Agent: FAIL - {e}")
+        return False
+
+
+def test_audiobook_creator():
+    """Test Audiobook Creator Agent"""
+    print("\n" + "="*50)
+    print("Testing Audiobook Creator Agent")
+    print("="*50)
+    
+    try:
+        from agents.audiobook_creator.audiobook_creator_agent import AudiobookCreatorAgent
+        
+        agent = AudiobookCreatorAgent()
+        
+        # Test voice profile creation
+        profile = agent.create_voice_profile("Test Voice", ["/sample.wav"])
+        if "id" not in profile or "name" not in profile:
+            raise ValueError("Voice profile creation failed")
+        
+        # Generate report
+        report = agent.generate_audiobook_report()
+        required_keys = ['timestamp', 'overall_status', 'statistics']
+        for key in required_keys:
+            if key not in report:
+                raise ValueError(f"Missing required key in report: {key}")
+        
+        print("✅ Audiobook Creator Agent: PASS")
+        print(f"Status: {report['overall_status']}")
+        print(f"Voice Profiles: {report['statistics']['voice_profiles']}")
+        
+        return True
+    except Exception as e:
+        print(f"❌ Audiobook Creator Agent: FAIL - {e}")
+        return False
+
+
+def test_podcast_creator():
+    """Test Podcast Creator Agent"""
+    print("\n" + "="*50)
+    print("Testing Podcast Creator Agent")
+    print("="*50)
+    
+    try:
+        from agents.podcast_creator.podcast_creator_agent import PodcastCreatorAgent
+        
+        agent = PodcastCreatorAgent()
+        
+        # Test series creation
+        series = agent.create_podcast_series("Test Series", "Test Description")
+        if "id" not in series or "title" not in series:
+            raise ValueError("Series creation failed")
+        
+        # Generate report
+        report = agent.generate_podcast_report()
+        required_keys = ['timestamp', 'overall_status', 'statistics']
+        for key in required_keys:
+            if key not in report:
+                raise ValueError(f"Missing required key in report: {key}")
+        
+        print("✅ Podcast Creator Agent: PASS")
+        print(f"Status: {report['overall_status']}")
+        print(f"Series: {report['statistics']['total_series']}")
+        
+        return True
+    except Exception as e:
+        print(f"❌ Podcast Creator Agent: FAIL - {e}")
+        return False
+
+
+def test_os_optimizer():
+    """Test OS Optimizer Agent"""
+    print("\n" + "="*50)
+    print("Testing OS Optimizer Agent")
+    print("="*50)
+    
+    try:
+        from agents.os_optimizer.os_optimizer_agent import OSOptimizerAgent
+        
+        agent = OSOptimizerAgent()
+        
+        # Test performance analysis
+        analysis = agent.analyze_system_performance()
+        if "performance_score" not in analysis:
+            raise ValueError("Performance analysis failed")
+        
+        # Generate report
+        report = agent.generate_optimizer_report()
+        required_keys = ['timestamp', 'overall_status', 'statistics']
+        for key in required_keys:
+            if key not in report:
+                raise ValueError(f"Missing required key in report: {key}")
+        
+        print("✅ OS Optimizer Agent: PASS")
+        print(f"Status: {report['overall_status']}")
+        print(f"Optimizations: {report['statistics']['total_optimizations']}")
+        
+        return True
+    except Exception as e:
+        print(f"❌ OS Optimizer Agent: FAIL - {e}")
+        return False
+
+
+def test_security_ops():
+    """Test Security Operations Agent"""
+    print("\n" + "="*50)
+    print("Testing Security Operations Agent")
+    print("="*50)
+    
+    try:
+        from agents.security_ops.security_ops_agent import SecurityOpsAgent
+        
+        agent = SecurityOpsAgent()
+        
+        # Test security scan
+        scan = agent.run_security_scan("port", ["localhost"])
+        if "id" not in scan or "type" not in scan:
+            raise ValueError("Security scan failed")
+        
+        # Generate report
+        report = agent.generate_security_report()
+        required_keys = ['timestamp', 'overall_status', 'statistics']
+        for key in required_keys:
+            if key not in report:
+                raise ValueError(f"Missing required key in report: {key}")
+        
+        print("✅ Security Operations Agent: PASS")
+        print(f"Status: {report['overall_status']}")
+        print(f"Scans: {report['statistics']['total_scans']}")
+        
+        return True
+    except Exception as e:
+        print(f"❌ Security Operations Agent: FAIL - {e}")
+        return False
+
+
+def test_cli_integrations():
+    """Test Codex and Copilot CLI Integrations"""
+    print("\n" + "="*50)
+    print("Testing CLI Integrations")
+    print("="*50)
+    
+    results = []
+    
+    # Test Codex CLI Integration
+    try:
+        from tools.codex_cli.codex_integration import CodexCLIIntegration
+        codex = CodexCLIIntegration()
+        status = codex.get_integration_status()
+        
+        if "integration" not in status or "capabilities" not in status:
+            raise ValueError("Invalid status structure")
+        
+        print("✅ Codex CLI Integration: PASS")
+        results.append(True)
+    except Exception as e:
+        print(f"❌ Codex CLI Integration: FAIL - {e}")
+        results.append(False)
+    
+    # Test Copilot CLI Integration
+    try:
+        from tools.copilot_cli.copilot_integration import CopilotCLIIntegration
+        copilot = CopilotCLIIntegration()
+        status = copilot.get_integration_status()
+        
+        if "integration" not in status or "capabilities" not in status:
+            raise ValueError("Invalid status structure")
+        
+        print("✅ Copilot CLI Integration: PASS")
+        results.append(True)
+    except Exception as e:
+        print(f"❌ Copilot CLI Integration: FAIL - {e}")
+        results.append(False)
+    
+    return all(results)
+
+
 def main():
     """Run all tests"""
     print("\n" + "="*50)
@@ -309,13 +619,24 @@ def main():
     
     results = []
     
-    # Run MVP agent tests
+    # Run original MVP agent tests
     results.append(("Boot Hardening", test_boot_hardening()))
     results.append(("Daily Brief", test_daily_brief()))
     results.append(("Focus Guardrails", test_focus_guardrails()))
     results.append(("Tool Integrations", test_tool_integrations()))
     results.append(("Syllabus Parser Normalization", test_syllabus_parser_normalization_pipeline()))
     results.append(("Schedule Optimizer Integration", test_schedule_optimizer_with_normalized_events()))
+    
+    # Run new agent tests
+    results.append(("Personal Assistant", test_personal_assistant()))
+    results.append(("Content Creator", test_content_creator()))
+    results.append(("Email Manager", test_email_manager()))
+    results.append(("Live Caption", test_live_caption()))
+    results.append(("Audiobook Creator", test_audiobook_creator()))
+    results.append(("Podcast Creator", test_podcast_creator()))
+    results.append(("OS Optimizer", test_os_optimizer()))
+    results.append(("Security Operations", test_security_ops()))
+    results.append(("CLI Integrations", test_cli_integrations()))
     
     # Summary
     print("\n" + "="*50)
