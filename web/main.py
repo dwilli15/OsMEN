@@ -1465,7 +1465,7 @@ async def intake_agent_chat(request: Request):
         import traceback
 
         traceback.print_exc()
-
+        
         return {
             "response": f"I encountered an error: {str(e)}. Please try again.",
             "context": context,

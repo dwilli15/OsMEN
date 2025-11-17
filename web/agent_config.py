@@ -115,7 +115,7 @@ class AgentConfigManager:
             self.config["agents"] = {}
         if agent_name not in self.config["agents"]:
             self.config["agents"][agent_name] = self._default_agent_config()
-
+        
         self.config["agents"][agent_name].update(updates)
         self.save_config()
 

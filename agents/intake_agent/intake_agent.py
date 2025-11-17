@@ -795,8 +795,8 @@ What would you like to do next?"""
 
         proposed_agents = context.get("proposedAgents", [])
 
-        deployment_results: List[Dict[str, Any]] = []
-        created_agents: List[Dict[str, Any]] = []
+        updated_agents: List[Dict[str, Any]] = []
+        lookup = {idx: agent for idx, agent in enumerate(agents)}
 
         for agent in proposed_agents:
             agent_slug = self._slugify_agent_name(agent["name"])
@@ -941,7 +941,7 @@ What would you like to do next?"""
                 {"source": "memory", "target": "output"},
             ],
         }
-
+        
         return flow
 
     def _register_agent_with_dashboard(
@@ -1150,7 +1150,6 @@ What would you like to do next?"""
         agent_name_slug = self._slugify_agent_name(agent["name"])
 
         workflow = {
-            "id": f"{agent_name_slug}_trigger",
             "name": f"{agent['name']} Trigger",
             "description": agent.get("purpose", "Automated workflow"),
             "nodes": [
@@ -1207,7 +1206,7 @@ What would you like to do next?"""
             "active": True,
             "settings": {},
         }
-
+        
         return workflow
 
 
