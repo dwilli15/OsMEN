@@ -9,9 +9,19 @@ custom agent teams with coordinated specialists.
 import json
 import logging
 import os
+import re
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional, Tuple
+
+from requests.exceptions import JSONDecodeError
+
+from web.agent_config import AgentConfigManager
+
+try:
+    import requests
+except ImportError:  # pragma: no cover - requests is an optional runtime dependency
+    requests = None
 
 try:
     import requests
@@ -106,26 +116,28 @@ class IntakeAgent:
         
         # Conversation stages
         self.STAGES = {
-            'initial': self._handle_initial,
-            'gathering_requirements': self._handle_gathering,
-            'confirming': self._handle_confirming,
-            'deploying': self._handle_deploying,
-            'complete': self._handle_complete
+            "initial": self._handle_initial,
+            "gathering_requirements": self._handle_gathering,
+            "confirming": self._handle_confirming,
+            "deploying": self._handle_deploying,
+            "complete": self._handle_complete,
         }
-    
-    def process_message(self, message: str, context: Dict, history: List[Dict]) -> Dict[str, Any]:
+
+    def process_message(
+        self, message: str, context: Dict, history: List[Dict]
+    ) -> Dict[str, Any]:
         """
         Process a user message and return the agent's response.
-        
+
         Args:
             message: User's message
             context: Current conversation context
             history: Conversation history
-            
+
         Returns:
             Dictionary with response, updated context, and any created agents
         """
-        stage = context.get('stage', 'initial')
+        stage = context.get("stage", "initial")
         handler = self.STAGES.get(stage, self._handle_initial)
 
         return handler(message, context, history)
@@ -363,15 +375,15 @@ class IntakeAgent:
     
     def _handle_initial(self, message: str, context: Dict, history: List[Dict]) -> Dict[str, Any]:
         """Handle the initial user description of needs"""
-        
+
         # Analyze the user's needs
         requirements = self._analyze_requirements(message)
-        
+
         # Update context
-        context['stage'] = 'gathering_requirements'
-        context['requirements'] = requirements
-        context['original_request'] = message
-        
+        context["stage"] = "gathering_requirements"
+        context["requirements"] = requirements
+        context["original_request"] = message
+
         # Ask clarifying questions
         questions = self._generate_clarifying_questions(requirements)
         context['clarifyingQuestions'] = questions
@@ -399,26 +411,26 @@ class IntakeAgent:
     
     def _handle_gathering(self, message: str, context: Dict, history: List[Dict]) -> Dict[str, Any]:
         """Gather additional requirements from user"""
-        
+
         # Extract additional information
-        requirements = context.get('requirements', {})
-        
+        requirements = context.get("requirements", {})
+
         # Parse user's answers
         parsed_info = self._parse_user_answers(message)
         requirements.update(parsed_info)
-        
-        context['requirements'] = requirements
-        
+
+        context["requirements"] = requirements
+
         # Check if we have enough information
         if self._has_sufficient_info(requirements):
             # Generate agent team proposal
             proposed_agents = self._design_agent_team(requirements)
-            context['proposedAgents'] = proposed_agents
-            context['stage'] = 'confirming'
-            
+            context["proposedAgents"] = proposed_agents
+            context["stage"] = "confirming"
+
             # Create summary
             summary_html = self._create_team_summary(proposed_agents)
-            
+
             response = f"""Perfect! Based on your needs, I've designed a custom agent team for you:<br><br>
 
 {summary_html}
@@ -444,21 +456,19 @@ Reply "yes" to create these agents, or tell me what you'd like to change!"""
             response = """Thanks for that information! A few more quick questions:<br><br>
 
 What specific tasks should the agents handle? (Be as detailed as you like - I can handle it! 😊)"""
-            
-            return {
-                'response': response,
-                'context': context,
-                'isHtml': True
-            }
-    
-    def _handle_confirming(self, message: str, context: Dict, history: List[Dict]) -> Dict[str, Any]:
+
+            return {"response": response, "context": context, "isHtml": True}
+
+    def _handle_confirming(
+        self, message: str, context: Dict, history: List[Dict]
+    ) -> Dict[str, Any]:
         """Handle user confirmation or modification requests"""
-        
+
         message_lower = message.lower()
 
         if self._is_affirmative(message_lower):
             # User approved - deploy agents
-            context['stage'] = 'deploying'
+            context["stage"] = "deploying"
             return self._deploy_agents(context)
         else:
             # User wants modifications
@@ -607,7 +617,7 @@ What would you like to do next?"""
                 logger.debug("Failed to parse LLM-generated questions; using defaults")
 
         return questions
-    
+
     def _parse_user_answers(self, message: str) -> Dict[str, Any]:
         """Parse user's answers to questions"""
         
@@ -678,9 +688,9 @@ What would you like to do next?"""
     
     def _create_team_summary(self, agents: List[Dict]) -> str:
         """Create HTML summary of proposed agent team"""
-        
+
         summary = '<div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin: 10px 0;">'
-        
+
         for i, agent in enumerate(agents, 1):
             capabilities = agent.get('capabilities', [])
             if isinstance(capabilities, str):
@@ -695,7 +705,7 @@ What would you like to do next?"""
         summary += '</div>'
         
         return summary
-    
+
     def _parse_modifications(self, message: str) -> Dict[str, Any]:
         """Parse user's modification requests"""
         
@@ -781,117 +791,368 @@ What would you like to do next?"""
         return updated_agents
     
     def _deploy_agents(self, context: Dict) -> Dict[str, Any]:
-        """Deploy the designed agent team"""
-        
-        proposed_agents = context.get('proposedAgents', [])
-        
-        # Create agents
-        created_agents = []
+        """Deploy the designed agent team and synchronize services."""
+
+        proposed_agents = context.get("proposedAgents", [])
+
+        deployment_results: List[Dict[str, Any]] = []
+        created_agents: List[Dict[str, Any]] = []
+
         for agent in proposed_agents:
+            agent_slug = self._slugify_agent_name(agent["name"])
+            result: Dict[str, Any] = {
+                "name": agent["name"],
+                "slug": agent_slug,
+            }
+
             try:
-                self._create_agent_files(agent)
-                created_agents.append(agent)
-                logger.info(f"Created agent: {agent['name']}")
-            except Exception as e:
-                logger.error(f"Failed to create agent {agent['name']}: {e}")
-        
-        context['stage'] = 'complete'
-        context['createdAgents'] = created_agents
-        
+                files, artifacts = self._create_agent_files(agent)
+                result["files"] = files
+
+                registration_status = self._register_agent_with_dashboard(
+                    agent_slug, agent, artifacts
+                )
+                result["registration"] = registration_status
+
+                sync_status = self._synchronize_services(agent_slug, artifacts)
+                result["synchronization"] = sync_status
+
+                if (
+                    registration_status.get("status") == "success"
+                    and sync_status.get("status") == "success"
+                ):
+                    created_agents.append(agent)
+                    result["status"] = "success"
+                    logger.info(f"Successfully deployed agent: {agent['name']}")
+                else:
+                    result["status"] = "partial"
+                    logger.warning(f"Agent {agent['name']} deployed with warnings")
+            except Exception as exc:
+                result["status"] = "error"
+                result["error"] = str(exc)
+                logger.error(
+                    f"Failed to deploy agent %s: %s", agent["name"], exc, exc_info=True
+                )
+
+            deployment_results.append(result)
+
+        success_count = len(
+            [r for r in deployment_results if r.get("status") == "success"]
+        )
+        error_count = len([r for r in deployment_results if r.get("status") == "error"])
+
+        if error_count == 0 and success_count == len(deployment_results):
+            overall_status = "success"
+            response_message = f"🎉 Success! I've created {success_count} agent(s) for your team. They're synchronized and ready to help!"
+        elif success_count == 0 and deployment_results:
+            overall_status = "failed"
+            response_message = "⚠️ I wasn't able to deploy any agents. Please review the errors and try again."
+        elif not deployment_results:
+            overall_status = "skipped"
+            response_message = "ℹ️ No agents were provided for deployment."
+        else:
+            overall_status = "partial"
+            response_message = (
+                f"⚠️ I deployed {success_count} agent(s), but some steps need attention."
+            )
+
+        context["stage"] = "complete"
+        context["createdAgents"] = created_agents
+        context["deploymentResults"] = deployment_results
+        context["deploymentStatus"] = overall_status
+
         return {
-            'response': f'🎉 Success! I\'ve created {len(created_agents)} agent(s) for your team. They\'re now active and ready to help!',
-            'context': context,
-            'agentsCreated': created_agents
+            "response": response_message,
+            "context": context,
+            "agentsCreated": created_agents,
+            "deploymentResults": deployment_results,
+            "deploymentStatus": overall_status,
         }
-    
-    def _create_agent_files(self, agent: Dict):
-        """Create the actual agent files (Langflow flow + n8n workflow)"""
-        
-        agent_name = agent['name'].lower().replace(' ', '_')
-        
+
+    def _create_agent_files(self, agent: Dict) -> Tuple[Dict[str, str], Dict[str, Any]]:
+        """Create the actual agent files (Langflow flow + n8n workflow)."""
+
+        agent_slug = self._slugify_agent_name(agent["name"])
+
         # Create Langflow flow
         langflow_flow = self._generate_langflow_flow(agent)
-        langflow_file = self.langflow_dir / f"{agent_name}.json"
-        
-        with open(langflow_file, 'w') as f:
+        langflow_file = self.langflow_dir / f"{agent_slug}.json"
+
+        with open(langflow_file, "w") as f:
             json.dump(langflow_flow, f, indent=2)
-        
+
+        files = {"langflow": str(langflow_file)}
+        artifacts = {"langflow": langflow_flow}
+
         # Create n8n workflow if needed
-        if agent.get('type') != 'coordinator':
+        if agent.get("type") != "coordinator":
             n8n_workflow = self._generate_n8n_workflow(agent)
-            n8n_file = self.n8n_dir / f"{agent_name}_trigger.json"
-            
-            with open(n8n_file, 'w') as f:
+            n8n_file = self.n8n_dir / f"{agent_slug}_trigger.json"
+
+            with open(n8n_file, "w") as f:
                 json.dump(n8n_workflow, f, indent=2)
-        
+
+            files["n8n"] = str(n8n_file)
+            artifacts["n8n"] = n8n_workflow
+
         logger.info(f"Created files for agent: {agent['name']}")
-    
+
+        return files, artifacts
+
     def _generate_langflow_flow(self, agent: Dict) -> Dict:
         """Generate Langflow flow definition for an agent"""
-        
+
+        agent_slug = self._slugify_agent_name(agent["name"])
+
         flow = {
-            "name": agent['name'],
-            "description": agent['purpose'],
+            "id": agent_slug,
+            "name": agent["name"],
+            "description": agent["purpose"],
             "nodes": [
-                {
-                    "id": "input",
-                    "type": "ChatInput",
-                    "data": {
-                        "message": "User input"
-                    }
-                },
+                {"id": "input", "type": "ChatInput", "data": {"message": "User input"}},
                 {
                     "id": "llm",
                     "type": "ChatOllama",
                     "data": {
-                        "model": os.getenv('OLLAMA_MODEL', 'llama2'),
+                        "model": os.getenv("OLLAMA_MODEL", "llama2"),
                         "base_url": "http://ollama:11434",
                         "temperature": 0.7,
-                        "system_message": f"You are {agent['name']}. {agent['purpose']}. Your capabilities include: {', '.join(agent.get('capabilities', []))}."
-                    }
+                        "system_message": f"You are {agent['name']}. {agent['purpose']}. Your capabilities include: {', '.join(agent.get('capabilities', []))}.",
+                    },
                 },
                 {
                     "id": "memory",
                     "type": "VectorStoreRetriever",
                     "data": {
                         "vector_store": "qdrant",
-                        "collection_name": f"{agent['name'].lower().replace(' ', '_')}_memory",
-                        "host": "http://qdrant:6333"
-                    }
+                        "collection_name": f"{agent_slug}_memory",
+                        "host": "http://qdrant:6333",
+                    },
                 },
                 {
                     "id": "output",
                     "type": "ChatOutput",
-                    "data": {
-                        "message": "Agent response"
-                    }
-                }
+                    "data": {"message": "Agent response"},
+                },
             ],
             "edges": [
-                {
-                    "source": "input",
-                    "target": "llm"
-                },
-                {
-                    "source": "llm",
-                    "target": "memory"
-                },
-                {
-                    "source": "memory",
-                    "target": "output"
-                }
-            ]
+                {"source": "input", "target": "llm"},
+                {"source": "llm", "target": "memory"},
+                {"source": "memory", "target": "output"},
+            ],
         }
-        
+
         return flow
-    
+
+    def _register_agent_with_dashboard(
+        self, agent_slug: str, agent: Dict, artifacts: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Register agent configuration so it appears in the dashboard.
+
+        Args:
+            agent_slug (str): URL-safe identifier for the agent.
+            agent (Dict): Agent configuration containing name, purpose, and capabilities.
+            artifacts (Dict[str, Any]): Generated artifacts including langflow and n8n definitions.
+
+        Returns:
+            Dict[str, Any]: Status dictionary with 'status' key ('success' or 'error') and
+                optional 'error' message.
+        """
+        try:
+            agent_metadata = {
+                "name": agent["name"],
+                "purpose": agent.get("purpose", ""),
+                "capabilities": agent.get("capabilities", []),
+                "enabled": True,
+            }
+            self.config_manager.register_agent(agent_slug, agent_metadata)
+
+            langflow_record = {
+                "id": agent_slug,
+                "name": artifacts["langflow"].get("name", agent["name"]),
+                "description": artifacts["langflow"].get(
+                    "description", agent.get("purpose", "")
+                ),
+                "enabled": True,
+                "trigger": "manual",
+            }
+            self.config_manager.register_langflow_workflow(langflow_record)
+
+            if "n8n" in artifacts:
+                n8n_record = {
+                    "id": f"{agent_slug}_trigger",
+                    "name": artifacts["n8n"].get("name", f"{agent['name']} Trigger"),
+                    "description": artifacts["n8n"].get(
+                        "description", agent.get("purpose", "Automated workflow")
+                    ),
+                    "enabled": True,
+                    "trigger": "schedule",
+                }
+                self.config_manager.register_n8n_workflow(n8n_record)
+
+            return {"status": "success"}
+        except Exception as exc:
+            logger.error(
+                f"Failed to register agent {agent['name']} with dashboard: {exc}"
+            )
+            return {"status": "error", "error": str(exc)}
+
+    def _synchronize_services(
+        self, agent_slug: str, artifacts: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Import generated definitions into Langflow and n8n services.
+
+        Args:
+            agent_slug: URL-safe identifier for the agent.
+            artifacts: Dictionary containing Langflow and optional n8n artifacts to import.
+
+        Returns:
+            Dictionary with individual service statuses (``langflow``/``n8n``) plus an overall
+            ``status`` key set to ``success``, ``partial``, or ``error``.
+        """
+
+        langflow_status = self._sync_langflow_flow(
+            agent_slug, artifacts.get("langflow")
+        )
+        n8n_status = self._sync_n8n_workflow(agent_slug, artifacts.get("n8n"))
+
+        statuses = {"langflow": langflow_status}
+        if n8n_status:
+            statuses["n8n"] = n8n_status
+
+        if any(s.get("status") == "error" for s in statuses.values()):
+            statuses["status"] = "error"
+        elif any(s.get("status") == "partial" for s in statuses.values()):
+            statuses["status"] = "partial"
+        else:
+            statuses["status"] = "success"
+
+        return statuses
+
+    def _sync_langflow_flow(
+        self, agent_slug: str, flow: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Import Langflow flow via API when available."""
+
+        if not flow:
+            return {"status": "error", "error": "Missing Langflow flow definition"}
+
+        langflow_cfg = self.config_manager.config.get("langflow", {})
+        if not langflow_cfg.get("enabled", True):
+            return {"status": "skipped", "reason": "Langflow disabled"}
+
+        base_url = os.getenv("LANGFLOW_API_URL") or langflow_cfg.get("base_url")
+        api_key = os.getenv("LANGFLOW_API_KEY") or langflow_cfg.get("api_key")
+
+        if not base_url:
+            return {"status": "skipped", "reason": "Langflow URL not configured"}
+
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["x-api-key"] = api_key
+
+        flow_payload = dict(flow)
+        flow_payload.setdefault("id", agent_slug)
+
+        endpoints = [
+            (
+                "POST",
+                f"{base_url.rstrip('/')}/api/v1/flows/import",
+                {"flows": [flow_payload]},
+            ),
+            ("POST", f"{base_url.rstrip('/')}/api/v1/flows/", flow_payload),
+            ("PUT", f"{base_url.rstrip('/')}/api/v1/flows/{agent_slug}", flow_payload),
+        ]
+
+        timeout = int(os.getenv("LANGFLOW_API_TIMEOUT", "30"))
+        last_error = None
+        for method, url, payload in endpoints:
+            try:
+                logger.debug("Langflow sync attempting %s %s", method, url)
+                response = requests.request(
+                    method, url, json=payload, headers=headers, timeout=timeout
+                )
+                if response.status_code < 400:
+                    try:
+                        data = response.json()
+                    except JSONDecodeError:
+                        data = {}
+                    logger.info("Langflow sync succeeded via %s %s", method, url)
+                    return {"status": "success", "endpoint": url, "response": data}
+
+                logger.warning(
+                    "Langflow API error %s %s: %s", method, url, response.status_code
+                )
+                logger.debug("Langflow API response body: %s", response.text)
+                last_error = f"{response.status_code}: Langflow import failed"
+            except requests.RequestException as exc:
+                logger.error("Langflow request %s %s failed: %s", method, url, exc)
+                last_error = str(exc)
+
+        return {"status": "error", "error": last_error or "Langflow import failed"}
+
+    def _sync_n8n_workflow(
+        self, agent_slug: str, workflow: Optional[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
+        """Import n8n workflow via API when available."""
+
+        if workflow is None:
+            return None
+
+        n8n_cfg = self.config_manager.config.get("n8n", {})
+        if not n8n_cfg.get("enabled", True):
+            return {"status": "skipped", "reason": "n8n disabled"}
+
+        base_url = os.getenv("N8N_API_URL") or n8n_cfg.get("base_url")
+        api_key = os.getenv("N8N_API_KEY") or n8n_cfg.get("api_key")
+
+        if not base_url:
+            return {"status": "skipped", "reason": "n8n URL not configured"}
+
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["X-N8N-API-KEY"] = api_key
+
+        workflow_payload = dict(workflow)
+        workflow_payload.setdefault("active", True)
+        workflow_payload.setdefault("settings", {})
+        workflow_payload.setdefault("connections", {})
+
+        url = f"{base_url.rstrip('/')}/rest/workflows"
+
+        try:
+            timeout = int(os.getenv("N8N_API_TIMEOUT", "30"))
+            logger.debug("n8n sync attempting POST %s", url)
+            response = requests.post(
+                url, json=workflow_payload, headers=headers, timeout=timeout
+            )
+            if response.status_code < 400:
+                try:
+                    data = response.json()
+                except JSONDecodeError:
+                    data = {}
+                logger.info("n8n sync succeeded for %s", agent_slug)
+                return {"status": "success", "endpoint": url, "response": data}
+
+            logger.warning("n8n API error POST %s: %s", url, response.status_code)
+            logger.debug("n8n API response body: %s", response.text)
+            return {
+                "status": "error",
+                "error": f"{response.status_code}: n8n import failed",
+            }
+        except requests.RequestException as exc:
+            logger.error("n8n sync request failed for %s: %s", agent_slug, exc)
+            return {"status": "error", "error": str(exc)}
+
     def _generate_n8n_workflow(self, agent: Dict) -> Dict:
         """Generate n8n workflow definition for an agent"""
-        
-        agent_name_slug = agent['name'].lower().replace(' ', '_')
-        
+
+        agent_name_slug = self._slugify_agent_name(agent["name"])
+
         workflow = {
+            "id": f"{agent_name_slug}_trigger",
             "name": f"{agent['name']} Trigger",
+            "description": agent.get("purpose", "Automated workflow"),
             "nodes": [
                 {
                     "parameters": {
@@ -899,7 +1160,7 @@ What would you like to do next?"""
                             "interval": [
                                 {
                                     "field": "cronExpression",
-                                    "expression": "0 * * * *"  # Hourly by default
+                                    "expression": "0 * * * *",  # Hourly by default
                                 }
                             ]
                         }
@@ -907,22 +1168,21 @@ What would you like to do next?"""
                     "name": "Schedule Trigger",
                     "type": "n8n-nodes-base.scheduleTrigger",
                     "typeVersion": 1,
-                    "position": [250, 300]
+                    "position": [250, 300],
                 },
                 {
                     "parameters": {
                         "url": f"http://langflow:7860/api/v1/run/{agent_name_slug}",
                         "method": "POST",
                         "jsonParameters": True,
-                        "bodyParametersJson": json.dumps({
-                            "input": f"Execute {agent['name']} task",
-                            "tweaks": {}
-                        })
+                        "bodyParametersJson": json.dumps(
+                            {"input": f"Execute {agent['name']} task", "tweaks": {}}
+                        ),
                     },
                     "name": f"Call {agent['name']}",
                     "type": "n8n-nodes-base.httpRequest",
                     "typeVersion": 1,
-                    "position": [450, 300]
+                    "position": [450, 300],
                 },
                 {
                     "parameters": {
@@ -931,52 +1191,41 @@ What would you like to do next?"""
                     "name": "Log Result",
                     "type": "n8n-nodes-base.function",
                     "typeVersion": 1,
-                    "position": [650, 300]
-                }
+                    "position": [650, 300],
+                },
             ],
             "connections": {
                 "Schedule Trigger": {
                     "main": [
-                        [
-                            {
-                                "node": f"Call {agent['name']}",
-                                "type": "main",
-                                "index": 0
-                            }
-                        ]
+                        [{"node": f"Call {agent['name']}", "type": "main", "index": 0}]
                     ]
                 },
                 f"Call {agent['name']}": {
-                    "main": [
-                        [
-                            {
-                                "node": "Log Result",
-                                "type": "main",
-                                "index": 0
-                            }
-                        ]
-                    ]
-                }
+                    "main": [[{"node": "Log Result", "type": "main", "index": 0}]]
+                },
             },
             "active": True,
             "settings": {},
-            "id": f"{agent_name_slug}_trigger"
         }
-        
+
         return workflow
 
 
 if __name__ == "__main__":
     # Test the intake agent
     agent = IntakeAgent()
-    
+
     # Simulate conversation
-    context = {'stage': 'initial'}
+    context = {"stage": "initial"}
     history = []
-    
-    result1 = agent.process_message("I need help with system security", context, history)
-    print("Agent:", result1['response'])
-    
-    context = result1['context']
-    result2 = agent.process_message("I want to monitor continuously and get alerts", context, history)
-    print("Agent:", result2['response'])
+
+    result1 = agent.process_message(
+        "I need help with system security", context, history
+    )
+    print("Agent:", result1["response"])
+
+    context = result1["context"]
+    result2 = agent.process_message(
+        "I want to monitor continuously and get alerts", context, history
+    )
+    print("Agent:", result2["response"])
