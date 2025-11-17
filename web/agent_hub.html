@@ -728,6 +728,10 @@
 
             <!-- Create Team View (Intake Agent) -->
             <div id="create-team" class="view">
+                <div class="recent-conversations" id="hubRecentConversations" style="margin-bottom: 16px; display: none;">
+                    <h3 style="margin-bottom: 8px;">Recent Intake Conversations</h3>
+                    <div class="recent-conversations-list" id="hubRecentConversationsList"></div>
+                </div>
                 <div class="chat-container">
                     <div class="chat-messages" id="chatMessages">
                         <div class="message agent">
@@ -806,6 +810,9 @@
         let agents = [];
         let workflows = [];
         let conversationHistory = [];
+        let intakeSessionId = (window.crypto && window.crypto.randomUUID)
+            ? window.crypto.randomUUID()
+            : 'session-' + Date.now() + '-' + Math.random().toString(36).slice(2);
         let agentContext = { stage: 'initial' };
         let structuredUiLoaded = false;
         let typePickerTemplate = '';
@@ -850,6 +857,211 @@
             // Load data for specific views
             if (viewName === 'agents') loadAgents();
             if (viewName === 'workflows') loadWorkflows();
+            if (viewName === 'create-team') loadIntakeRecentConversations();
+        }
+
+        async function ensureReviewUi() {
+            const panel = document.getElementById('structuredUi');
+            if (!panel) return;
+
+            if (!structuredUiLoaded) {
+                const container = document.getElementById('teamReviewContainer');
+                container.innerHTML = '<p class="loading-message">Loading review tools…</p>';
+
+                const [formResponse, pickerResponse] = await Promise.all([
+                    fetch('/api/intake-agent/forms/team-review'),
+                    fetch('/api/intake-agent/forms/agent-type-picker')
+                ]);
+
+                if (!formResponse.ok || !pickerResponse.ok) {
+                    throw new Error('Unable to load review templates');
+                }
+
+                container.innerHTML = await formResponse.text();
+                typePickerTemplate = await pickerResponse.text();
+                structuredUiLoaded = true;
+                attachReviewFormEvents();
+            }
+        }
+
+        async function updateReviewUi(review) {
+            const panel = document.getElementById('structuredUi');
+            if (!panel) return;
+
+            if (!review || !review.agents || review.agents.length === 0) {
+                panel.hidden = true;
+                return;
+            }
+
+            await ensureReviewUi();
+
+            panel.hidden = false;
+            const summary = document.getElementById('teamReviewSummary');
+            if (summary) {
+                summary.innerHTML = review.summaryHtml || '';
+            }
+
+            populateTeamReviewAgents(review.agents);
+        }
+
+        function populateTeamReviewAgents(agents) {
+            const container = document.getElementById('teamReviewAgents');
+            if (!container) return;
+
+            container.innerHTML = '';
+            newAgentCounter = 0;
+
+            agents.forEach((agent, index) => {
+                const row = createAgentRow(agent, index, false);
+                container.appendChild(row);
+            });
+        }
+
+        function createAgentRow(agent = {}, index = 0, isNew = false) {
+            const row = document.createElement('div');
+            row.className = 'agent-row';
+            row.dataset.index = isNew ? 'new' : index;
+            row.dataset.isNew = isNew ? 'true' : 'false';
+
+            const capabilities = Array.isArray(agent.capabilities)
+                ? agent.capabilities.join(', ')
+                : (agent.capabilities || '');
+
+            row.innerHTML = `
+                <div class="field">
+                    <label>Name</label>
+                    <input type="text" class="agent-name" value="${agent.name || ''}" placeholder="Agent name" />
+                </div>
+                <div class="field">
+                    <label>Role</label>
+                    ${typePickerTemplate}
+                </div>
+                <div class="field">
+                    <label>Purpose</label>
+                    <textarea class="agent-purpose" rows="2" placeholder="What does this agent do?">${agent.purpose || ''}</textarea>
+                </div>
+                <div class="field">
+                    <label>Capabilities</label>
+                    <input type="text" class="agent-capabilities" value="${capabilities}" placeholder="Comma separated" />
+                </div>
+                <div class="field field-toggle">
+                    <label>Keep</label>
+                    <input type="checkbox" class="agent-keep" ${agent.keep === false ? '' : 'checked'} />
+                </div>
+            `;
+
+            const select = row.querySelector('.agent-type-select');
+            if (select) {
+                select.value = agent.type || 'specialist';
+            }
+
+            return row;
+        }
+
+        function collectReviewFormData() {
+            const rows = Array.from(document.querySelectorAll('#teamReviewAgents .agent-row'));
+            return rows.map((row, index) => {
+                const capabilitiesRaw = row.querySelector('.agent-capabilities')?.value || '';
+                const capabilities = capabilitiesRaw
+                    .split(',')
+                    .map(cap => cap.trim())
+                    .filter(Boolean);
+
+                const isNew = row.dataset.isNew === 'true';
+
+                return {
+                    index: isNew ? 'new' : Number(row.dataset.index ?? index),
+                    name: row.querySelector('.agent-name')?.value.trim() || '',
+                    type: row.querySelector('.agent-type-select')?.value || 'specialist',
+                    purpose: row.querySelector('.agent-purpose')?.value.trim() || '',
+                    capabilities,
+                    keep: row.querySelector('.agent-keep')?.checked !== false,
+                    action: isNew ? 'add' : 'update'
+                };
+            });
+        }
+
+        function attachReviewFormEvents() {
+            const addButton = document.getElementById('addAgentButton');
+            const updateButton = document.getElementById('updateTeamButton');
+            const deployButton = document.getElementById('deployTeamButton');
+
+            if (addButton) {
+                addButton.addEventListener('click', () => addAgentRow());
+            }
+
+            if (updateButton) {
+                updateButton.addEventListener('click', () => applyReviewChanges());
+            }
+
+            if (deployButton) {
+                deployButton.addEventListener('click', () => deployTeamFromUi());
+            }
+        }
+
+        async function addAgentRow() {
+            await ensureReviewUi();
+            const container = document.getElementById('teamReviewAgents');
+            if (!container) return;
+
+            newAgentCounter += 1;
+            const row = createAgentRow({ type: 'specialist', purpose: '', capabilities: [] }, newAgentCounter, true);
+            container.appendChild(row);
+        }
+
+        async function applyReviewChanges() {
+            try {
+                const modifications = {
+                    action: 'update',
+                    agents: collectReviewFormData()
+                };
+
+                const response = await fetch('/api/intake-agent/review', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        context: agentContext,
+                        modifications
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update team');
+                }
+
+                const data = await response.json();
+                addChatMessage(data.response, false, data.isHtml);
+                if (data.context) agentContext = data.context;
+                await updateReviewUi(data.review);
+            } catch (error) {
+                addChatMessage('Unable to apply changes right now. Please try again.', false);
+                console.error(error);
+            }
+        }
+
+        async function deployTeamFromUi() {
+            try {
+                const response = await fetch('/api/intake-agent/deploy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ context: agentContext })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Deployment failed');
+                }
+
+                const data = await response.json();
+                addChatMessage(data.response, false, data.isHtml);
+                if (data.context) agentContext = data.context;
+                if (data.agentsCreated) {
+                    setTimeout(() => loadAgents(), 1000);
+                }
+                await updateReviewUi(null);
+            } catch (error) {
+                addChatMessage('Deployment encountered an issue. Check logs and try again.', false);
+                console.error(error);
+            }
         }
 
         async function ensureReviewUi() {
@@ -1140,6 +1352,101 @@
             }
         }
 
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        async function loadIntakeRecentConversations() {
+            try {
+                const response = await fetch('/api/intake-agent/history?limit=200');
+                if (!response.ok) {
+                    return;
+                }
+
+                const data = await response.json();
+                const recent = data.recent || [];
+                const container = document.getElementById('hubRecentConversations');
+                const listEl = document.getElementById('hubRecentConversationsList');
+
+                if (!container || !listEl) {
+                    return;
+                }
+
+                if (recent.length === 0) {
+                    container.style.display = 'none';
+                    return;
+                }
+
+                container.style.display = 'block';
+                listEl.innerHTML = '';
+
+                recent.forEach(conv => {
+                    const card = document.createElement('div');
+                    card.className = 'conversation-card';
+                    const title = conv.first_user_message || 'Untitled conversation';
+                    const startedAt = conv.started_at ? new Date(conv.started_at).toLocaleString() : '';
+
+                    card.innerHTML = `
+                        <div class="conversation-title">${escapeHtml(title)}</div>
+                        <div class="conversation-meta">
+                            <span>${escapeHtml(startedAt)}</span>
+                            <span>${(conv.message_count || 0)} messages</span>
+                        </div>
+                    `;
+
+                    card.addEventListener('click', async () => {
+                        await loadIntakeSession(conv.session_id);
+                    });
+
+                    listEl.appendChild(card);
+                });
+            } catch (err) {
+                console.error('Failed to load intake recent conversations', err);
+            }
+        }
+
+        async function loadIntakeSession(sessionId) {
+            try {
+                const response = await fetch(`/api/intake-agent/history/${encodeURIComponent(sessionId)}`);
+                if (!response.ok) {
+                    console.error('Failed to load intake session', response.status);
+                    return;
+                }
+
+                const data = await response.json();
+                const items = data.history || [];
+                const container = document.getElementById('chatMessages');
+
+                if (!container) return;
+
+                container.innerHTML = '';
+                conversationHistory = [];
+                intakeSessionId = data.session_id || sessionId;
+
+                let lastContext = agentContext;
+
+                items.forEach(item => {
+                    if (item.user_message) {
+                        addChatMessage(item.user_message, true);
+                    }
+                    if (item.agent_response) {
+                        addChatMessage(item.agent_response, false, item.metadata && item.metadata.isHtml);
+                    }
+                    if (item.context) {
+                        lastContext = item.context;
+                    }
+                });
+
+                if (lastContext) {
+                    agentContext = lastContext;
+                }
+            } catch (err) {
+                console.error('Error loading intake session', err);
+            }
+        }
+
         // Chat functionality
         document.getElementById('chatInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendChatMessage();
@@ -1160,7 +1467,8 @@
                     body: JSON.stringify({
                         message: message,
                         context: agentContext,
-                        history: conversationHistory
+                        history: conversationHistory,
+                        session_id: intakeSessionId
                     })
                 });
 
