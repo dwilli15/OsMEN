@@ -118,6 +118,7 @@ See **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)** for complet
 
 ### Getting Started
 - **[AI Agent Setup](1stsetup.md)** - Automated first-use setup instructions for AI agents
+- **[OAuth Code Assistant](OAUTH_QUICKSTART.md)** - 5-minute setup for OAuth-based code generation
 - **[Setup Guide](docs/SETUP.md)** - Installation and configuration
 - **[Production Deployment](docs/PRODUCTION_DEPLOYMENT.md)** - Complete production deployment checklist
 - **[LLM Agents](docs/LLM_AGENTS.md)** - Configure OpenAI, Copilot, Amazon Q, Claude, LM Studio, Ollama
@@ -129,9 +130,16 @@ See **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)** for complet
 
 ### Technical
 - **[Architecture](docs/ARCHITECTURE.md)** - System design and components
+- **[OAuth Workflow](docs/OAUTH_WORKFLOW.md)** - Complete OAuth integration guide
 - **[Obsidian Integration](docs/OBSIDIAN_INTEGRATION.md)** - Knowledge management with Obsidian
 
 ## 🔧 Key Features
+
+### OAuth Code Generation Workflow
+- **GitHub Copilot OAuth**: Web-based login for Copilot access (no API keys!)
+- **OpenAI Codex OAuth**: Secure token-based authentication
+- **Langflow Integration**: Visual workflow for code generation
+- **Quick Start**: See **[OAuth Quick Start](OAUTH_QUICKSTART.md)**
 
 ### Model Context Protocol (MCP)
 - **Standardized tool integration** for LLM agents

@@ -157,6 +157,13 @@ for module_dir in ['integrations', 'scheduling', 'parsers', 'reminders', 'health
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
+# Include OAuth routes
+try:
+    from .oauth_routes import router as oauth_router
+    app.include_router(oauth_router)
+except ImportError as e:
+    logger.warning(f"OAuth routes not available: {e}")
+
 AGENT_TYPE_OPTIONS = [
     ("coordinator", "Coordinator"),
     ("specialist", "Specialist"),
