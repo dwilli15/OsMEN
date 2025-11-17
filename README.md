@@ -135,6 +135,7 @@ See **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)** for complet
 
 ### Getting Started
 - **[AI Agent Setup](1stsetup.md)** - Automated first-use setup instructions for AI agents
+- **[OAuth Code Assistant](OAUTH_QUICKSTART.md)** - 5-minute setup for OAuth-based code generation
 - **[Setup Guide](docs/SETUP.md)** - Installation and configuration
 - **[Production Deployment](docs/PRODUCTION_DEPLOYMENT.md)** - Complete production deployment checklist
 - **[LLM Agents](docs/LLM_AGENTS.md)** - Configure OpenAI, Copilot, Amazon Q, Claude, LM Studio, Ollama
@@ -146,6 +147,7 @@ See **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)** for complet
 
 ### Technical
 - **[Architecture](docs/ARCHITECTURE.md)** - System design and components
+- **[OAuth Workflow](docs/OAUTH_WORKFLOW.md)** - Complete OAuth integration guide
 - **[Obsidian Integration](docs/OBSIDIAN_INTEGRATION.md)** - Knowledge management with Obsidian
 
 ## 🔧 Key Features

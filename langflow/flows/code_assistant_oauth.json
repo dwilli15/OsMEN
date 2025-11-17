@@ -1,0 +1,245 @@
+{
+  "name": "Code Assistant with OAuth",
+  "description": "Code generation specialist using GitHub Copilot or OpenAI Codex with OAuth authentication",
+  "nodes": [
+    {
+      "id": "input",
+      "type": "ChatInput",
+      "position": {"x": 100, "y": 200},
+      "data": {
+        "name": "User Input",
+        "description": "Code generation request from user",
+        "template": {
+          "message": {
+            "type": "str",
+            "required": true,
+            "placeholder": "Enter your code request..."
+          }
+        }
+      }
+    },
+    {
+      "id": "oauth_check",
+      "type": "CustomComponent",
+      "position": {"x": 300, "y": 200},
+      "data": {
+        "name": "OAuth Authentication Check",
+        "description": "Verify OAuth authentication for selected provider",
+        "code": "from integrations.oauth.github_oauth import GitHubOAuthIntegration\nfrom integrations.oauth.openai_oauth import OpenAIOAuthIntegration\n\nclass OAuthCheck:\n    def check_auth(self, provider: str) -> dict:\n        if provider == 'github':\n            oauth = GitHubOAuthIntegration()\n            authenticated = oauth.is_authenticated()\n            return {'authenticated': authenticated, 'provider': 'github', 'oauth': oauth}\n        elif provider == 'openai':\n            oauth = OpenAIOAuthIntegration()\n            authenticated = oauth.is_authenticated()\n            return {'authenticated': authenticated, 'provider': 'openai', 'oauth': oauth}\n        else:\n            return {'authenticated': False, 'provider': 'unknown', 'oauth': None}\n",
+        "template": {
+          "provider": {
+            "type": "str",
+            "required": true,
+            "options": ["github", "openai"],
+            "value": "github"
+          }
+        }
+      }
+    },
+    {
+      "id": "router",
+      "type": "ConditionalRouter",
+      "position": {"x": 500, "y": 200},
+      "data": {
+        "name": "Provider Router",
+        "description": "Route to appropriate LLM based on authentication",
+        "routes": [
+          {
+            "condition": "provider == 'github' and authenticated",
+            "target": "github_copilot"
+          },
+          {
+            "condition": "provider == 'openai' and authenticated",
+            "target": "openai_codex"
+          },
+          {
+            "condition": "not authenticated",
+            "target": "auth_required"
+          }
+        ]
+      }
+    },
+    {
+      "id": "github_copilot",
+      "type": "CustomComponent",
+      "position": {"x": 700, "y": 100},
+      "data": {
+        "name": "GitHub Copilot Generator",
+        "description": "Generate code using GitHub Copilot with OAuth",
+        "code": "from integrations.oauth.github_oauth import GitHubOAuthIntegration\n\nclass GitHubCopilotGenerator:\n    def __init__(self):\n        self.oauth = GitHubOAuthIntegration()\n    \n    def generate(self, prompt: str, language: str = None) -> str:\n        if not self.oauth.is_authenticated():\n            return 'Error: Not authenticated with GitHub. Please login at /oauth/github/login'\n        \n        code = self.oauth.generate_code(prompt, language=language, max_tokens=1500)\n        return code if code else 'Error: Failed to generate code'\n",
+        "template": {
+          "prompt": {
+            "type": "str",
+            "required": true
+          },
+          "language": {
+            "type": "str",
+            "required": false,
+            "options": ["python", "javascript", "typescript", "java", "go", "rust", "c++", "c#"],
+            "value": "python"
+          }
+        }
+      }
+    },
+    {
+      "id": "openai_codex",
+      "type": "CustomComponent",
+      "position": {"x": 700, "y": 300},
+      "data": {
+        "name": "OpenAI Codex Generator",
+        "description": "Generate code using OpenAI with OAuth",
+        "code": "from integrations.oauth.openai_oauth import OpenAIOAuthIntegration\n\nclass OpenAICodexGenerator:\n    def __init__(self):\n        self.oauth = OpenAIOAuthIntegration()\n    \n    def generate(self, prompt: str, model: str = 'gpt-4') -> str:\n        if not self.oauth.is_authenticated():\n            return 'Error: Not authenticated with OpenAI. Please login at /oauth/openai/login'\n        \n        code = self.oauth.generate_code(prompt, model=model, max_tokens=1500)\n        return code if code else 'Error: Failed to generate code'\n",
+        "template": {
+          "prompt": {
+            "type": "str",
+            "required": true
+          },
+          "model": {
+            "type": "str",
+            "required": false,
+            "options": ["gpt-4", "gpt-4-turbo-preview", "gpt-3.5-turbo"],
+            "value": "gpt-4"
+          }
+        }
+      }
+    },
+    {
+      "id": "auth_required",
+      "type": "CustomComponent",
+      "position": {"x": 700, "y": 500},
+      "data": {
+        "name": "Authentication Required",
+        "description": "Return authentication required message",
+        "code": "class AuthRequired:\n    def message(self, provider: str) -> str:\n        if provider == 'github':\n            return 'Please authenticate with GitHub Copilot: Visit http://localhost:8000/oauth/github/login'\n        elif provider == 'openai':\n            return 'Please authenticate with OpenAI: Visit http://localhost:8000/oauth/openai/login'\n        else:\n            return 'Please select a valid provider (github or openai)'\n",
+        "template": {
+          "provider": {
+            "type": "str",
+            "required": true
+          }
+        }
+      }
+    },
+    {
+      "id": "formatter",
+      "type": "CustomComponent",
+      "position": {"x": 900, "y": 200},
+      "data": {
+        "name": "Code Formatter",
+        "description": "Format the generated code output",
+        "code": "class CodeFormatter:\n    def format(self, code: str, provider: str) -> str:\n        header = f'# Generated by {provider.upper()}\\n\\n'\n        return header + code\n",
+        "template": {
+          "code": {
+            "type": "str",
+            "required": true
+          },
+          "provider": {
+            "type": "str",
+            "required": true
+          }
+        }
+      }
+    },
+    {
+      "id": "memory",
+      "type": "VectorStoreRetriever",
+      "position": {"x": 500, "y": 400},
+      "data": {
+        "name": "Code History Memory",
+        "description": "Store and retrieve code generation history",
+        "vector_store": "qdrant",
+        "collection_name": "code_assistant_memory",
+        "host": "http://qdrant:6333",
+        "top_k": 3
+      }
+    },
+    {
+      "id": "output",
+      "type": "ChatOutput",
+      "position": {"x": 1100, "y": 200},
+      "data": {
+        "name": "Generated Code",
+        "description": "Output the generated code",
+        "template": {
+          "message": {
+            "type": "str",
+            "required": true
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "input",
+      "sourceHandle": "message",
+      "target": "oauth_check",
+      "targetHandle": "input"
+    },
+    {
+      "source": "oauth_check",
+      "sourceHandle": "output",
+      "target": "router",
+      "targetHandle": "input"
+    },
+    {
+      "source": "router",
+      "sourceHandle": "github",
+      "target": "github_copilot",
+      "targetHandle": "prompt"
+    },
+    {
+      "source": "router",
+      "sourceHandle": "openai",
+      "target": "openai_codex",
+      "targetHandle": "prompt"
+    },
+    {
+      "source": "router",
+      "sourceHandle": "auth_required",
+      "target": "auth_required",
+      "targetHandle": "provider"
+    },
+    {
+      "source": "github_copilot",
+      "sourceHandle": "output",
+      "target": "formatter",
+      "targetHandle": "code"
+    },
+    {
+      "source": "openai_codex",
+      "sourceHandle": "output",
+      "target": "formatter",
+      "targetHandle": "code"
+    },
+    {
+      "source": "auth_required",
+      "sourceHandle": "output",
+      "target": "output",
+      "targetHandle": "message"
+    },
+    {
+      "source": "formatter",
+      "sourceHandle": "output",
+      "target": "output",
+      "targetHandle": "message"
+    },
+    {
+      "source": "input",
+      "sourceHandle": "message",
+      "target": "memory",
+      "targetHandle": "query"
+    },
+    {
+      "source": "memory",
+      "sourceHandle": "output",
+      "target": "router",
+      "targetHandle": "context"
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "created": "2024-11-15",
+    "author": "OsMEN",
+    "tags": ["code-generation", "oauth", "github-copilot", "openai", "codex"]
+  }
+}
