@@ -237,6 +237,26 @@ else:  # pragma: no cover - development without memory system
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
+# Include OAuth routes
+try:
+    from .oauth_routes import router as oauth_router
+    app.include_router(oauth_router)
+except ImportError as e:
+    logger.warning(f"OAuth routes not available: {e}")
+
+AGENT_TYPE_OPTIONS = [
+    ("coordinator", "Coordinator"),
+    ("specialist", "Specialist"),
+    ("automation", "Automation"),
+    ("monitor", "Monitor"),
+    ("analyst", "Analyst"),
+]
+
+INTAKE_AGENT_FORM_TEMPLATES = {
+    "team-review": ("team_review_form.html", {}),
+    "agent-type-picker": ("agent_type_picker.html", {"agent_types": AGENT_TYPE_OPTIONS}),
+}
+
 # Log buffer for live streaming
 log_buffer = []
 MAX_LOG_BUFFER = 100
@@ -252,6 +272,21 @@ def template_context(request: Request, extra: Optional[dict] = None) -> dict:
 ViewerRole = Depends(role_required("viewer"))
 OperatorRole = Depends(role_required("operator"))
 AdminRole = Depends(role_required("admin"))
+
+
+def get_intake_agent():
+    """Dynamically load the intake agent implementation."""
+
+    import sys
+
+    agents_dir = Path(__file__).parent.parent / "agents"
+    agents_path = str(agents_dir)
+    if agents_path not in sys.path:
+        sys.path.insert(0, agents_path)
+
+    from intake_agent.intake_agent import IntakeAgent  # pylint: disable=import-error
+
+    return IntakeAgent()
 
 # In-memory tracker for parsed syllabus previews
 active_uploads = {}
@@ -580,8 +615,8 @@ async def export_digest_json(request: Request, user: dict = Depends(check_auth))
 async def calendar_page(request: Request, user: dict = Depends(check_auth)):
     """Calendar management page."""
     # Import calendar manager
-    from calendar.calendar_manager import CalendarManager
-
+    from calendar_manager import CalendarManager
+    
     manager = CalendarManager()
     status = manager.get_status()
 
@@ -602,8 +637,8 @@ async def google_calendar_oauth(request: Request, user: dict = Depends(check_aut
     """Initiate Google Calendar OAuth flow."""
     # Import Google Calendar integration
     import sys
-    from calendar.google_calendar import GoogleCalendarIntegration
-
+    from google_calendar import GoogleCalendarIntegration
+    
     try:
         google_cal = GoogleCalendarIntegration()
         auth_url = google_cal.get_authorization_url()
@@ -628,8 +663,8 @@ async def google_calendar_callback(
         raise HTTPException(status_code=400, detail="Authorization code required")
 
     import sys
-    from calendar.calendar_manager import CalendarManager
-
+    from calendar_manager import CalendarManager
+    
     try:
         manager = CalendarManager()
 
@@ -661,8 +696,8 @@ async def outlook_calendar_oauth(request: Request, user: dict = Depends(check_au
     """Initiate Outlook Calendar OAuth flow."""
     # Import Outlook Calendar integration
     import sys
-    from calendar.outlook_calendar import OutlookCalendarIntegration
-
+    from outlook_calendar import OutlookCalendarIntegration
+    
     try:
         outlook_cal = OutlookCalendarIntegration()
         auth_url = outlook_cal.get_authorization_url()
@@ -687,9 +722,9 @@ async def outlook_calendar_callback(
         raise HTTPException(status_code=400, detail="Authorization code required")
 
     import sys
-    from calendar.calendar_manager import CalendarManager
-    from calendar.outlook_calendar import OutlookCalendarIntegration
-
+    from calendar_manager import CalendarManager
+    from outlook_calendar import OutlookCalendarIntegration
+    
     try:
         # Exchange code for access token
         outlook_cal = OutlookCalendarIntegration()
@@ -721,8 +756,8 @@ async def outlook_calendar_callback(
 async def list_calendar_events(request: Request, user: dict = Depends(check_auth)):
     """List calendar events."""
     import sys
-    from calendar.calendar_manager import CalendarManager
-
+    from calendar_manager import CalendarManager
+    
     try:
         manager = CalendarManager()
         max_results = int(request.query_params.get("max_results", 50))
@@ -739,8 +774,8 @@ async def list_calendar_events(request: Request, user: dict = Depends(check_auth
 async def sync_calendar_events(request: Request, user: dict = Depends(check_auth)):
     """Sync events to calendar (batch creation)."""
     import sys
-    from calendar.calendar_manager import CalendarManager
-
+    from calendar_manager import CalendarManager
+    
     try:
         data = await request.json()
         events = data.get("events", [])
@@ -947,8 +982,8 @@ async def generate_schedule(request: Request, user: dict = Depends(check_auth)):
 
     try:
         # Get calendar events
-        from calendar.calendar_manager import CalendarManager
-
+        from calendar_manager import CalendarManager
+        
         manager = CalendarManager()
         events = manager.list_events(max_results=100)
 
@@ -1207,17 +1242,6 @@ async def startup_event():
 
 
 # ============================================================================
-# HEALTH CHECK
-# ============================================================================
-
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint for Docker"""
-    return {"status": "healthy", "service": "osmen-web"}
-
-
-# ============================================================================
 # AGENT HUB - Comprehensive Agent Management Interface
 # ============================================================================
 
@@ -1229,6 +1253,18 @@ async def agent_hub():
     ui_file = Path(__file__).parent / "agent_hub.html"
     with open(ui_file, "r") as f:
         return HTMLResponse(content=f.read())
+
+
+@app.get("/api/intake-agent/forms/{form_name}", response_class=HTMLResponse)
+async def intake_agent_form(form_name: str, request: Request):
+    """Serve partial templates used by the intake agent structured UI."""
+
+    template_info = INTAKE_AGENT_FORM_TEMPLATES.get(form_name)
+    if not template_info:
+        raise HTTPException(status_code=404, detail="Form not found")
+
+    template_name, extra = template_info
+    return templates.TemplateResponse(template_name, template_context(request, extra))
 
 
 @app.get("/api/agents")
@@ -1412,40 +1448,15 @@ async def intake_agent_chat(request: Request):
     Processes natural language input and creates custom agent teams.
     """
     try:
-        # Import the intake agent
-        import sys
-        from pathlib import Path
-
-        # Add agents directory to path
-        agents_dir = Path(__file__).parent.parent / "agents"
-        agents_dir_str = str(agents_dir)
-        if agents_dir_str not in sys.path:
-            sys.path.insert(0, agents_dir_str)
-
-        from intake_agent.intake_agent import IntakeAgent
-
         # Parse request
         data = await request.json()
-        message = data.get("message", "")
-        context = data.get("context", {"stage": "initial"})
-        history = data.get("history", [])
-        session_id = data.get("session_id")
+        message = data.get('message', '')
+        context = data.get('context', {'stage': 'initial'})
+        history = data.get('history', [])
 
         # Process with intake agent
-        agent = IntakeAgent()
+        agent = get_intake_agent()
         result = agent.process_message(message, context, history)
-
-        # Persist this turn into the conversation store for retention/history
-        if ConversationStore is not None and message and result.get("response"):
-            try:
-                await asyncio.to_thread(
-                    _save_intake_conversation_turn,
-                    message,
-                    result,
-                    session_id,
-                )
-            except Exception as store_exc:  # pragma: no cover - defensive logging
-                logger.error("Failed to persist intake conversation: %s", store_exc)
 
         return result
 
@@ -1462,269 +1473,36 @@ async def intake_agent_chat(request: Request):
         }
 
 
-def _save_intake_conversation_turn(
-    user_message: str, result: Dict[str, Any], session_id: Optional[str]
-) -> None:
-    """Store a single intake-agent turn in the conversation store.
-
-    This uses the shared ConversationStore SQLite backend and tags
-    rows so we can later filter by agent and session.
-    """
-    if ConversationStore is None:
-        return
+@app.post("/api/intake-agent/review")
+async def intake_agent_review(request: Request):
+    """Apply structured modifications submitted via the Agent Hub UI."""
 
     try:
-        store = ConversationStore()
-    except Exception as exc:  # pragma: no cover
-        logger.error("Unable to initialize ConversationStore: %s", exc)
-        return
+        data = await request.json()
+        context = data.get('context', {'stage': 'confirming'})
+        modifications = data.get('modifications', {})
 
-    context = result.get("context") or {}
-    metadata: Dict[str, Any] = {
-        "ui": "intake-agent",
-        "session_id": session_id,
-        "stage": context.get("stage"),
-    }
-    if result.get("agentsCreated"):
-        metadata["agents_created"] = True
-
-    store.add_conversation(
-        user_message=user_message,
-        agent_response=result.get("response", ""),
-        agent_name="intake_agent",
-        context=context,
-        metadata=metadata,
-    )
+        agent = get_intake_agent()
+        return agent.apply_structured_modifications(context, modifications)
+    except Exception as e:  # pragma: no cover - UI convenience
+        logger.error(f"Intake agent review error: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/intake-agent/deploy")
-async def intake_agent_deploy(request: Request, user: dict = Depends(OperatorRole)):
-    """Deploy agents using the intake agent deployment pipeline."""
+async def intake_agent_deploy(request: Request):
+    """Deploy the proposed agent team from structured UI controls."""
 
     try:
-        import sys
+        data = await request.json()
+        context = data.get('context', {'stage': 'confirming'})
 
-        agents_dir = Path(__file__).parent.parent / "agents"
-        agents_dir_str = str(agents_dir)
-        if agents_dir_str not in sys.path:
-            sys.path.insert(0, agents_dir_str)
-
-        from intake_agent.intake_agent import IntakeAgent
-
-        payload = await request.json()
-        context = payload.get("context", {})
-        if not isinstance(context, dict):
-            raise HTTPException(
-                status_code=400, detail="Context payload must be an object"
-            )
-
-        proposed_agents = payload.get("agents")
-        if proposed_agents is not None:
-            context["proposedAgents"] = _validate_proposed_agents_payload(
-                proposed_agents
-            )
-
-        if not context.get("proposedAgents"):
-            raise HTTPException(
-                status_code=400, detail="No agents provided for deployment"
-            )
-
-        intake_agent = IntakeAgent()
-        result = intake_agent.deploy_agents(context)
-
-        return JSONResponse(result)
-    except HTTPException:
-        raise
-    except Exception as exc:
-        logger.error(f"Deployment error: {exc}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(exc))
-
-
-@app.get("/api/intake-agent/history")
-async def intake_agent_history(limit: int = 100):
-    """Retrieve recent intake-agent conversation history and recent sessions.
-
-    Data is sourced from the ConversationStore SQLite backend and limited to
-    entries tagged with the intake agent.
-    """
-    if ConversationStore is None:
-        raise HTTPException(
-            status_code=500, detail="Conversation store is not configured"
-        )
-
-    def _load_history_data(max_rows: int) -> Dict[str, Any]:
-        store = ConversationStore()
-        rows = store.get_conversations(limit=max_rows)
-
-        # Filter to intake agent turns only
-        intake_rows = [r for r in rows if r.get("agent_name") == "intake_agent"]
-
-        history: List[Dict[str, Any]] = []
-        for row in reversed(intake_rows):  # oldest first for replay
-            raw_context = row.get("context")
-            raw_metadata = row.get("metadata")
-            parsed_context: Optional[Dict[str, Any]] = None
-            parsed_metadata: Optional[Dict[str, Any]] = None
-
-            if raw_context:
-                try:
-                    parsed_context = json.loads(raw_context)
-                except Exception:
-                    parsed_context = None
-            if raw_metadata:
-                try:
-                    parsed_metadata = json.loads(raw_metadata)
-                except Exception:
-                    parsed_metadata = None
-
-            history.append(
-                {
-                    "id": row.get("id"),
-                    "timestamp": row.get("timestamp"),
-                    "user_message": row.get("user_message"),
-                    "agent_response": row.get("agent_response"),
-                    "context": parsed_context,
-                    "metadata": parsed_metadata,
-                }
-            )
-
-        # Aggregate into recent session cards using session_id metadata
-        sessions: Dict[str, Dict[str, Any]] = {}
-        for item in history:
-            meta = item.get("metadata") or {}
-            session_id = meta.get("session_id") or f"legacy-{item['id']}"
-
-            session = sessions.get(session_id)
-            timestamp = item.get("timestamp")
-            if session is None:
-                session = {
-                    "session_id": session_id,
-                    "started_at": timestamp,
-                    "updated_at": timestamp,
-                    "first_user_message": item.get("user_message"),
-                    "last_agent_response": item.get("agent_response"),
-                    "message_count": 1,
-                    "stage": (item.get("context") or {}).get("stage"),
-                }
-                sessions[session_id] = session
-            else:
-                session["updated_at"] = timestamp
-                session["last_agent_response"] = item.get("agent_response")
-                session["message_count"] = session.get("message_count", 0) + 1
-                ctx = item.get("context") or {}
-                if ctx.get("stage"):
-                    session["stage"] = ctx["stage"]
-
-        recent_sessions = sorted(
-            sessions.values(),
-            key=lambda s: (s.get("updated_at") or ""),
-            reverse=True,
-        )[:10]
-
-        return {"history": history, "recent": recent_sessions}
-
-    payload = await asyncio.to_thread(_load_history_data, min(limit, 1000))
-    return JSONResponse(payload)
-
-
-@app.get("/api/intake-agent/history/{session_id}")
-async def intake_agent_session_history(session_id: str):
-    """Retrieve full history for a specific intake-agent session."""
-    if ConversationStore is None:
-        raise HTTPException(
-            status_code=500, detail="Conversation store is not configured"
-        )
-
-    def _load_session_data(target_session: str) -> List[Dict[str, Any]]:
-        store = ConversationStore()
-        rows = store.get_conversations(limit=1000)
-        intake_rows = [r for r in rows if r.get("agent_name") == "intake_agent"]
-
-        items: List[Dict[str, Any]] = []
-        for row in reversed(intake_rows):  # oldest first
-            raw_metadata = row.get("metadata")
-            raw_context = row.get("context")
-            parsed_metadata: Optional[Dict[str, Any]] = None
-            parsed_context: Optional[Dict[str, Any]] = None
-
-            if raw_metadata:
-                try:
-                    parsed_metadata = json.loads(raw_metadata)
-                except Exception:
-                    parsed_metadata = None
-
-            meta = parsed_metadata or {}
-            if meta.get("session_id") != target_session:
-                continue
-
-            if raw_context:
-                try:
-                    parsed_context = json.loads(raw_context)
-                except Exception:
-                    parsed_context = None
-
-            items.append(
-                {
-                    "id": row.get("id"),
-                    "timestamp": row.get("timestamp"),
-                    "user_message": row.get("user_message"),
-                    "agent_response": row.get("agent_response"),
-                    "context": parsed_context,
-                    "metadata": parsed_metadata,
-                }
-            )
-
-        return items
-
-    history = await asyncio.to_thread(_load_session_data, session_id)
-    return JSONResponse({"session_id": session_id, "history": history})
-
-
-@app.get("/api/intake-agent/summaries")
-async def intake_agent_summaries():
-    """Expose high-level conversation summaries from the memory system."""
-    if ConversationStore is None:
-        raise HTTPException(
-            status_code=500, detail="Conversation store is not configured"
-        )
-
-    def _load_summaries() -> List[Dict[str, Any]]:
-        store = ConversationStore()
-        rows = store.get_summaries()
-        summaries: List[Dict[str, Any]] = []
-
-        for row in rows:
-            key_topics: List[str] = []
-            decisions: List[str] = []
-
-            if row.get("key_topics"):
-                try:
-                    key_topics = json.loads(row["key_topics"])
-                except Exception:
-                    key_topics = []
-            if row.get("decisions_made"):
-                try:
-                    decisions = json.loads(row["decisions_made"])
-                except Exception:
-                    decisions = []
-
-            summaries.append(
-                {
-                    "id": row.get("id"),
-                    "start_date": row.get("start_date"),
-                    "end_date": row.get("end_date"),
-                    "summary": row.get("summary"),
-                    "conversation_count": row.get("conversation_count"),
-                    "key_topics": key_topics,
-                    "decisions_made": decisions,
-                    "created_at": row.get("created_at"),
-                }
-            )
-
-        return summaries
-
-    summaries = await asyncio.to_thread(_load_summaries)
-    return JSONResponse({"summaries": summaries})
+        agent = get_intake_agent()
+        result = agent.deploy_team(context)
+        return result
+    except Exception as e:  # pragma: no cover - UI convenience
+        logger.error(f"Intake agent deploy error: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 if __name__ == "__main__":

@@ -2,78 +2,190 @@
 
 ## System Overview
 
-OsMEN is a local-first, no/low-code agent hub that combines:
+OsMEN is a **no-code agent team orchestration** platform that combines:
+- **Codex CLI**: OpenAI Codex for code generation and technical tasks
+- **Copilot CLI**: GitHub Copilot for development assistance
 - **Langflow**: Visual reasoning graph builder for LLM agents
 - **n8n**: Workflow automation and orchestration
-- **Ollama**: Local LLM inference
+- **Cloud LLMs**: OpenAI GPT-4, Copilot, Amazon Q, Claude
+- **Local LLMs**: LM Studio, Ollama for privacy-focused inference
 - **Qdrant**: Vector database for memory storage
-- **Tool Layer**: Integration with system utilities
+- **Tool Layer**: Integration with Zoom, Audiblez, Vibevoice, Obsidian, Notion, and system utilities
 
 ## Architecture Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                         User Interface                       │
+│                      User Interface Layer                    │
 ├─────────────────────────────────────────────────────────────┤
-│  Langflow UI (7860)    │    n8n UI (5678)                   │
+│  Langflow (7860)  │   n8n (5678)   │  Web Dashboard (8000)  │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Coordinator Agent                         │
-│              (Langflow - Task Routing)                       │
+│                    Model Source Layer                        │
+├─────────────────────────────────────────────────────────────┤
+│  Codex CLI  │ Copilot CLI │ GPT-4 │ Claude │ LM Studio     │
+│             │             │       │        │ Ollama        │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Coordinator Agent                          │
+│                (Langflow - Task Routing)                     │
 └─────────────────────────────────────────────────────────────┘
                               │
         ┌─────────────────────┼─────────────────────┐
         ▼                     ▼                     ▼
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│Boot Hardening│    │ Daily Brief  │    │   Focus      │
-│  Specialist  │    │  Specialist  │    │ Guardrails   │
-│   (Agent)    │    │   (Agent)    │    │  Specialist  │
+│ Personal     │    │  Content     │    │Communication │
+│ Productivity │    │  Creation    │    │    Team      │
+│   Team       │    │    Team      │    │              │
+└──────────────┘    └──────────────┘    └──────────────┘
+        │                     │                     │
+        ▼                     ▼                     ▼
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│  Knowledge   │    │   System     │    │  Security    │
+│    Team      │    │    Team      │    │    Team      │
 └──────────────┘    └──────────────┘    └──────────────┘
         │                     │                     │
         └─────────────────────┼─────────────────────┘
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      n8n Automation                          │
-│  (Triggers, Workflows, Subflows, State Management)          │
+│                    n8n Automation Layer                      │
+│         (Triggers, Workflows, State Management)              │
 └─────────────────────────────────────────────────────────────┘
                               │
         ┌─────────────────────┼─────────────────────┐
         ▼                     ▼                     ▼
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│   Ollama     │    │   Qdrant     │    │   Tool       │
-│  (Local LLM) │    │(Vector Store)│    │   Layer      │
+│   Qdrant     │    │  PostgreSQL  │    │    Redis     │
+│ (Vectors)    │    │ (Database)   │    │   (Cache)    │
 └──────────────┘    └──────────────┘    └──────────────┘
-                                                │
-                              ┌─────────────────┼─────────────┐
-                              ▼                 ▼             ▼
-                      ┌──────────┐    ┌──────────┐  ┌──────────┐
-                      │Simplewall│    │Sysinter- │  │ FFmpeg   │
-                      │          │    │  nals    │  │          │
-                      └──────────┘    └──────────┘  └──────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                       Tool Layer                             │
+├─────────────────────────────────────────────────────────────┤
+│ Codex  │ Copilot │ Zoom │ Audiblez │ Vibevoice │ Obsidian  │
+│  CLI   │   CLI   │      │          │           │  Notion   │
+├─────────────────────────────────────────────────────────────┤
+│ Simplewall │ Sysinternals │ FFmpeg │ System Tools           │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Component Details
+
+### Model Source Layer
+
+**Purpose**: Provide AI model capabilities for agents
+
+**Components**:
+
+1. **Codex CLI Integration**
+   - Code generation from natural language
+   - Code completion and review
+   - Code explanation and documentation
+   - Technical task automation
+
+2. **Copilot CLI Integration**
+   - Command-line assistance
+   - Shell command suggestions
+   - Git workflow help
+   - Context-aware code suggestions
+
+3. **Cloud LLM Providers**
+   - **OpenAI GPT-4**: Advanced reasoning and generation
+   - **GitHub Copilot**: Development assistance
+   - **Amazon Q**: AWS integration and enterprise features
+   - **Claude**: Long-context understanding
+
+4. **Local LLM Options**
+   - **LM Studio**: Primary local option, user-friendly
+   - **Ollama**: Secondary option, CLI-focused
+
+**Model Selection Logic**:
+- Codex CLI for code generation tasks
+- Copilot CLI for development workflows
+- GPT-4 for complex reasoning
+- Claude for long documents
+- Local LLMs for privacy-sensitive data
+
+### Agent Teams
+
+**Purpose**: Organize specialized agents into functional teams
+
+**Teams**:
+
+#### 1. Personal Productivity Team
+- **Personal Assistant Agent**: Task and calendar management
+- **Focus Guardrails Agent**: Distraction blocking
+- **Daily Brief Agent**: Morning summaries
+
+**Primary Model**: GPT-4 for reasoning, Copilot CLI for scheduling
+
+#### 2. Content Creation Team
+- **Content Creator Agent**: Image/video generation
+- **Audiobook Creator Agent**: ebook to audiobook conversion
+- **Podcast Creator Agent**: Podcast generation from notes
+
+**Primary Model**: GPT-4 for content, Codex CLI for processing scripts
+
+#### 3. Communication Team
+- **Email Manager Agent**: Email automation
+- **Live Caption Agent**: Meeting transcription
+- **Contact Management**: Contact database
+
+**Primary Model**: GPT-4 for email composition, Claude for transcription
+
+#### 4. Knowledge Team
+- **Knowledge Management Agent**: Obsidian/Notion integration
+- **Syllabus Parser Agent**: Extract events from syllabuses
+- **Research Intel Agent**: Information gathering
+
+**Primary Model**: Claude for long documents, GPT-4 for organization
+
+#### 5. System Team
+- **OS Optimizer Agent**: Performance tuning
+- **Boot Hardening Agent**: Security verification
+- **Performance Monitor**: Resource tracking
+
+**Primary Model**: Codex CLI for scripts, Copilot CLI for commands
+
+#### 6. Security Team
+- **Security Operations Agent**: Vulnerability scanning
+- **Compliance Monitor**: Policy enforcement
+- **Threat Detection**: Anomaly detection
+
+**Primary Model**: Codex CLI for security scripts, GPT-4 for analysis
 
 ### Langflow Layer
 
 **Purpose**: Visual graph-based agent reasoning and coordination
 
 **Components**:
-- **Coordinator Agent**: Routes requests to appropriate specialists
-- **Specialist Agents**: Domain-specific agents for:
-  - Boot Hardening
-  - Daily Brief
-  - Focus Guardrails
-  - Content Editing
-  - Research Intelligence
+- **Coordinator Agent**: Routes requests to appropriate specialist teams
+- **Specialist Agents**: Domain-specific agents organized in teams
+  - Personal Productivity (3 agents)
+  - Content Creation (3 agents)
+  - Communication (3 agents)
+  - Knowledge (3 agents)
+  - System (3 agents)
+  - Security (3 agents)
 
 **Features**:
-- Visual flow builder
-- LLM integration
-- Tool calling
+- Visual flow builder with drag-and-drop
+- Multi-model LLM integration
+- Tool calling and orchestration
 - Memory retrieval from Qdrant
+- Conversation state management
+- Error handling and retry logic
+
+**Flow Types**:
+- **Coordinator Flow**: Main entry point, routes to specialists
+- **Specialist Flows**: Domain-specific reasoning graphs
+- **Tool Flows**: Integration with external tools
+- **Memory Flows**: Context retrieval and storage
 
 ### n8n Automation Layer
 
@@ -81,22 +193,37 @@ OsMEN is a local-first, no/low-code agent hub that combines:
 
 **Components**:
 - **Trigger Workflows**: Schedule and event-based triggers
-  - Daily boot hardening check
-  - Morning daily brief
-  - Periodic focus monitoring
+  - Daily boot hardening check (6 AM)
+  - Morning daily brief (8 AM)
+  - Periodic focus monitoring (hourly)
+  - Weekly system optimization (Sunday 2 AM)
+  - Security scans (hourly)
+  
+- **Agent Workflows**: Orchestrate multi-agent tasks
+  - Syllabus to calendar pipeline
+  - Podcast creation workflow
+  - Meeting transcription workflow
+  - Weekly knowledge digest
+  
 - **Subflows**: Reusable workflow components
+  - Email sending
+  - Calendar event creation
+  - Note creation in Obsidian
+  - Notification dispatch
+
 - **State Management**: Persistent workflow state
+  - Task queues
+  - Processing status
+  - Error states
+  - Retry counters
 
 **Features**:
-- Cron scheduling
-- HTTP webhooks
-- Conditional logic
-- Data transformation
+- Cron scheduling with timezone support
+- HTTP webhooks for external triggers
+- Conditional logic and branching
+- Data transformation and mapping
 - Integration with Langflow agents
-
-### Ollama (Local LLM)
-
-**Purpose**: Local language model inference
+- Error handling and notifications
 
 **Features**:
 - GPU acceleration support
