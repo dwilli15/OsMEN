@@ -14,10 +14,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import requests
 from requests.exceptions import JSONDecodeError
 
 from web.agent_config import AgentConfigManager
+
+try:
+    import requests
+except ImportError:  # pragma: no cover - requests is an optional runtime dependency
+    requests = None
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -31,16 +35,81 @@ class IntakeAgent:
     agent creation, goal setting, and team cohesion.
     """
 
-    def __init__(self):
-        self.project_root = Path(__file__).parent.parent.parent
+    def __init__(self, project_root: Optional[Path] = None):
+        """Create a new intake agent.
+
+        Args:
+            project_root: Optional override for the repository root. This is
+                primarily useful for tests so we can point the agent at a
+                temporary directory when generating Langflow and n8n assets.
+        """
+
+        base_root = Path(project_root) if project_root is not None else Path(__file__).parent.parent.parent
+        self.project_root = base_root
         self.agents_dir = self.project_root / "agents"
         self.langflow_dir = self.project_root / "langflow" / "flows"
         self.n8n_dir = self.project_root / "n8n" / "workflows"
 
+        # Ensure directories exist so deployments never fail because of missing folders
         self.langflow_dir.mkdir(parents=True, exist_ok=True)
         self.n8n_dir.mkdir(parents=True, exist_ok=True)
 
         self.config_manager = AgentConfigManager()
+
+        # LLM configuration
+        self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        self.openai_base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+        self.llm_model = os.getenv("INTAKE_AGENT_MODEL", os.getenv("OPENAI_MODEL", "gpt-4o-mini"))
+        self._llm_available = bool(self.openai_api_key)
+        self.system_prompt = (
+            "You are the OsMEN intake coordinator. You translate natural language "
+            "requests into structured agent orchestration plans. Always respond "
+            "with concise JSON data that the platform can use directly."
+        )
+
+        # Expanded domain catalogue for richer agent proposals
+        self.domain_specialists = {
+            "general": {
+                "name": "Operations Specialist",
+                "purpose": "Handles general automations and ensures smooth execution",
+                "capabilities": ["task_management", "workflow_automation", "status_reporting"],
+            },
+            "security": {
+                "name": "Security Monitor",
+                "purpose": "Monitors system security and detects threats",
+                "capabilities": ["security_scanning", "threat_detection", "firewall_management"],
+            },
+            "productivity": {
+                "name": "Productivity Manager",
+                "purpose": "Manages tasks, schedules, and workflows",
+                "capabilities": ["task_management", "scheduling", "reminder_system"],
+            },
+            "research": {
+                "name": "Research Analyst",
+                "purpose": "Gathers and analyzes information",
+                "capabilities": ["web_research", "data_analysis", "summarization"],
+            },
+            "content_creation": {
+                "name": "Content Creator",
+                "purpose": "Creates and edits content",
+                "capabilities": ["content_generation", "media_editing", "optimization"],
+            },
+            "marketing": {
+                "name": "Marketing Strategist",
+                "purpose": "Plans campaigns and tracks engagement metrics",
+                "capabilities": ["campaign_planning", "audience_research", "performance_reporting"],
+            },
+            "finance": {
+                "name": "Finance Analyst",
+                "purpose": "Monitors budgets and financial KPIs",
+                "capabilities": ["budget_tracking", "forecasting", "variance_analysis"],
+            },
+            "development": {
+                "name": "DevOps Specialist",
+                "purpose": "Automates build, test, and deployment workflows",
+                "capabilities": ["ci_cd", "infrastructure_as_code", "release_management"],
+            },
+        }
 
         # Conversation stages
         self.STAGES = {
@@ -69,6 +138,63 @@ class IntakeAgent:
         handler = self.STAGES.get(stage, self._handle_initial)
 
         return handler(message, context, history)
+
+    # ------------------------------------------------------------------
+    # LLM + Fallback Utilities
+    # ------------------------------------------------------------------
+
+    def _call_llm(self, prompt: str, *, expect_json: bool = False, temperature: float = 0.2) -> Optional[str]:
+        """Call configured LLM provider and return response text."""
+
+        if not self._llm_available or requests is None:
+            logger.debug("LLM not configured; skipping call")
+            return None
+
+        try:
+            payload = {
+                "model": self.llm_model,
+                "messages": [
+                    {"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": temperature,
+            }
+
+            if expect_json:
+                payload["response_format"] = {"type": "json_object"}
+
+            response = requests.post(
+                f"{self.openai_base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.openai_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+                timeout=30,
+            )
+            response.raise_for_status()
+
+            data = response.json()
+            content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+
+            if expect_json:
+                content = self._clean_json_block(content)
+
+            return content.strip() if content else None
+        except Exception as exc:
+            logger.warning(f"LLM call failed: {exc}")
+            return None
+
+    def _clean_json_block(self, text: str) -> str:
+        """Strip markdown code fences from a JSON response."""
+        text = text.strip()
+        if text.startswith("```json"):
+            text = text[len("```json"):].lstrip()
+        elif text.startswith("```"):
+            text = text[len("```"):].lstrip()
+        if text.endswith("```"):
+            text = text[:-len("```")].rstrip()
+        return text
 
     def _handle_initial(
         self, message: str, context: Dict, history: List[Dict]
