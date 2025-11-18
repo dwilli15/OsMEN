@@ -1,0 +1,55 @@
+name: License Compliance Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+
+jobs:
+  check-licenses:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-licenses
+          pip install -r requirements.txt
+      
+      - name: Run license checker
+        run: |
+          python3 scripts/automation/check_licenses.py
+      
+      - name: Generate license report
+        if: always()
+        run: |
+          pip-licenses --format=markdown --output-file=LICENSE_REPORT.md
+      
+      - name: Upload license report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: license-report
+          path: LICENSE_REPORT.md
+          retention-days: 30
+      
+      - name: Check for incompatible licenses
+        run: |
+          # Fail if GPL or AGPL licenses are found
+          if pip-licenses --format=json | grep -iE '"License":\s*".*GPL.*"'; then
+            echo "❌ GPL/AGPL license detected!"
+            exit 1
+          fi
+          echo "✅ No incompatible licenses found"
