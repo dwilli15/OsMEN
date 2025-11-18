@@ -1,49 +1,63 @@
 # OsMEN - OS Management and Engagement Network
 
-[![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen.svg)](check_operational.py)
+[![Version](https://img.shields.io/badge/version-1.0%20(Foundation)-blue.svg)](FEATURE_STATUS.md)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Docker](https://img.shields.io/badge/docker-required-blue.svg)](https://www.docker.com/)
-[![Security Validated](https://img.shields.io/badge/security-validated-success.svg)](scripts/automation/validate_security.py)
+[![Tests Passing](https://img.shields.io/badge/tests-15%2F15%20passing-brightgreen.svg)](test_agents.py)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-A **production-ready** local-first **no-code agent team orchestration** platform combining Langflow reasoning graphs with n8n automation fabric, powered by Codex CLI, Copilot CLI, local LLMs, and cloud providers.
+A **local-first agent orchestration platform** combining Langflow reasoning graphs with n8n automation fabric, powered by local LLMs and cloud providers. **Core infrastructure is production-ready; external integrations are in active development.**
+
+> ⚠️ **Current Status (v1.0)**: Core platform and basic agents are fully functional. Advanced features (calendar/email OAuth, audiobooks, live transcription) are frameworks requiring configuration or additional development. See [FEATURE_STATUS.md](FEATURE_STATUS.md) for detailed capabilities.
 
 ## 🎯 Overview
 
-OsMEN provides a complete **no-code agent team orchestration** platform for:
-- 🤖 **Personal Assistant**: Task management, scheduling, reminders, and productivity
-- 🎨 **Content Creation**: Image generation and video processing
-- 📧 **Email & Contact Management**: Automated email workflows and contact sync
-- 📚 **Syllabus to Calendar**: Build weekly todos and calendar items from syllabuses
-- 🎤 **Live Captioning**: Real-time transcription for Zoom and meetings
-- 📖 **Audiobook Creator**: Convert ebooks to audiobooks with voice cloning
-- 🎙️ **Podcast Creator**: Generate podcasts from knowledge bases
-- 🛡️ **Boot Hardening**: System security and boot integrity monitoring
-- 📊 **Daily Briefing**: Comprehensive morning briefs with system status
-- 🎯 **Focus Guardrails**: Productivity management and distraction blocking
-- 💻 **OS Optimization**: System customization and performance tuning
-- 🔒 **Security Operations**: White hat operations and security monitoring
-- 📝 **Knowledge Management**: Obsidian, Notion, and multi-source knowledge bases
+OsMEN provides an **agent orchestration platform** with:
+
+### ✅ Fully Working Now
+- 🛡️ **Boot Hardening**: System security and boot integrity monitoring (Windows)
+- 📊 **Daily Briefing**: System status reports and task summaries
+- 🎯 **Focus Guardrails**: Productivity timers and distraction blocking (Windows)
+- 🤖 **Personal Assistant**: Task management and reminders
+- 📝 **Knowledge Management**: Full Obsidian vault integration
+- 🎨 **Content Processing**: Video/audio processing via FFmpeg
+- 🔧 **Workflow Automation**: Visual builder (Langflow) and automation (n8n)
+- 🔒 **Security Operations**: System scanning and monitoring
+
+### ⚠️ Framework/Needs Configuration
+- 📧 **Email & Calendar**: Requires OAuth setup for Google/Microsoft
+- 📚 **Syllabus Parser**: Working, calendar sync needs OAuth
+- 📧 **Contact Management**: Storage works, sync needs OAuth
+
+### 🚧 In Active Development
+- 🎤 **Live Captioning**: Needs Zoom API integration
+- 📖 **Audiobook Creator**: Needs TTS service integration
+- 🎙️ **Podcast Creator**: Needs TTS service integration
+- 💻 **OS Optimization**: Analysis works, tuning needs platform work
+
+See [FEATURE_STATUS.md](FEATURE_STATUS.md) for complete capability matrix.
 
 ## 🏗️ Architecture
 
-**No-Code Agent Team Orchestration:**
-- **Codex CLI Integration**: OpenAI Codex as model source and agent
-- **Copilot CLI Integration**: GitHub Copilot for code assistance and suggestions
+**Agent Orchestration Platform:**
 - **Langflow**: Visual reasoning graph builder with coordinator + specialist agents
 - **n8n**: Workflow automation with triggers and subflows
-- **LLM Agents**: Production agents (OpenAI, Copilot, Amazon Q, Claude) + Local (LM Studio, Ollama)
+- **LLM Agents**: OpenAI GPT-4, Claude, LM Studio (local), Ollama (local)
 - **Qdrant**: Vector database for agent memory
-- **Tool Layer**: Codex CLI, Copilot CLI, Zoom, Audiblez, Vibevoice, Simplewall, Sysinternals, FFmpeg, Obsidian, Notion
+- **PostgreSQL**: Persistent data storage
+- **Redis**: Caching layer
+- **Tool Layer**: Obsidian, FFmpeg, Simplewall, Sysinternals
+
+**Planned Integrations** (frameworks in place):
+- Codex CLI, Copilot CLI, Zoom API, Google Calendar/Gmail, Outlook, Notion, Audiblez, Vibevoice
 
 **Agent Teams:**
-1. **Personal Productivity Team**: Personal Assistant, Focus Guardrails, Daily Brief
-2. **Content Creation Team**: Content Creator, Audiobook Creator, Podcast Creator
-3. **Communication Team**: Email Manager, Live Caption, Contact Management
-4. **Knowledge Team**: Knowledge Management, Syllabus Parser, Research Intel
-5. **System Team**: OS Optimizer, Boot Hardening, Security Operations
+1. **Personal Productivity**: Personal Assistant, Focus Guardrails, Daily Brief
+2. **Content Processing**: Content Creator (basic), Audiobook Creator (planned), Podcast Creator (planned)
+3. **Knowledge Management**: Obsidian integration, Syllabus Parser, Note organization
+4. **System Operations**: OS Optimizer, Boot Hardening, Security Operations
 
-**Flexible deployment** - Use production cloud agents or run locally for privacy.
+**Flexible deployment** - Use cloud LLMs or run locally for privacy.
 
 ## 🚀 Quick Start
 
@@ -133,12 +147,15 @@ See **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)** for complet
 
 ## 📖 Documentation
 
+### Understanding OsMEN
+- **[Feature Status](FEATURE_STATUS.md)** - Complete feature capability matrix (✅ Working, ⚠️ Framework, ❌ Planned)
+- **[Final Product Assessment](FINAL_PRODUCT_ASSESSMENT.md)** - Honest evaluation of current state
+- **[Realistic Roadmap](REALISTIC_ROADMAP.md)** - 8-month plan to v2.0 completion
+
 ### Getting Started
 - **[AI Agent Setup](1stsetup.md)** - Automated first-use setup instructions for AI agents
-- **[OAuth Code Assistant](OAUTH_QUICKSTART.md)** - 5-minute setup for OAuth-based code generation
 - **[Setup Guide](docs/SETUP.md)** - Installation and configuration
-- **[Production Deployment](docs/PRODUCTION_DEPLOYMENT.md)** - Complete production deployment checklist
-- **[LLM Agents](docs/LLM_AGENTS.md)** - Configure OpenAI, Copilot, Amazon Q, Claude, LM Studio, Ollama
+- **[LLM Agents](docs/LLM_AGENTS.md)** - Configure OpenAI, Claude, LM Studio, Ollama
 
 ### Operations
 - **[Usage Guide](docs/USAGE.md)** - How to use OsMEN features
@@ -380,48 +397,63 @@ python agents/knowledge_management/knowledge_agent.py
 
 ## 📊 Project Status
 
-**Current Version**: v2.0 (No-Code Agent Team Orchestration)
+**Current Version**: v1.0 (Foundation Complete)
 
-**Operational Status**: ✅ [See detailed status](STATUS.md)
+**Realistic Status**: See [FEATURE_STATUS.md](FEATURE_STATUS.md) for complete details
 
-✅ **Completed:**
+### ✅ Production-Ready Core (100%)
 - Core infrastructure (Docker Compose)
-- Langflow coordinator + specialist agents
-- n8n automation workflows
-- Codex CLI integration
-- Copilot CLI integration
-- Personal Assistant agent
-- Content Creator agent
-- Email Manager agent
-- Live Caption agent
-- Audiobook Creator agent
-- Podcast Creator agent
-- OS Optimizer agent
-- Security Operations agent
-- Boot Hardening agent
-- Daily Brief agent
-- Focus Guardrails agent
-- Knowledge Management agent
-- Ollama/LM Studio local LLM integration
-- Qdrant vector memory storage
-- Tool layer integrations (Codex, Copilot, Zoom, Audiblez, Vibevoice, Simplewall, Sysinternals, FFmpeg)
-- Obsidian and Notion integration
+- PostgreSQL, Redis, Qdrant databases
+- Langflow visual agent builder
+- n8n workflow automation
+- FastAPI gateway
+- Agent testing framework (15/15 tests passing)
 - Comprehensive documentation
-- Automated test suite
 
-🚧 **In Progress:**
-- Zoom API live integration
-- Audiblez/Vibevoice full integration
-- Enhanced voice cloning workflows
-- Advanced podcast generation templates
+### ✅ Fully Working Agents (8 agents)
+- Boot Hardening Agent (Windows)
+- Daily Brief Agent
+- Focus Guardrails Agent (Windows)
+- Personal Assistant Agent (basic features)
+- Content Creator Agent (FFmpeg-based)
+- Email Manager Agent (contact storage)
+- OS Optimizer Agent (analysis)
+- Security Operations Agent (scanning)
+
+### ✅ Working Tool Integrations
+- Obsidian (full vault access)
+- FFmpeg (video/audio processing)
+- Simplewall (Windows firewall)
+- Sysinternals (Windows utilities)
+- LLM providers (OpenAI, Claude, LM Studio, Ollama)
+
+### ⚠️ Frameworks in Place (Needs Configuration/Development)
+- Google Calendar/Gmail (OAuth needed)
+- Microsoft Outlook/Calendar (OAuth needed)
+- Notion API (completion needed)
+- Todoist (completion needed)
+
+### 🚧 In Active Development
+- Live Caption Agent (Zoom API integration)
+- Audiobook Creator Agent (TTS service needed)
+- Podcast Creator Agent (TTS service needed)
+- Codex CLI integration (CLI + API needed)
+- Copilot CLI integration (CLI + token needed)
+- Cross-platform support (Linux/macOS)
 - Web dashboard enhancements
+- Production hardening (SSL, monitoring, backups)
 
-📋 **Planned:**
-- Mobile companion app
-- Advanced analytics dashboard
+### 📋 Planned for v2.0 (6-8 months)
+- Complete OAuth flows for Google/Microsoft
+- TTS integration (Coqui, ElevenLabs, or Azure)
+- Zoom API full integration
+- Enhanced web dashboard
 - Multi-user collaboration
-- Enterprise security features
+- Advanced analytics
 - Plugin marketplace
+- Mobile companion app
+
+**See [REALISTIC_ROADMAP.md](REALISTIC_ROADMAP.md) for detailed development timeline.**
 
 ## 🤝 Contributing
 
