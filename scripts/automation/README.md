@@ -79,6 +79,93 @@ gh auth login
 python3 scripts/automation/validate_security.py
 ```
 
+### validate_env.py
+**Purpose:** Validate .env file for placeholder and insecure values.
+
+**Usage:**
+```bash
+python3 scripts/automation/validate_env.py
+```
+
+**What it checks:**
+- Detects placeholder patterns (your-*-here, changeme, example, etc.)
+- Identifies insecure defaults (admin, password, postgres)
+- Validates critical keys (PASSWORD, SECRET, API_KEY, TOKEN)
+- Returns exit code 1 for critical issues (suitable for CI/CD)
+
+### check_licenses.py
+**Purpose:** Check Python package licenses for Apache 2.0 compatibility.
+
+**Usage:**
+```bash
+python3 scripts/automation/check_licenses.py
+```
+
+**What it does:**
+- Scans all installed Python packages
+- Identifies compatible licenses (MIT, BSD, Apache 2.0, etc.)
+- Flags incompatible licenses (GPL, AGPL)
+- Marks licenses requiring manual review (LGPL, Fair Code)
+- Generates compliance reports
+
+**Prerequisites:**
+- Install pip-licenses for better detection: `pip install pip-licenses`
+
+### validate_backup.py
+**Purpose:** Validate backup file integrity and completeness.
+
+**Usage:**
+```bash
+python3 scripts/automation/validate_backup.py <backup-file>
+```
+
+**Example:**
+```bash
+python3 scripts/automation/validate_backup.py backups/osmen_backup_20241118_120000.tar.gz
+```
+
+**What it checks:**
+- File integrity (valid tar.gz format)
+- Required components (postgres, config)
+- Recommended components (qdrant, n8n, langflow)
+- Manifest.json validity
+- Calculates and displays SHA256 checksum
+
+### test_performance.py
+**Purpose:** Run performance tests on OsMEN agents.
+
+**Usage:**
+```bash
+python3 scripts/automation/test_performance.py
+```
+
+**What it tests:**
+- Agent response times (min, max, mean, median)
+- Success rates
+- Performance statistics (standard deviation)
+- Provides optimization recommendations
+
+### analyze_repo.py
+**Purpose:** Deep analysis to identify gaps between documentation and implementation.
+
+**Usage:**
+```bash
+python3 scripts/automation/analyze_repo.py
+```
+
+**What it analyzes:**
+- Documented scripts vs. actual files
+- Documented API endpoints vs. implementations
+- Configuration options coverage
+- Documented features vs. actual code
+- Makefile targets documentation
+- Docker services documentation
+
+**Output:**
+- Categorized gaps (Critical, High, Medium, Low priority)
+- Actionable recommendations
+- Prioritized fix list
+
 ## General Guidelines
 
 1. **Run from repository root:** Most scripts should be run from the repository root directory
