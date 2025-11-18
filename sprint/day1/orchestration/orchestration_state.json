@@ -335,6 +335,70 @@
       "priority": "medium",
       "timestamp": "2025-11-18T22:32:03.201866",
       "acknowledged": true
+    },
+    {
+      "team_id": "team3",
+      "team_name": "API Clients",
+      "message": "Test message",
+      "priority": "medium",
+      "timestamp": "2025-11-18T22:33:35.302761",
+      "acknowledged": true
+    },
+    {
+      "team_id": "team3",
+      "team_name": "API Clients",
+      "message": "Team 3 Agent initialized and ready to begin API client generation",
+      "priority": "medium",
+      "timestamp": "2025-11-18T22:33:35.309149",
+      "acknowledged": true
+    },
+    {
+      "team_id": "team3",
+      "team_name": "API Clients",
+      "message": "Starting task: Build retry/backoff decorator",
+      "priority": "medium",
+      "timestamp": "2025-11-18T22:33:35.309799",
+      "acknowledged": true
+    },
+    {
+      "team_id": "team3",
+      "team_name": "API Clients",
+      "message": "Completed task: Build retry/backoff decorator",
+      "priority": "medium",
+      "timestamp": "2025-11-18T22:33:35.310673",
+      "acknowledged": true
+    },
+    {
+      "team_id": "team3",
+      "team_name": "API Clients",
+      "message": "Team 3 Agent initialized and ready to begin API client generation",
+      "priority": "medium",
+      "timestamp": "2025-11-18T22:33:35.311861",
+      "acknowledged": true
+    },
+    {
+      "team_id": "team3",
+      "team_name": "API Clients",
+      "message": "Integration test message",
+      "priority": "medium",
+      "timestamp": "2025-11-18T22:33:35.312421",
+      "acknowledged": true
+    },
+    {
+      "team_id": "team3",
+      "team_name": "API Clients",
+      "message": "Test",
+      "priority": "medium",
+      "timestamp": "2025-11-18T22:35:01.436479",
+      "acknowledged": true
+    },
+    {
+      "team_id": "team3",
+      "team_name": "API Clients",
+      "message": "Team 3 Agent initialized and ready to begin API client generation",
+      "priority": "medium",
+      "timestamp": "2025-11-18T22:35:01.437310",
+      "acknowledged": true
     }
   ],
   "blockers": [
@@ -387,6 +451,16 @@
       "status": "open",
       "reported_at": "2025-11-18T22:32:03.187314",
       "resolution": null
+    },
+    {
+      "id": "BLOCK-6",
+      "team_id": "team3",
+      "team_name": "API Clients",
+      "description": "Test blocker",
+      "severity": "medium",
+      "status": "open",
+      "reported_at": "2025-11-18T22:33:35.303375",
+      "resolution": null
     }
   ],
   "pr_requests": [
@@ -407,6 +481,16 @@
       "description": "Test PR",
       "status": "pending",
       "requested_at": "2025-11-18T22:32:03.188571",
+      "created_at": null,
+      "pr_url": null
+    },
+    {
+      "id": "PR-3",
+      "team_id": "team3",
+      "branch_name": "test-branch",
+      "description": "Test PR",
+      "status": "pending",
+      "requested_at": "2025-11-18T22:33:35.304763",
       "created_at": null,
       "pr_url": null
     }
@@ -465,7 +549,25 @@
       "status": "pending",
       "requested_at": "2025-11-18T22:32:03.202652",
       "fulfilled_at": null
+    },
+    {
+      "id": "SECRET-7",
+      "team_id": "team3",
+      "secret_name": "TEST_SECRET",
+      "reason": "Testing",
+      "status": "pending",
+      "requested_at": "2025-11-18T22:33:35.304217",
+      "fulfilled_at": null
+    },
+    {
+      "id": "SECRET-8",
+      "team_id": "team3",
+      "secret_name": "TEST_KEY",
+      "reason": "Integration test",
+      "status": "pending",
+      "requested_at": "2025-11-18T22:33:35.313249",
+      "fulfilled_at": null
     }
   ],
-  "timestamp": "2025-11-18T22:32:03.202655"
+  "timestamp": "2025-11-18T22:35:01.437313"
 }
