@@ -424,7 +424,23 @@ Before announcing public release, ensure:
 
 ## Tracking
 
-Create GitHub issues for each item using the labels provided. Track progress in a GitHub Project board:
+### Creating GitHub Issues
+
+Use the automation script to create all 15 issues at once:
+
+```bash
+# Ensure you're authenticated with GitHub CLI
+gh auth login
+
+# Create all 15 issues
+./scripts/automation/create_release_issues.sh
+```
+
+This will create individual GitHub issues for each item with appropriate labels, descriptions, and checklists.
+
+### Project Board
+
+Track progress in a GitHub Project board:
 
 - Column 1: Backlog
 - Column 2: In Progress
