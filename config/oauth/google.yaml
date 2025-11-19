@@ -1,0 +1,102 @@
+# Google OAuth 2.0 Configuration
+#
+# This file configures the Google OAuth 2.0 provider for OsMEN.
+# 
+# Setup Instructions:
+# 1. Go to Google Cloud Console: https://console.cloud.google.com/
+# 2. Create a new project or select existing project
+# 3. Enable required APIs (Calendar, Gmail, Contacts, etc.)
+# 4. Go to "Credentials" and create OAuth 2.0 Client ID
+# 5. Add authorized redirect URIs
+# 6. Copy client_id and client_secret to your .env file
+# 7. Update this configuration as needed
+
+provider: google
+type: oauth2
+provider_name: Google
+
+# OAuth 2.0 Endpoints
+auth_endpoint: https://accounts.google.com/o/oauth2/v2/auth
+token_endpoint: https://oauth2.googleapis.com/token
+revoke_endpoint: https://oauth2.googleapis.com/revoke
+tokeninfo_endpoint: https://oauth2.googleapis.com/tokeninfo
+
+# Client Credentials (from .env file)
+# Set these in your .env file:
+#   GOOGLE_CLIENT_ID=your_client_id_here
+#   GOOGLE_CLIENT_SECRET=your_client_secret_here
+client_id: ${GOOGLE_CLIENT_ID}
+client_secret: ${GOOGLE_CLIENT_SECRET}
+
+# Redirect URI
+# Must match the URI registered in Google Cloud Console
+# For local development:
+redirect_uri: http://localhost:8080/oauth/callback
+
+# For production (update as needed):
+# redirect_uri: https://your-domain.com/oauth/callback
+
+# OAuth Scopes
+# Request permissions for specific Google APIs
+scopes:
+  # Google Calendar API
+  - https://www.googleapis.com/auth/calendar
+  - https://www.googleapis.com/auth/calendar.events
+  
+  # Gmail API
+  - https://www.googleapis.com/auth/gmail.modify
+  - https://www.googleapis.com/auth/gmail.send
+  - https://www.googleapis.com/auth/gmail.labels
+  
+  # Google Contacts API
+  - https://www.googleapis.com/auth/contacts
+  - https://www.googleapis.com/auth/contacts.readonly
+  
+  # User Profile (for identification)
+  - https://www.googleapis.com/auth/userinfo.email
+  - https://www.googleapis.com/auth/userinfo.profile
+  - openid
+
+# OAuth Flow Parameters
+# These control the OAuth authorization flow behavior
+flow_params:
+  # Request refresh token (required for offline access)
+  access_type: offline
+  
+  # Force consent screen to ensure refresh token is issued
+  prompt: consent
+  
+  # Enable incremental authorization (optional)
+  include_granted_scopes: true
+
+# Token Storage
+# Configuration for where and how tokens are stored
+token_storage:
+  # Storage backend: "file", "database", "encrypted_file"
+  backend: encrypted_file
+  
+  # Storage location (for file-based storage)
+  path: ${HOME}/.osmen/tokens/google_tokens.enc
+  
+  # Encryption key (from .env file)
+  encryption_key: ${OAUTH_ENCRYPTION_KEY}
+
+# Auto-refresh Configuration
+auto_refresh:
+  # Enable automatic token refresh
+  enabled: true
+  
+  # Refresh tokens this many seconds before expiration
+  refresh_before_expiry: 300
+  
+  # Maximum retry attempts for refresh
+  max_retries: 3
+
+# Logging
+# Control OAuth-related logging
+logging:
+  # Log OAuth events (never logs tokens!)
+  enabled: true
+  
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  level: INFO

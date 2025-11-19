@@ -610,6 +610,56 @@ def test_cli_integrations():
     return all(results)
 
 
+def test_team3_agent():
+    """Test Team 3 Agent and Orchestration"""
+    print("\n" + "="*50)
+    print("Testing Team 3 Agent & Orchestration")
+    print("="*50)
+    
+    try:
+        # Add sprint directory to path
+        import sys
+        from pathlib import Path
+        sprint_dir = Path(__file__).parent / 'sprint'
+        sys.path.insert(0, str(sprint_dir))
+        
+        from day1.orchestration.orchestration_agent import OrchestrationAgent, TeamStatus, TaskPriority
+        from day1.team3_api_clients.team3_agent import Team3Agent, TaskStatus as AgentTaskStatus
+        
+        # Test orchestration agent
+        orchestration = OrchestrationAgent()
+        
+        # Test message reception
+        response = orchestration.receive_message('team3', 'Test', TaskPriority.MEDIUM)
+        if not response['acknowledged']:
+            raise ValueError("Message not acknowledged")
+        
+        # Test Team 3 agent
+        agent = Team3Agent(orchestration_agent=orchestration)
+        
+        if agent.team_id != 'team3':
+            raise ValueError("Invalid team_id")
+        
+        if len(agent.tasks) != 15:
+            raise ValueError(f"Expected 15 tasks, got {len(agent.tasks)}")
+        
+        # Test status retrieval
+        status = agent.get_status()
+        if 'team_id' not in status or status['total_tasks'] != 15:
+            raise ValueError("Invalid status")
+        
+        print("✅ Team 3 Agent & Orchestration: PASS")
+        print(f"  - Orchestration agent: ✓")
+        print(f"  - Team 3 agent: ✓")
+        print(f"  - Task tracking: ✓ ({len(agent.tasks)} tasks)")
+        print(f"  - Integration: ✓")
+        
+        return True
+    except Exception as e:
+        print(f"❌ Team 3 Agent & Orchestration: FAIL - {e}")
+        return False
+
+
 def main():
     """Run all tests"""
     print("\n" + "="*50)
@@ -637,6 +687,7 @@ def main():
     results.append(("OS Optimizer", test_os_optimizer()))
     results.append(("Security Operations", test_security_ops()))
     results.append(("CLI Integrations", test_cli_integrations()))
+    results.append(("Team 3 Agent", test_team3_agent()))
     
     # Summary
     print("\n" + "="*50)
