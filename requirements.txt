@@ -72,6 +72,18 @@ todoist-api-python==2.1.5
 watchdog==3.0.0
 python-frontmatter==1.0.1
 
+# Testing dependencies (Team 4)
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
+pytest-asyncio>=0.21.0
+pytest-xdist>=3.3.0
+pytest-timeout>=2.1.0
+pytest-html>=3.2.0
+pytest-benchmark>=4.0.0
+coverage>=7.3.0
+responses>=0.23.0
+
 # Optional: For enhanced functionality
 # numpy==1.26.2
 # langchain==0.1.0

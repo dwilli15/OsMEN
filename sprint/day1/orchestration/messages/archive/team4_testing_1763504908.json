@@ -1,0 +1,52 @@
+{
+  "team": "team4_testing",
+  "timestamp": "2025-11-18T22:28:28.473582",
+  "message_type": "status_update",
+  "content": {
+    "team": "Team 4: Testing Infrastructure",
+    "team_id": "team4_testing",
+    "timestamp": "2025-11-18T22:28:28.473558",
+    "elapsed_time": "0:00:00.000250",
+    "current_hour": 0,
+    "summary": {
+      "total_tasks": 10,
+      "completed": 0,
+      "in_progress": 0,
+      "blocked": 0,
+      "pending": 10,
+      "completion_percentage": 0
+    },
+    "completed_tasks": [],
+    "in_progress_tasks": [],
+    "blocked_tasks": [],
+    "next_tasks": [
+      {
+        "task_id": "pytest_setup",
+        "description": "Set up pytest with auto-discovery and coverage tracking",
+        "status": "pending",
+        "progress_percentage": 0,
+        "started_at": null,
+        "completed_at": null,
+        "blocker": null
+      },
+      {
+        "task_id": "oauth_fixtures",
+        "description": "Create OAuth flow test fixtures",
+        "status": "pending",
+        "progress_percentage": 0,
+        "started_at": null,
+        "completed_at": null,
+        "blocker": null
+      },
+      {
+        "task_id": "mock_oauth_server",
+        "description": "Build mock OAuth server for testing",
+        "status": "pending",
+        "progress_percentage": 0,
+        "started_at": null,
+        "completed_at": null,
+        "blocker": null
+      }
+    ]
+  }
+}
