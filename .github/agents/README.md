@@ -4,6 +4,47 @@ This directory contains GitHub Custom Agent definitions for the OsMEN project.
 
 ## Available Agents
 
+### Day 1 Sprint Agents (6-Day Blitz to v2.0)
+
+**Day 1 Orchestrator** (`day1-orchestrator.yml`)
+- Coordinates all 5 Day 1 teams
+- Manages dependencies and resolves blockers
+- Tracks progress toward Day 1 deliverables
+- Uses: `sprint/day1/orchestration/orchestration_agent.py`
+
+**Team 1: Google OAuth** (`day1-team1-google-oauth.yml`)
+- Implements universal OAuth handler framework
+- Completes Google OAuth 2.0 integration
+- Critical path: Unblocks Team 2
+- TODO: `sprint/day1/team1_google_oauth/TODO.md`
+
+**Team 2: Microsoft OAuth** (`day1-team2-microsoft-oauth.yml`)
+- Implements Microsoft OAuth with Azure AD
+- Builds on Team 1's OAuth base class
+- Agent: `sprint/day1/team2_microsoft_oauth/team2_agent.py`
+- TODO: `sprint/day1/team2_microsoft_oauth/TODO.md`
+
+**Team 3: API Clients** (`day1-team3-api-clients.yml`)
+- Auto-generates API clients for Calendar, Gmail, Contacts
+- Uses openapi-generator
+- Agent: `sprint/day1/team3_api_clients/team3_agent.py`
+- TODO: `sprint/day1/team3_api_clients/TODO.md`
+
+**Team 4: Testing** (`day1-team4-testing.yml`)
+- Builds comprehensive test infrastructure
+- Creates mock OAuth and API servers
+- Targets 90%+ code coverage
+- Agent: `sprint/day1/team4_testing/team4_agent.py`
+- TODO: `sprint/day1/team4_testing/TODO.md`
+
+**Team 5: Token Security** (`day1-team5-token-security.yml`)
+- Implements token encryption and secure storage
+- Automatic token refresh automation
+- Security validation framework
+- TODO: `sprint/day1/team5_token_security/TODO.md`
+
+---
+
 ### OsMEN Coordinator (`osmen-coordinator.yml`)
 
 The main coordinator agent that orchestrates the OsMEN multi-agent ecosystem. This agent:

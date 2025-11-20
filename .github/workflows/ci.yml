@@ -99,7 +99,17 @@ jobs:
         
     - name: Run agent tests
       run: |
-        python test_agents.py
+        mkdir -p logs
+        set -o pipefail
+        # Run tests unbuffered so tee receives output immediately
+        python -u test_agents.py 2>&1 | tee logs/test_results.log
+        # Capture exit code of the python process
+        rc=${PIPESTATUS[0]:-$?}
+        echo "=== TEST EXIT CODE: $rc ==="
+        echo "=== Logs directory contents ==="
+        ls -lh logs/ || true
+        # Exit with the test's exit code
+        exit $rc
         
     - name: Upload test results
       if: always()
