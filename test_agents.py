@@ -4,12 +4,18 @@ OsMEN Agent Testing Script
 Tests all agent implementations
 """
 
+import os
 import sys
 import json
+import traceback
 from datetime import datetime
 
 from parsers.syllabus.syllabus_parser import SyllabusParser
 from scheduling.schedule_optimizer import ScheduleOptimizer
+
+
+# Ensure logs directory exists
+os.makedirs("logs", exist_ok=True)
 
 
 def _sample_parsed_syllabus():
@@ -712,4 +718,22 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception as e:
+        # Ensure unhandled exceptions are written to logs for CI debugging
+        error_msg = f"\n{'='*50}\nUnhandled exception in test_agents.py:\n{'='*50}\n"
+        error_msg += traceback.format_exc()
+        error_msg += f"\n{'='*50}\n"
+        
+        print(error_msg, file=sys.stderr)
+        
+        # Write to log file for CI artifact collection
+        try:
+            with open("logs/test_results.log", "a") as f:
+                f.write(error_msg)
+        except Exception:
+            pass  # If we can't write to log, at least stderr has it
+        
+        # Re-raise to ensure non-zero exit code
+        raise

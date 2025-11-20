@@ -99,7 +99,10 @@ jobs:
         
     - name: Run agent tests
       run: |
-        python test_agents.py
+        mkdir -p logs
+        set -o pipefail
+        python test_agents.py 2>&1 | tee logs/test_results.log
+        exit ${PIPESTATUS[0]}
         
     - name: Upload test results
       if: always()
