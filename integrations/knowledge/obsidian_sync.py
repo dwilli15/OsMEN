@@ -21,6 +21,10 @@ try:
     WATCHDOG_AVAILABLE = True
 except ImportError:
     WATCHDOG_AVAILABLE = False
+    # Create a dummy class for when watchdog is not available
+    class FileSystemEventHandler:
+        """Dummy FileSystemEventHandler for when watchdog is not installed"""
+        pass
 
 
 class ObsidianSync:
