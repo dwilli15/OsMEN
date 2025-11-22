@@ -1,6 +1,7 @@
 """Token bucket rate limiter"""
 import time
 import threading
+import functools
 from collections import defaultdict
 
 class RateLimiter:
