@@ -9,7 +9,6 @@ This script autonomously executes the entire 6-day development plan following:
 Designed for maximal automation within safety limits.
 """
 
-import os
 import sys
 import json
 import subprocess
