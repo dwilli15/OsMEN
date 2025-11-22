@@ -554,7 +554,7 @@ def retry_with_backoff(
                     delay = min(base_delay * (2 ** retries), max_delay)
                     time.sleep(delay)
             
-            return func(*args, **kwargs)  # Final attempt
+        
         
         return wrapper
     return decorator
