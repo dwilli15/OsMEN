@@ -8,7 +8,7 @@ Automated completion of all API integrations for Day 2 of 6-Day Blitz:
 - Notion & Todoist integration testing
 - Comprehensive integration test suite
 
-Following manger.agent.md automation-first principles.
+Following manager.agent.md automation-first principles.
 """
 
 import os
