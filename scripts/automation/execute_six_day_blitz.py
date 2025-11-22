@@ -3,7 +3,7 @@
 6-Day Blitz to v2.0 - Master Automation Script
 
 This script autonomously executes the entire 6-day development plan following:
-- manger.agent.md automation-first principles
+- manager.agent.md automation-first principles
 - 6_DAY_BLITZ_TO_V2.md parameters and timeline
 
 Designed for maximal automation within safety limits.
