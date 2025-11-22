@@ -254,3 +254,86 @@ def test_custom_endpoints(google_config):
     
     assert handler.auth_endpoint == 'https://custom.auth.endpoint'
     assert handler.token_endpoint == 'https://custom.token.endpoint'
+
+
+def test_authorization_url_without_state(google_handler):
+    """Test authorization URL generation without explicit state."""
+    auth_url = google_handler.get_authorization_url()
+    # State should be auto-generated
+    assert 'state=' in auth_url
+
+
+@patch('requests.post')
+def test_refresh_token_network_error(mock_post, google_handler):
+    """Test network error during token refresh."""
+    import requests
+    mock_post.side_effect = requests.RequestException('Network error')
+    
+    with pytest.raises(OAuthTokenError) as exc_info:
+        google_handler.refresh_token('test_refresh_token')
+    
+    assert 'Network error during token refresh' in str(exc_info.value)
+
+
+@patch('requests.post')
+def test_revoke_token_network_error(mock_post, google_handler):
+    """Test network error during token revocation."""
+    import requests
+    mock_post.side_effect = requests.RequestException('Network error')
+    
+    result = google_handler.revoke_token('test_token')
+    assert result is False
+
+
+def test_revoke_token_empty(google_handler):
+    """Test revoking empty token."""
+    result = google_handler.revoke_token('')
+    assert result is False
+
+
+def test_validate_token_empty(google_handler):
+    """Test validating empty token."""
+    with pytest.raises(OAuthValidationError) as exc_info:
+        google_handler.validate_token('')
+    
+    assert 'Access token is required' in str(exc_info.value)
+
+
+@patch('requests.get')
+def test_validate_token_network_error(mock_get, google_handler):
+    """Test network error during token validation."""
+    import requests
+    mock_get.side_effect = requests.RequestException('Network error')
+    
+    with pytest.raises(OAuthValidationError) as exc_info:
+        google_handler.validate_token('test_token')
+    
+    assert 'Network error during token validation' in str(exc_info.value)
+
+
+def test_missing_client_secret():
+    """Test initialization with missing client_secret."""
+    config = {
+        'client_id': 'test_id',
+        'redirect_uri': 'http://localhost:8080/callback',
+        'scopes': []
+    }
+    
+    with pytest.raises(ValueError) as exc_info:
+        GoogleOAuthHandler(config)
+    
+    assert 'client_secret is required' in str(exc_info.value)
+
+
+def test_missing_redirect_uri():
+    """Test initialization with missing redirect_uri."""
+    config = {
+        'client_id': 'test_id',
+        'client_secret': 'test_secret',
+        'scopes': []
+    }
+    
+    with pytest.raises(ValueError) as exc_info:
+        GoogleOAuthHandler(config)
+    
+    assert 'redirect_uri is required' in str(exc_info.value)
