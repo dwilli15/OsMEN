@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 from typing import Dict, Any
+from requests.exceptions import RequestException
 
 # Add parent directories to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
@@ -302,3 +303,4 @@ if __name__ == "__main__":
     except ImportError:
         print("\n⚠️  pytest not installed")
         print("Install with: pip install pytest pytest-mock")
+
