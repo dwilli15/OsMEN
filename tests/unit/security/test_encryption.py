@@ -185,3 +185,61 @@ def run_all_tests():
 if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)
+
+
+def test_encryption_with_env_var():
+    """Test initialization with environment variable."""
+    import os
+    key = EncryptionManager.generate_key()
+    os.environ['OAUTH_ENCRYPTION_KEY'] = key
+    
+    try:
+        manager = EncryptionManager()
+        token = "test_token"
+        encrypted = manager.encrypt_token(token)
+        decrypted = manager.decrypt_token(encrypted)
+        assert decrypted == token
+        print("✅ test_encryption_with_env_var passed")
+    finally:
+        del os.environ['OAUTH_ENCRYPTION_KEY']
+
+
+def test_encrypt_non_string_token():
+    """Test encrypting non-string token."""
+    manager = EncryptionManager(EncryptionManager.generate_key())
+    try:
+        manager.encrypt_token(12345)
+        assert False, "Should have raised ValueError"
+    except ValueError as e:
+        assert "must be a string" in str(e).lower()
+    print("✅ test_encrypt_non_string_token passed")
+
+
+def test_key_as_bytes():
+    """Test initialization with bytes key."""
+    key = EncryptionManager.generate_key()
+    key_bytes = key.encode()
+    manager = EncryptionManager(key_bytes)
+    
+    token = "test_token"
+    encrypted = manager.encrypt_token(token)
+    decrypted = manager.decrypt_token(encrypted)
+    assert decrypted == token
+    print("✅ test_key_as_bytes passed")
+
+
+if __name__ == '__main__':
+    test_generate_key()
+    test_encryption_round_trip()
+    test_encrypt_empty_token()
+    test_decrypt_empty_ciphertext()
+    test_decrypt_invalid_ciphertext()
+    test_different_keys_different_encryption()
+    test_wrong_key_cannot_decrypt()
+    test_invalid_key_raises_error()
+    test_no_key_raises_error()
+    test_unicode_token_encryption()
+    test_encryption_with_env_var()
+    test_encrypt_non_string_token()
+    test_key_as_bytes()
+    print("\n✅ All encryption tests passed!")

@@ -116,3 +116,27 @@ def run_all_tests():
 if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)
+
+
+def test_validate_client_id_invalid_provider():
+    """Test validation with invalid/unknown provider."""
+    result = CredentialValidator.validate_client_id('some_random_id', 'unknown_provider')
+    # Should return True for unknown providers (skip format validation)
+    assert result is True
+
+
+def test_validate_client_id_none():
+    """Test validation with None client_id."""
+    result = CredentialValidator.validate_client_id(None, 'google')
+    assert result is False
+
+
+def test_validate_client_id_whitespace():
+    """Test validation with whitespace-only client_id."""
+    result = CredentialValidator.validate_client_id('   ', 'google')
+    assert result is False
+
+
+if __name__ == '__main__':
+    import pytest
+    pytest.main([__file__, '-v'])
