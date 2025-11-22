@@ -13,7 +13,7 @@ class RateLimiter:
     def __init__(self, requests_per_second: float = 10.0):
         self.rate = requests_per_second
         self.tokens = defaultdict(lambda: self.rate)
-        self.last_update = defaultdict(lambda: time.time())
+        self.last_update = defaultdict(time.time)
         self.lock = threading.Lock()
     
     def acquire(self, key: str = 'default', tokens: int = 1) -> bool:
