@@ -243,3 +243,32 @@ if __name__ == '__main__':
     test_encrypt_non_string_token()
     test_key_as_bytes()
     print("\n✅ All encryption tests passed!")
+
+
+def test_decrypt_non_string_ciphertext():
+    """Test decrypting non-string ciphertext."""
+    manager = EncryptionManager(EncryptionManager.generate_key())
+    try:
+        manager.decrypt_token(12345)
+        assert False, "Should have raised ValueError"
+    except ValueError as e:
+        assert "must be a string" in str(e).lower()
+    print("✅ test_decrypt_non_string_ciphertext passed")
+
+
+if __name__ == '__main__':
+    test_generate_key()
+    test_encryption_round_trip()
+    test_encrypt_empty_token()
+    test_decrypt_empty_ciphertext()
+    test_decrypt_invalid_ciphertext()
+    test_different_keys_different_encryption()
+    test_wrong_key_cannot_decrypt()
+    test_invalid_key_raises_error()
+    test_no_key_raises_error()
+    test_unicode_token_encryption()
+    test_encryption_with_env_var()
+    test_encrypt_non_string_token()
+    test_key_as_bytes()
+    test_decrypt_non_string_ciphertext()
+    print("\n✅ All encryption tests passed!")

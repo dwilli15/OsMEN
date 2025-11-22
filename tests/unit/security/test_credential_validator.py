@@ -140,3 +140,15 @@ def test_validate_client_id_whitespace():
 if __name__ == '__main__':
     import pytest
     pytest.main([__file__, '-v'])
+
+
+def test_check_secrets_not_committed_no_gitignore(tmp_path):
+    """Test when .gitignore doesn't exist."""
+    import os
+    original_dir = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+        result = CredentialValidator.check_secrets_not_committed()
+        assert result is False
+    finally:
+        os.chdir(original_dir)

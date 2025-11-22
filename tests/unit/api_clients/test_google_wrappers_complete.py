@@ -296,3 +296,34 @@ class TestGoogleContactsWrapper:
 
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
+
+
+class TestGoogleCalendarWrapperPagination:
+    """Test pagination for Google Calendar Wrapper."""
+    
+    @patch('requests.get')
+    def test_list_events_with_pagination(self, mock_get, mock_oauth_handler):
+        """Test listing events with pagination."""
+        # First page
+        first_response = Mock()
+        first_response.json.return_value = {
+            'items': [{'id': 'event1', 'summary': 'Event 1'}],
+            'nextPageToken': 'token123'
+        }
+        first_response.raise_for_status = Mock()
+        
+        # Second page
+        second_response = Mock()
+        second_response.json.return_value = {
+            'items': [{'id': 'event2', 'summary': 'Event 2'}]
+        }
+        second_response.raise_for_status = Mock()
+        
+        mock_get.side_effect = [first_response, second_response]
+        
+        wrapper = GoogleCalendarWrapper(oauth_handler=mock_oauth_handler)
+        result = wrapper.list_events('primary')
+        
+        # Should have called twice for pagination
+        assert mock_get.call_count == 2
+        assert isinstance(result, list)

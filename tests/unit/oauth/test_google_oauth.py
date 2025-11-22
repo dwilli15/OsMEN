@@ -337,3 +337,16 @@ def test_missing_redirect_uri():
         GoogleOAuthHandler(config)
     
     assert 'redirect_uri is required' in str(exc_info.value)
+
+
+def test_is_token_expired(google_handler):
+    """Test checking if token is expired."""
+    from datetime import datetime, timedelta
+    
+    # Token that expired 5 minutes ago
+    expired_time = datetime.now() - timedelta(minutes=5)
+    assert google_handler.is_token_expired(expired_time) is True
+    
+    # Token that expires in 10 minutes
+    future_time = datetime.now() + timedelta(minutes=10)
+    assert google_handler.is_token_expired(future_time) is False
