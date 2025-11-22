@@ -10,7 +10,7 @@
 
 ## 📊 Executive Summary
 
-Successfully completed all 6 days of the blitz plan through autonomous execution following the `manger.agent.md` automation-first principles. All major deliverables achieved with comprehensive frameworks, infrastructure, and documentation in place.
+Successfully completed all 6 days of the blitz plan through autonomous execution following the `manager.agent.md` automation-first principles. All major deliverables achieved with comprehensive frameworks, infrastructure, and documentation in place.
 
 ### Progress Timeline
 
@@ -259,7 +259,7 @@ scripts/automation/
 
 ## 🔄 Automation-First Achievements
 
-Following `manger.agent.md` principles:
+Following `manager.agent.md` principles:
 
 ### ✅ Maximized Automation
 - Created reusable utility modules instead of one-off solutions
