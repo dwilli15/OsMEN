@@ -53,14 +53,246 @@ class WorkflowTemplate:
         }
     
     def to_langflow(self) -> Dict[str, Any]:
-        """Convert to Langflow format"""
-        # TODO: Implement Langflow conversion
-        return {'format': 'langflow', 'workflow': self.to_dict()}
+        """
+        Convert to Langflow format.
+        
+        Langflow uses a node-based visual flow with:
+        - Input/Output nodes
+        - Process nodes for each step
+        - Edges connecting the flow
+        - LLM nodes for AI operations
+        """
+        nodes = []
+        edges = []
+        y_offset = 100
+        
+        # Create input node
+        nodes.append({
+            'id': 'input_1',
+            'type': 'CustomComponent',
+            'position': {'x': 100, 'y': 0},
+            'data': {
+                'node': {
+                    'template': {
+                        'input_schema': {
+                            'type': 'dict',
+                            'required': True,
+                            'list': False,
+                            'value': self.inputs
+                        }
+                    },
+                    'description': f'Input for {self.name}',
+                    'base_classes': ['Data'],
+                },
+                'type': 'Input'
+            }
+        })
+        
+        # Create a node for each step
+        for i, step in enumerate(self.steps):
+            node_id = f'step_{i+1}'
+            nodes.append({
+                'id': node_id,
+                'type': 'CustomComponent',
+                'position': {'x': 100, 'y': (i + 1) * y_offset},
+                'data': {
+                    'node': {
+                        'template': {
+                            'action': {
+                                'type': 'str',
+                                'value': step.get('action', 'process')
+                            },
+                            'description': {
+                                'type': 'str',
+                                'value': step.get('description', '')
+                            }
+                        },
+                        'description': step.get('description', ''),
+                        'base_classes': ['Chain'],
+                    },
+                    'type': 'Processor'
+                }
+            })
+            
+            # Create edge from previous node
+            source_id = 'input_1' if i == 0 else f'step_{i}'
+            edges.append({
+                'id': f'edge_{i+1}',
+                'source': source_id,
+                'target': node_id,
+                'sourceHandle': 'output',
+                'targetHandle': 'input'
+            })
+        
+        # Create output node
+        output_id = 'output_1'
+        nodes.append({
+            'id': output_id,
+            'type': 'CustomComponent',
+            'position': {'x': 100, 'y': (len(self.steps) + 1) * y_offset},
+            'data': {
+                'node': {
+                    'template': {
+                        'output_schema': {
+                            'type': 'dict',
+                            'value': self.outputs
+                        }
+                    },
+                    'description': f'Output for {self.name}',
+                    'base_classes': ['Data'],
+                },
+                'type': 'Output'
+            }
+        })
+        
+        # Connect last step to output
+        if self.steps:
+            edges.append({
+                'id': f'edge_output',
+                'source': f'step_{len(self.steps)}',
+                'target': output_id,
+                'sourceHandle': 'output',
+                'targetHandle': 'input'
+            })
+        
+        return {
+            'name': self.name,
+            'description': self.description,
+            'nodes': nodes,
+            'edges': edges,
+            'viewport': {'x': 0, 'y': 0, 'zoom': 1},
+            'metadata': {
+                'category': self.category,
+                'tags': self.tags,
+                'version': '1.0',
+                'format': 'langflow'
+            }
+        }
     
     def to_n8n(self) -> Dict[str, Any]:
-        """Convert to n8n format"""
-        # TODO: Implement n8n conversion
-        return {'format': 'n8n', 'workflow': self.to_dict()}
+        """
+        Convert to n8n format.
+        
+        n8n uses a node-based workflow with:
+        - Trigger node to start
+        - Function/HTTP nodes for processing
+        - Set/IF nodes for data manipulation
+        - Connections array defining flow
+        """
+        nodes = []
+        connections = {}
+        x_offset = 300
+        
+        # Create manual trigger node
+        trigger_name = 'Start'
+        nodes.append({
+            'parameters': {},
+            'name': trigger_name,
+            'type': 'n8n-nodes-base.manualTrigger',
+            'typeVersion': 1,
+            'position': [100, 300]
+        })
+        
+        # Create set node for inputs
+        input_name = 'Set Inputs'
+        nodes.append({
+            'parameters': {
+                'values': {
+                    'string': [
+                        {'name': inp['name'], 'value': f"={{{{$json.{inp['name']}}}}}"}
+                        for inp in self.inputs
+                    ]
+                },
+                'options': {}
+            },
+            'name': input_name,
+            'type': 'n8n-nodes-base.set',
+            'typeVersion': 1,
+            'position': [100 + x_offset, 300]
+        })
+        
+        # Connect trigger to input
+        connections[trigger_name] = {
+            'main': [[{'node': input_name, 'type': 'main', 'index': 0}]]
+        }
+        
+        # Create function node for each step
+        prev_node = input_name
+        for i, step in enumerate(self.steps):
+            step_name = f"{step.get('action', 'Step').title()} {i+1}"
+            
+            # Generate function code
+            action = step.get('action', 'process')
+            description = step.get('description', '')
+            
+            function_code = f"""// {description}
+// Action: {action}
+
+// Process input data
+for (const item of items) {{
+  // Add your {action} logic here
+  item.json.step_{i+1}_complete = true;
+  item.json.step_name = '{step_name}';
+}}
+
+return items;
+"""
+            
+            nodes.append({
+                'parameters': {
+                    'functionCode': function_code
+                },
+                'name': step_name,
+                'type': 'n8n-nodes-base.function',
+                'typeVersion': 1,
+                'position': [100 + (i + 2) * x_offset, 300]
+            })
+            
+            # Connect previous node to this step
+            connections[prev_node] = {
+                'main': [[{'node': step_name, 'type': 'main', 'index': 0}]]
+            }
+            prev_node = step_name
+        
+        # Create output set node
+        output_name = 'Format Output'
+        nodes.append({
+            'parameters': {
+                'values': {
+                    'string': [
+                        {'name': out['name'], 'value': f"={{{{$json.{out['name']}}}}}"}
+                        for out in self.outputs
+                    ]
+                },
+                'options': {}
+            },
+            'name': output_name,
+            'type': 'n8n-nodes-base.set',
+            'typeVersion': 1,
+            'position': [100 + (len(self.steps) + 2) * x_offset, 300]
+        })
+        
+        # Connect last step to output
+        connections[prev_node] = {
+            'main': [[{'node': output_name, 'type': 'main', 'index': 0}]]
+        }
+        
+        return {
+            'name': self.name,
+            'nodes': nodes,
+            'connections': connections,
+            'active': False,
+            'settings': {
+                'executionOrder': 'v1'
+            },
+            'tags': self.tags,
+            'meta': {
+                'category': self.category,
+                'description': self.description,
+                'version': '1.0',
+                'format': 'n8n'
+            }
+        }
     
     def to_deepagents(self) -> Dict[str, Any]:
         """Convert to DeepAgents format"""

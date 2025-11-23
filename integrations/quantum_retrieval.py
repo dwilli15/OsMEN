@@ -42,11 +42,67 @@ class QueryState:
         
         Like quantum measurement, context determines which interpretation
         manifests.
+        
+        Args:
+            context: Dictionary with contextual information like:
+                - domain: Current topic/domain
+                - previous_topic: Last discussed topic
+                - user_intent: Detected user intention
+                - conversation_history: Recent messages
+        
+        Returns:
+            Most likely interpretation based on context
         """
-        # TODO: Implement context-based collapse
-        # For now, return highest probability interpretation
-        max_idx = np.argmax(self.probabilities)
-        return self.interpretations[max_idx]
+        if not context:
+            # No context - return highest probability interpretation
+            max_idx = np.argmax(self.probabilities)
+            return self.interpretations[max_idx]
+        
+        # Score each interpretation based on context alignment
+        context_scores = []
+        
+        for i, interpretation in enumerate(self.interpretations):
+            score = self.probabilities[i]  # Start with base probability
+            
+            focus = interpretation.get('focus', 'general')
+            specificity = interpretation.get('specificity', 'medium')
+            
+            # Boost anaphoric if we have previous topic
+            if focus == 'anaphoric' and 'previous_topic' in context:
+                score *= 1.5
+            
+            # Boost technical if domain is specified
+            if focus == 'technical' and 'domain' in context:
+                score *= 1.3
+            
+            # Boost literal if user_intent is 'search'
+            if focus == 'literal' and context.get('user_intent') == 'search':
+                score *= 1.2
+            
+            # Boost expansive if user_intent is 'explore'
+            if focus == 'expansive' and context.get('user_intent') == 'explore':
+                score *= 1.4
+            
+            # Adjust based on conversation length
+            if 'conversation_history' in context:
+                history_len = len(context['conversation_history'])
+                if history_len > 3 and focus == 'anaphoric':
+                    score *= 1.2  # More context = more anaphoric confidence
+            
+            context_scores.append(score)
+        
+        # Normalize scores
+        total_score = sum(context_scores)
+        if total_score > 0:
+            context_scores = [s / total_score for s in context_scores]
+        
+        # Return interpretation with highest context-adjusted score
+        best_idx = np.argmax(context_scores)
+        result = self.interpretations[best_idx].copy()
+        result['confidence'] = context_scores[best_idx]
+        result['context_used'] = list(context.keys())
+        
+        return result
 
 
 @dataclass
@@ -130,28 +186,59 @@ class QuantumInspiredRetrieval:
         """
         interpretations = []
         
-        # TODO: Implement proper interpretation generation
-        # For now, create simple variations
-        base_interpretation = {
-            'text': query,
-            'focus': 'general',
-            'specificity': 'medium'
-        }
-        interpretations.append(base_interpretation)
+        # Analyze query characteristics
+        words = query.lower().split()
+        has_pronouns = any(word in words for word in ['it', 'this', 'that', 'they', 'them'])
+        is_question = '?' in query
+        is_short = len(words) < 3
         
-        # Add focused interpretation
+        # Base interpretation (literal)
         interpretations.append({
             'text': query,
-            'focus': 'specific',
-            'specificity': 'high'
+            'focus': 'literal',
+            'specificity': 'exact',
+            'weight': 0.4
         })
         
-        # Add broad interpretation
+        # If has pronouns, create anaphoric interpretation
+        if has_pronouns:
+            interpretations.append({
+                'text': query,
+                'focus': 'anaphoric',  # Refers to previous context
+                'specificity': 'contextual',
+                'weight': 0.3
+            })
+        
+        # If is question, create informational interpretation
+        if is_question:
+            interpretations.append({
+                'text': query,
+                'focus': 'informational',
+                'specificity': 'broad',
+                'weight': 0.2
+            })
+        
+        # If short, create expansive interpretation
+        if is_short:
+            interpretations.append({
+                'text': query,
+                'focus': 'expansive',
+                'specificity': 'broad',
+                'weight': 0.3
+            })
+        
+        # Always add a focused technical interpretation
         interpretations.append({
             'text': query,
-            'focus': 'broad',
-            'specificity': 'low'
+            'focus': 'technical',
+            'specificity': 'high',
+            'weight': 0.25
         })
+        
+        # Normalize weights to sum to 1.0
+        total_weight = sum(i['weight'] for i in interpretations)
+        for interp in interpretations:
+            interp['weight'] = interp['weight'] / total_weight
         
         return interpretations
     
@@ -251,29 +338,65 @@ class QuantumInspiredRetrieval:
         Returns:
             Interference-based relevance score
         """
-        # TODO: Implement proper interference calculation
-        # For now, use simplified scoring
-        
         scores = []
+        weights = []
+        
         for interpretation, prob in zip(query_state.interpretations, query_state.probabilities):
-            # Simple placeholder scoring
-            base_score = np.random.random()  # Replace with actual embedding similarity
-            weighted_score = base_score * prob
+            # Calculate base similarity score
+            # Use interpretation characteristics to modulate scoring
+            focus = interpretation.get('focus', 'general')
+            specificity = interpretation.get('specificity', 'medium')
+            weight = interpretation.get('weight', 1.0 / len(query_state.interpretations))
+            
+            # Simulate embedding similarity based on interpretation type
+            # In production, this would use actual embedding vectors
+            if focus == 'literal':
+                base_score = 0.8  # High confidence for literal matches
+            elif focus == 'anaphoric':
+                base_score = 0.6  # Medium confidence, needs context
+            elif focus == 'technical':
+                base_score = 0.7  # Good for specific domains
+            elif focus == 'expansive':
+                base_score = 0.5  # Lower precision, broader coverage
+            else:
+                base_score = 0.6  # Default
+            
+            # Modulate by specificity
+            if specificity == 'high':
+                base_score *= 1.1
+            elif specificity == 'low':
+                base_score *= 0.9
+            
+            # Apply probability weight
+            weighted_score = base_score * prob * weight
             scores.append(weighted_score)
+            weights.append(weight)
         
-        # Interference: scores can amplify or cancel
-        # Constructive: similar scores → amplification
-        # Destructive: different scores → cancellation
+        # Calculate interference effects
+        # Similar scores → constructive interference (amplification)
+        # Different scores → destructive interference (cancellation)
+        
         mean_score = np.mean(scores)
-        variance = np.var(scores)
+        std_score = np.std(scores)
         
-        # Low variance = constructive interference
-        # High variance = destructive interference
-        interference_factor = 1.0 / (1.0 + variance)
+        # Interference factor:
+        # - Low variance (std) = similar interpretations = constructive = amplify
+        # - High variance = conflicting interpretations = destructive = dampen
         
+        # Normalize std to [0, 1] range
+        max_possible_std = mean_score / 2  # Heuristic
+        normalized_std = min(std_score / max_possible_std, 1.0) if max_possible_std > 0 else 0
+        
+        # Constructive interference factor (inverse of normalized std)
+        interference_factor = 1.0 + (1.0 - normalized_std) * 0.5  # Boost up to 1.5x
+        
+        # Apply interference
         final_score = mean_score * interference_factor
         
-        return final_score
+        # Clip to valid range
+        final_score = np.clip(final_score, 0.0, 1.0)
+        
+        return float(final_score)
     
     def retrieve(
         self,
