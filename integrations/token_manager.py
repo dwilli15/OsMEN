@@ -262,9 +262,15 @@ class TokenRefreshDaemon:
     Background daemon that automatically refreshes tokens before expiry.
     
     Usage:
+        def refresh_callback(provider):
+            # Your refresh logic
+            oauth_handler = get_oauth_handler(provider)
+            new_tokens = oauth_handler.refresh_token(old_refresh_token)
+            return new_tokens
+        
         daemon = TokenRefreshDaemon(token_manager, refresh_callback)
         daemon.start()
-        # ... do work ...
+        # ... application runs ...
         daemon.stop()
     """
     
@@ -288,6 +294,12 @@ class TokenRefreshDaemon:
         self.running = False
         self.thread = None
         self.stop_event = Event()
+        
+        # Track refresh attempts
+        self.refresh_attempts = {}
+        self.max_retries = 3
+        
+        logger.info(f"TokenRefreshDaemon initialized (check interval: {check_interval}s)")
     
     def start(self):
         """Start the refresh daemon"""
@@ -297,7 +309,7 @@ class TokenRefreshDaemon:
         
         self.running = True
         self.stop_event.clear()
-        self.thread = Thread(target=self._run, daemon=True)
+        self.thread = Thread(target=self._run, daemon=True, name="TokenRefreshDaemon")
         self.thread.start()
         logger.info("Token refresh daemon started")
     
@@ -306,39 +318,98 @@ class TokenRefreshDaemon:
         if not self.running:
             return
         
+        logger.info("Stopping token refresh daemon...")
         self.running = False
         self.stop_event.set()
-        if self.thread:
-            self.thread.join(timeout=5)
+        
+        if self.thread and self.thread.is_alive():
+            self.thread.join(timeout=10)
+            if self.thread.is_alive():
+                logger.warning("Daemon thread did not stop gracefully")
+        
         logger.info("Token refresh daemon stopped")
     
     def _run(self):
         """Main daemon loop"""
+        logger.info("Token refresh daemon loop starting")
+        
         while self.running:
             try:
                 self._check_and_refresh_tokens()
             except Exception as e:
                 logger.error(f"Error in refresh daemon: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
             
             # Wait for check_interval or stop event
             self.stop_event.wait(self.check_interval)
+        
+        logger.info("Token refresh daemon loop exited")
     
     def _check_and_refresh_tokens(self):
         """Check all tokens and refresh if needed"""
         providers = self.token_manager.list_providers()
         
+        if not providers:
+            logger.debug("No providers configured, skipping refresh check")
+            return
+        
+        logger.debug(f"Checking {len(providers)} providers for token expiry")
+        
         for provider in providers:
-            if self.token_manager.is_token_expired(provider):
-                logger.info(f"Token for {provider} expiring soon, refreshing...")
-                try:
-                    new_token_data = self.refresh_callback(provider)
-                    if new_token_data:
-                        self.token_manager.save_token(provider, new_token_data)
-                        logger.info(f"Successfully refreshed token for {provider}")
-                    else:
-                        logger.error(f"Failed to refresh token for {provider}")
-                except Exception as e:
-                    logger.error(f"Error refreshing token for {provider}: {e}")
+            try:
+                if self.token_manager.is_token_expired(provider):
+                    self._refresh_provider_token(provider)
+            except Exception as e:
+                logger.error(f"Error checking/refreshing token for {provider}: {e}")
+    
+    def _refresh_provider_token(self, provider: str):
+        """Refresh token for a specific provider"""
+        # Check retry count
+        attempts = self.refresh_attempts.get(provider, 0)
+        if attempts >= self.max_retries:
+            logger.error(
+                f"Max refresh retries ({self.max_retries}) reached for {provider}. "
+                f"Manual intervention required."
+            )
+            return
+        
+        logger.info(f"Token for {provider} expiring soon, initiating refresh...")
+        
+        try:
+            # Get current token data
+            current_token = self.token_manager.load_token(provider)
+            if not current_token:
+                logger.error(f"No token found for {provider}")
+                return
+            
+            # Call refresh callback
+            new_token_data = self.refresh_callback(provider)
+            
+            if new_token_data:
+                # Save new token
+                self.token_manager.save_token(provider, new_token_data)
+                logger.info(f"✅ Successfully refreshed token for {provider}")
+                
+                # Reset retry counter on success
+                self.refresh_attempts[provider] = 0
+            else:
+                logger.error(f"Failed to refresh token for {provider}: callback returned None")
+                self.refresh_attempts[provider] = attempts + 1
+                
+        except Exception as e:
+            logger.error(f"Error refreshing token for {provider}: {e}")
+            self.refresh_attempts[provider] = attempts + 1
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Get daemon status"""
+        return {
+            'running': self.running,
+            'check_interval': self.check_interval,
+            'thread_alive': self.thread.is_alive() if self.thread else False,
+            'providers_monitored': len(self.token_manager.list_providers()),
+            'refresh_attempts': self.refresh_attempts.copy()
+        }
 
 
 if __name__ == "__main__":
