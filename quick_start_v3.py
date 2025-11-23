@@ -81,7 +81,8 @@ def setup_google():
     print("\n🔐 Setting up Google OAuth...")
     print("-" * 70)
     
-    os.system("python scripts/setup_oauth.py --provider google")
+    import subprocess
+    subprocess.run(["python", "scripts/setup_oauth.py", "--provider", "google"])
 
 
 def setup_microsoft():
@@ -89,7 +90,8 @@ def setup_microsoft():
     print("\n🔐 Setting up Microsoft OAuth...")
     print("-" * 70)
     
-    os.system("python scripts/setup_oauth.py --provider microsoft")
+    import subprocess
+    subprocess.run(["python", "scripts/setup_oauth.py", "--provider", "microsoft"])
 
 
 def check_status():
@@ -97,7 +99,8 @@ def check_status():
     print("\n📊 Checking Integration Status...")
     print("-" * 70)
     
-    os.system("python scripts/setup_oauth.py --status")
+    import subprocess
+    subprocess.run(["python", "scripts/setup_oauth.py", "--status"])
 
 
 def test_integrations():
@@ -179,7 +182,8 @@ def start_services():
     print("-" * 70)
     
     print("\nStarting Docker Compose services...")
-    os.system("docker-compose up -d")
+    import subprocess
+    subprocess.run(["docker-compose", "up", "-d"])
     
     print("\n✅ Services started!")
     print("\nAccess points:")

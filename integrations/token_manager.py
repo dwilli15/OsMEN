@@ -218,10 +218,13 @@ class TokenManager:
     def list_providers(self) -> list:
         """List all providers with stored tokens"""
         providers = set()
-        for file in os.listdir(self.storage_dir):
-            if file.endswith(('.encrypted', '.json')) and '_tokens' in file:
-                provider = file.replace('_tokens.encrypted', '').replace('_tokens.json', '')
-                providers.add(provider)
+        try:
+            for file in os.listdir(self.storage_dir):
+                if file.endswith(('.encrypted', '.json')) and '_tokens' in file:
+                    provider = file.replace('_tokens.encrypted', '').replace('_tokens.json', '')
+                    providers.add(provider)
+        except Exception as e:
+            logger.error(f"Error listing providers: {e}")
         return sorted(list(providers))
     
     def get_token_status(self, provider: str) -> Dict:

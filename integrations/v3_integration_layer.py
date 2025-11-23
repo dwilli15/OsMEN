@@ -78,7 +78,7 @@ class V3IntegrationLayer:
         self.outlook_mail = None
         self.microsoft_contacts = None
         
-        # Unified interfaces
+        # Unified interfaces (lazy-initialized)
         self.calendar_manager = None
         
         # Load configuration
