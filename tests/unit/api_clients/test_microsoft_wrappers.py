@@ -132,7 +132,7 @@ class TestMicrosoftMailWrapper:
         """Test wrapper initialization with OAuth handler."""
         wrapper = MicrosoftMailWrapper(oauth_handler=mock_oauth_handler)
         assert wrapper.oauth_handler == mock_oauth_handler
-        assert 'graph.microsoft.com' in wrapper.base_url
+        assert 'graph.microsoft.com' in wrapper.GRAPH_API_BASE
     
     def test_initialization_without_oauth(self):
         """Test wrapper initialization without OAuth handler."""
@@ -167,7 +167,7 @@ class TestMicrosoftMailWrapper:
         mock_post.return_value = mock_response
         
         wrapper = MicrosoftMailWrapper(oauth_handler=mock_oauth_handler)
-        wrapper.send_mail('to@example.com', 'Subject', 'Body')
+        wrapper.send_email(['to@example.com'], 'Subject', 'Body')
         
         mock_post.assert_called_once()
     
@@ -204,7 +204,7 @@ class TestMicrosoftContactsWrapper:
         """Test wrapper initialization with OAuth handler."""
         wrapper = MicrosoftContactsWrapper(oauth_handler=mock_oauth_handler)
         assert wrapper.oauth_handler == mock_oauth_handler
-        assert 'graph.microsoft.com' in wrapper.base_url
+        assert 'graph.microsoft.com' in wrapper.GRAPH_API_BASE
     
     def test_initialization_without_oauth(self):
         """Test wrapper initialization without OAuth handler."""
