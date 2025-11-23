@@ -21,6 +21,9 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime
 from loguru import logger
 
+# Token management
+from integrations.token_manager import TokenManager
+
 # OAuth imports
 from integrations.oauth.google_oauth import GoogleOAuthHandler
 from integrations.oauth.microsoft_oauth import MicrosoftOAuthHandler
@@ -59,6 +62,9 @@ class V3IntegrationLayer:
             '../.copilot/integrations'
         )
         Path(self.config_dir).mkdir(parents=True, exist_ok=True)
+        
+        # Token manager for secure storage
+        self.token_manager = TokenManager(storage_dir=os.path.join(self.config_dir, 'tokens'))
         
         # OAuth handlers
         self.google_oauth = None

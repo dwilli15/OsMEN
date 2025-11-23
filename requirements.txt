@@ -27,6 +27,9 @@ loguru==0.7.2
 # Resilience and retry logic
 tenacity==8.2.3
 
+# Token encryption and security
+cryptography==41.0.7
+
 # RSS feed parsing for innovation monitoring
 feedparser==6.0.10
 
