@@ -83,7 +83,8 @@ class TokenBucketStrategy(RateLimitStrategy):
     def __init__(self):
         # {key: (tokens, last_refill_time)}
         self._buckets: Dict[str, Tuple[float, float]] = defaultdict(lambda: (0.0, 0.0))
-        self._lock = asyncio.Lock() if asyncio.get_event_loop().is_running() else None
+        # Lazy initialization of lock - avoid calling asyncio.get_event_loop() during init
+        self._lock = None
     
     def check(self, key: str, config: RateLimitConfig) -> RateLimitResult:
         current_time = time.time()

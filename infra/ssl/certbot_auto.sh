@@ -311,7 +311,7 @@ setup_auto_renewal() {
     cat << 'EOF' | sudo tee "$renewal_script" > /dev/null
 #!/bin/bash
 # OsMEN SSL Auto-Renewal
-certbot renew --quiet --deploy-hook "systemctl reload nginx"
+certbot renew --quiet --deploy-hook "/bin/systemctl reload nginx"
 EOF
     
     sudo chmod +x "$renewal_script"

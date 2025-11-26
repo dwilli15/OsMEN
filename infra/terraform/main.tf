@@ -528,10 +528,6 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   threshold           = 80
   alarm_description   = "CPU utilization is high"
   
-  # dimensions = {
-  #   AutoScalingGroupName = aws_autoscaling_group.app.name
-  # }
-  
   tags = {
     Name = "osmen-cpu-alarm"
   }
