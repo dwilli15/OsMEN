@@ -19,7 +19,7 @@ import asyncio
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set
 from uuid import uuid4
@@ -74,7 +74,7 @@ class ResearchResult:
     sections: List[ResearchSection]
     citations: List[Citation]
     metadata: Dict[str, Any]
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     
     def to_markdown(self) -> str:
         """Convert to markdown format"""
