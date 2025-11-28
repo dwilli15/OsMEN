@@ -17,14 +17,14 @@ This plan consolidates all priorities from the start of this repository into a m
 |-------|------|-------|--------|
 | 1 | LLM Provider Adapters | 5 | ✅ COMPLETE |
 | 2 | E2E Workflow: Daily Brief | 4 | ✅ COMPLETE |
-| 3 | Backend Observable: SSE + Storage | 6 | 🔄 IN PROGRESS |
-| 4 | Additional Workflows | 4 | ⏳ PENDING |
+| 3 | Backend Observable: SSE + Storage | 6 | ✅ COMPLETE |
+| 4 | Additional Workflows | 4 | 🔄 IN PROGRESS |
 | 5 | Testing Infrastructure | 4 | ⏳ PENDING |
 | 6 | Frontend Enhancements | 6 | ⏳ PENDING |
 | 7 | Production Hardening | 5 | ⏳ PENDING |
 | 8 | Documentation & Polish | 4 | ⏳ PENDING |
 
-**Total**: 38 tasks | **Complete**: 9 | **Progress**: 24%
+**Total**: 38 tasks | **Complete**: 15 | **Progress**: 39%
 
 ---
 
@@ -55,43 +55,43 @@ This plan consolidates all priorities from the start of this repository into a m
 
 ---
 
-## Phase 3: Backend Observable - SSE + Storage 🔄 IN PROGRESS
+## Phase 3: Backend Observable - SSE + Storage ✅ COMPLETE
 
 **Goal**: Make workflow runs observable and persistent
 
 ### Tasks
 
-- [ ] **P3-1**: SSE Streaming Endpoint
+- [x] **P3-1**: SSE Streaming Endpoint
   - File: `gateway/streaming.py`
   - Real-time workflow run visibility
   - Event types: start, step, tool_call, error, complete
   - Integration with workflow engine
 
-- [ ] **P3-2**: Run Result Storage
+- [x] **P3-2**: Run Result Storage
   - File: `database/run_storage.py`
   - PostgreSQL persistence for run history
   - Schema: runs, steps, tool_calls, results
   - Audit trail for compliance
 
-- [ ] **P3-3**: Approval Gating
+- [x] **P3-3**: Approval Gating
   - File: `workflows/approval.py`
   - Human-in-the-loop for sensitive operations
   - Configurable approval rules
   - Timeout and escalation
 
-- [ ] **P3-4**: Run History API
+- [x] **P3-4**: Run History API
   - File: `gateway/runs_api.py`
   - CRUD endpoints for run history
   - Search, filter, pagination
   - Export capabilities
 
-- [ ] **P3-5**: Run Dashboard UI
+- [x] **P3-5**: Run Dashboard UI
   - File: `web/dashboard/runs.html`
   - Real-time run monitoring
   - Historical run browser
   - Step-by-step execution view
 
-- [ ] **P3-6**: WebSocket Integration
+- [x] **P3-6**: WebSocket Integration
   - File: `gateway/websocket.py`
   - Real-time updates to dashboard
   - Multi-client broadcast
