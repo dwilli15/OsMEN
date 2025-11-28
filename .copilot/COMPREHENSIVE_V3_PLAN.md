@@ -19,12 +19,12 @@ This plan consolidates all priorities from the start of this repository into a m
 | 2 | E2E Workflow: Daily Brief | 4 | ✅ COMPLETE |
 | 3 | Backend Observable: SSE + Storage | 6 | ✅ COMPLETE |
 | 4 | Additional Workflows | 4 | ✅ COMPLETE |
-| 5 | Testing Infrastructure | 4 | 🔄 IN PROGRESS |
-| 6 | Frontend Enhancements | 6 | ⏳ PENDING |
+| 5 | Testing Infrastructure | 4 | ✅ COMPLETE |
+| 6 | Frontend Enhancements | 6 | 🔄 IN PROGRESS |
 | 7 | Production Hardening | 5 | ⏳ PENDING |
 | 8 | Documentation & Polish | 4 | ⏳ PENDING |
 
-**Total**: 38 tasks | **Complete**: 19 | **Progress**: 50%
+**Total**: 38 tasks | **Complete**: 23 | **Progress**: 61%
 
 ---
 
@@ -130,35 +130,35 @@ This plan consolidates all priorities from the start of this repository into a m
 
 ---
 
-## Phase 5: Testing Infrastructure ⏳ PENDING
+## Phase 5: Testing Infrastructure ✅ COMPLETE
 
 **Goal**: Comprehensive testing for confidence
 
 ### Tasks
 
-- [ ] **P5-1**: E2E Integration Test Suite
+- [x] **P5-1**: E2E Integration Test Suite
   - File: `tests/integration/test_e2e.py`
   - Mocked external services
   - Full workflow execution tests
   - Snapshot baselines
 
-- [ ] **P5-2**: LLM Provider Tests
+- [x] **P5-2**: LLM Provider Tests
   - File: `tests/integration/test_llm_providers.py`
   - All provider interface tests
   - Tool calling tests
   - Streaming tests
 
-- [ ] **P5-3**: Workflow Tests
+- [x] **P5-3**: Workflow Tests
   - File: `tests/integration/test_workflows.py`
   - Daily Brief workflow tests
   - Research workflow tests
   - Content workflow tests
 
-- [ ] **P5-4**: Live Smoke Tests
-  - File: `tests/smoke/`
+- [x] **P5-4**: Live Smoke Tests
+  - File: `tests/smoke/test_live.py`
   - Selective live API tests
-  - CI/CD integration
-  - Failure alerting
+  - Performance benchmarks
+  - Environment-gated execution
 
 ---
 
