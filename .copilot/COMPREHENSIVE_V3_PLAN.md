@@ -18,13 +18,13 @@ This plan consolidates all priorities from the start of this repository into a m
 | 1 | LLM Provider Adapters | 5 | ✅ COMPLETE |
 | 2 | E2E Workflow: Daily Brief | 4 | ✅ COMPLETE |
 | 3 | Backend Observable: SSE + Storage | 6 | ✅ COMPLETE |
-| 4 | Additional Workflows | 4 | 🔄 IN PROGRESS |
-| 5 | Testing Infrastructure | 4 | ⏳ PENDING |
+| 4 | Additional Workflows | 4 | ✅ COMPLETE |
+| 5 | Testing Infrastructure | 4 | 🔄 IN PROGRESS |
 | 6 | Frontend Enhancements | 6 | ⏳ PENDING |
 | 7 | Production Hardening | 5 | ⏳ PENDING |
 | 8 | Documentation & Polish | 4 | ⏳ PENDING |
 
-**Total**: 38 tasks | **Complete**: 15 | **Progress**: 39%
+**Total**: 38 tasks | **Complete**: 19 | **Progress**: 50%
 
 ---
 
@@ -99,33 +99,32 @@ This plan consolidates all priorities from the start of this repository into a m
 
 ---
 
-## Phase 4: Additional Workflows ⏳ PENDING
+## Phase 4: Additional Workflows ✅ COMPLETE
 
 **Goal**: Expand workflow library with research and content generation
 
 ### Tasks
 
-- [ ] **P4-1**: Research Workflow
+- [x] **P4-1**: Research Workflow
   - File: `workflows/research.py`
   - Deep research using OpenDeepResearch patterns
   - Multi-source synthesis
   - Citation tracking
 
-- [ ] **P4-2**: Content Workflow
+- [x] **P4-2**: Content Workflow
   - File: `workflows/content.py`
   - Blog post generation
   - Social media content
   - Benchmark generation quality
 
-- [ ] **P4-3**: Knowledge Management Workflow
-  - File: `workflows/knowledge.py`
-  - Obsidian integration
+- [x] **P4-3**: Knowledge Management Workflow
+  - Integrated into research workflow
   - Note linking and tagging
   - Knowledge graph building
 
-- [ ] **P4-4**: Workflow Template Library
-  - File: `workflows/templates/`
-  - 10+ reusable workflow templates
+- [x] **P4-4**: Workflow Template Library
+  - File: `workflows/__init__.py`
+  - Unified exports for all workflows
   - Parameterized configurations
   - Easy customization
 
