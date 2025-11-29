@@ -279,6 +279,7 @@ services:
       - POSTGRES_PORT=5432
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - LIBRARIAN_URL=http://librarian:8200
     volumes:
       - ./web:/app/web
       - ./agents:/app/agents
@@ -301,6 +302,53 @@ services:
     networks:
       - osmen-network
 
+  # Librarian - Semantic Memory & Lateral Thinking RAG Engine
+  librarian:
+    build:
+      context: ./agents/librarian
+      dockerfile: Dockerfile
+    container_name: osmen-librarian
+    ports:
+      - "127.0.0.1:8200:8200"
+    environment:
+      - LIBRARIAN_DATA_DIR=/app/data
+      - LIBRARIAN_DB_PATH=/app/data/db
+      - LIBRARIAN_EMBEDDING_MODEL=${LIBRARIAN_EMBEDDING_MODEL:-dunzhang/stella_en_1.5B_v5}
+      - LIBRARIAN_API_PORT=8200
+      - RAG_DEFAULT_MODE=${RAG_DEFAULT_MODE:-lateral}
+      - RAG_TOP_K=${RAG_TOP_K:-5}
+      - RAG_MMR_LAMBDA=${RAG_MMR_LAMBDA:-0.5}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - librarian-data:/app/data
+      - ./data/librarian:/app/data/sources:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure:3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8200/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 8G
+        reservations:
+          memory: 2G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - osmen-network
+    profiles:
+      - librarian
+
 volumes:
   langflow-data:
   n8n-data:
@@ -308,6 +356,7 @@ volumes:
   qdrant-data:
   postgres-data:
   redis-data:
+  librarian-data:
 
 networks:
   osmen-network:

@@ -666,6 +666,91 @@ def test_team3_agent():
         return False
 
 
+def test_librarian_agent():
+    """Test Librarian Agent (RAG Integration)"""
+    print("\n" + "="*50)
+    print("Testing Librarian Agent (RAG Integration)")
+    print("="*50)
+    
+    try:
+        from pathlib import Path
+        from agents.librarian.librarian_agent import LibrarianAgent, LibrarianConfig
+        
+        # Test with custom config
+        config = LibrarianConfig(
+            data_dir=Path("/tmp/librarian_test/data"),
+            db_path=Path("/tmp/librarian_test/db"),
+            default_mode="lateral",
+            top_k=5
+        )
+        agent = LibrarianAgent(config=config)
+        
+        # Test initialization
+        init_result = agent.initialize()
+        if init_result.get("status") != "initialized":
+            raise ValueError(f"Initialization failed: {init_result}")
+        
+        # Test query in each mode
+        for mode in ["foundation", "lateral", "factcheck"]:
+            result = agent.query("What is therapeutic alliance?", mode=mode)
+            if not result.answer:
+                raise ValueError(f"Query in {mode} mode returned empty answer")
+            if result.mode != mode:
+                raise ValueError(f"Expected mode {mode}, got {result.mode}")
+        
+        # Test fact verification
+        verification = agent.verify_fact("Attachment theory exists")
+        if "status" not in verification:
+            raise ValueError("Verification missing status field")
+        if verification["status"] not in ["verified", "partially_supported", "unverified"]:
+            raise ValueError(f"Invalid verification status: {verification['status']}")
+        
+        # Test lateral connections
+        connections = agent.find_connections("psychology")
+        if "connections_found" not in connections:
+            raise ValueError("Connections result missing connections_found")
+        
+        # Test document ingestion (with non-existent path)
+        ingest_result = agent.ingest_documents("/nonexistent/path")
+        if ingest_result["status"] != "error":
+            raise ValueError("Expected error for non-existent path")
+        
+        # Test health check
+        health = agent.get_health()
+        required_health_keys = ["status", "embedding_model", "documents_indexed"]
+        for key in required_health_keys:
+            if key not in health:
+                raise ValueError(f"Health check missing key: {key}")
+        
+        # Generate report
+        report = agent.generate_librarian_report()
+        required_keys = ["timestamp", "overall_status", "statistics", "capabilities"]
+        for key in required_keys:
+            if key not in report:
+                raise ValueError(f"Report missing required key: {key}")
+        
+        # Validate capabilities
+        expected_capabilities = ["semantic_search", "lateral_thinking", "fact_verification"]
+        for cap in expected_capabilities:
+            if cap not in report["capabilities"]:
+                raise ValueError(f"Missing expected capability: {cap}")
+        
+        print("✅ Librarian Agent: PASS")
+        print(f"  - Initialization: ✓")
+        print(f"  - Three-mode retrieval: ✓")
+        print(f"  - Fact verification: ✓")
+        print(f"  - Lateral connections: ✓")
+        print(f"  - Health monitoring: ✓")
+        print(f"  - Report generation: ✓")
+        
+        return True
+    except Exception as e:
+        print(f"❌ Librarian Agent: FAIL - {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
 def main():
     """Run all tests"""
     print("\n" + "="*50)
@@ -694,6 +779,7 @@ def main():
     results.append(("Security Operations", test_security_ops()))
     results.append(("CLI Integrations", test_cli_integrations()))
     results.append(("Team 3 Agent", test_team3_agent()))
+    results.append(("Librarian Agent", test_librarian_agent()))
     
     # Summary
     print("\n" + "="*50)
