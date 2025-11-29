@@ -39,6 +39,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Constants
+TRUNCATE_LENGTH = 100  # Length for content truncation in key points
+MAX_DOCUMENTS = 5  # Maximum documents to process for key points
+
 # Try to import librarian for RAG
 LIBRARIAN_AVAILABLE = False
 try:
@@ -263,13 +267,13 @@ Provide:
     def _extract_key_points(self, documents: List) -> List[str]:
         """Extract key points from retrieved documents."""
         key_points = []
-        for doc in documents[:5]:
+        for doc in documents[:MAX_DOCUMENTS]:
             # Extract first sentence or truncate
             content = doc.content
             if '. ' in content:
                 first_sentence = content.split('. ')[0] + '.'
             else:
-                first_sentence = content[:100] + '...' if len(content) > 100 else content
+                first_sentence = content[:TRUNCATE_LENGTH] + '...' if len(content) > TRUNCATE_LENGTH else content
             key_points.append(first_sentence)
         return key_points
     

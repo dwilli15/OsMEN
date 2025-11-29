@@ -566,7 +566,7 @@ Example output:
                 response = await llm.chat([
                     {"role": "system", "content": "You are a personal assistant that parses natural language into structured actions. Return only valid JSON."},
                     {"role": "user", "content": prompt}
-                ], json_mode=True)
+                ])  # Note: json_mode may not be supported by all providers
                 
                 result['llm_used'] = True
                 
