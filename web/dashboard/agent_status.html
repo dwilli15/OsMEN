@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OsMEN v3.0 - Agent Status Dashboard</title>
+    <link rel="stylesheet" href="../static/css/dashboard.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 OsMEN v3.0 - Agent Status Dashboard</h1>
+            <p>Real-time monitoring of autonomous agents and workflow execution</p>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh Data</button>
+                <span class="last-updated" id="lastUpdated">Last updated: Never</span>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Overall Progress</h3>
+                <div class="stat-value" id="overallProgress">26.7%</div>
+                <div class="stat-label">8/30 tasks complete</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="overallProgressBar" style="width: 26.7%"></div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Active Agents</h3>
+                <div class="stat-value" id="activeAgents">3</div>
+                <div class="stat-label">Backend, Frontend, DevOps</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Workflows Available</h3>
+                <div class="stat-value" id="workflowCount">100+</div>
+                <div class="stat-label">Ready to deploy</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>System Status</h3>
+                <div class="stat-value">✅</div>
+                <div class="stat-label"><span class="badge badge-success">Operational</span></div>
+            </div>
+        </div>
+        
+        <div id="agentsContainer" class="agents-grid">
+            <!-- Dynamically loaded agent cards -->
+        </div>
+        
+        <div class="workflow-section">
+            <h2>📋 Available Workflows (100+)</h2>
+            <div id="workflowsContainer" class="workflow-grid">
+                <!-- Dynamically loaded workflows -->
+            </div>
+        </div>
+    </div>
+    
+    <script src="../static/js/dashboard.js"></script>
+</body>
+</html>

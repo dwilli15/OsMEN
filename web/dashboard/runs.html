@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Run Monitor - OsMEN</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: #475569;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--info));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .stat-card.success .stat-value { color: var(--success); }
+        .stat-card.error .stat-value { color: var(--error); }
+        .stat-card.warning .stat-value { color: var(--warning); }
+        .stat-card.info .stat-value { color: var(--info); }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .panel-content {
+            padding: 16px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .run-list {
+            list-style: none;
+        }
+        
+        .run-item {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .run-item:hover {
+            transform: translateX(4px);
+        }
+        
+        .run-item.selected {
+            border-left-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .run-item.running {
+            border-left-color: var(--info);
+            animation: pulse 2s infinite;
+        }
+        
+        .run-item.completed {
+            border-left-color: var(--success);
+        }
+        
+        .run-item.failed {
+            border-left-color: var(--error);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .run-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .run-workflow {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .run-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+        
+        .status-running {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--info);
+        }
+        
+        .status-completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+        
+        .status-failed {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error);
+        }
+        
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+        
+        .run-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .run-detail-panel {
+            height: 100%;
+        }
+        
+        .run-detail-content {
+            padding: 20px;
+        }
+        
+        .detail-section {
+            margin-bottom: 24px;
+        }
+        
+        .detail-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .step-list {
+            list-style: none;
+        }
+        
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .step-indicator {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .step-indicator.completed {
+            background: var(--success);
+            color: white;
+        }
+        
+        .step-indicator.running {
+            background: var(--info);
+            color: white;
+            animation: pulse 1s infinite;
+        }
+        
+        .step-indicator.pending {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            border: 2px dashed var(--border);
+        }
+        
+        .step-indicator.failed {
+            background: var(--error);
+            color: white;
+        }
+        
+        .step-info {
+            flex: 1;
+        }
+        
+        .step-name {
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+        
+        .step-duration {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .tool-calls {
+            list-style: none;
+        }
+        
+        .tool-item {
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .tool-name {
+            font-family: 'Monaco', 'Menlo', monospace;
+            color: var(--info);
+        }
+        
+        .tool-status {
+            font-size: 12px;
+        }
+        
+        .tool-status.success { color: var(--success); }
+        .tool-status.error { color: var(--error); }
+        
+        .live-events {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .event-item {
+            padding: 8px 12px;
+            font-size: 12px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            margin-bottom: 4px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+        
+        .event-time {
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+        
+        .event-type {
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+        
+        .event-data {
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .filter-input {
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        select.filter-input {
+            cursor: pointer;
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--error);
+        }
+        
+        .connection-dot.connected {
+            background: var(--success);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+                <h1>Run Monitor</h1>
+            </div>
+            <div class="actions">
+                <div class="connection-status">
+                    <div class="connection-dot" id="connectionDot"></div>
+                    <span id="connectionText">Disconnected</span>
+                </div>
+                <button class="btn btn-secondary" onclick="exportRuns()">Export</button>
+                <button class="btn btn-primary" onclick="refreshRuns()">Refresh</button>
+            </div>
+        </header>
+        
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalRuns">-</div>
+                <div class="stat-label">Total Runs</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-value" id="completedRuns">-</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card info">
+                <div class="stat-value" id="runningRuns">-</div>
+                <div class="stat-label">Running</div>
+            </div>
+            <div class="stat-card error">
+                <div class="stat-value" id="failedRuns">-</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="successRate">-</div>
+                <div class="stat-label">Success Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgDuration">-</div>
+                <div class="stat-label">Avg Duration</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Recent Runs</span>
+                    <div class="filters">
+                        <select class="filter-input" id="workflowFilter" onchange="applyFilters()">
+                            <option value="">All Workflows</option>
+                        </select>
+                        <select class="filter-input" id="statusFilter" onchange="applyFilters()">
+                            <option value="">All Status</option>
+                            <option value="running">Running</option>
+                            <option value="completed">Completed</option>
+                            <option value="failed">Failed</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <ul class="run-list" id="runList">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                        </div>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="panel run-detail-panel">
+                <div class="panel-header">
+                    <span class="panel-title">Run Details</span>
+                </div>
+                <div class="panel-content" id="runDetail">
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <p>Select a run to view details</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration
+        const API_BASE = window.location.origin;
+        const STREAM_BASE = window.location.origin.replace(':8080', ':8085');
+        
+        // State
+        let runs = [];
+        let selectedRunId = null;
+        let eventSource = null;
+        let stats = {};
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadRuns();
+            loadWorkflows();
+            
+            // Auto-refresh every 10 seconds
+            setInterval(loadRuns, 10000);
+            setInterval(loadStats, 30000);
+        });
+        
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/runs/stats`);
+                if (!response.ok) throw new Error('Failed to load stats');
+                
+                stats = await response.json();
+                
+                document.getElementById('totalRuns').textContent = stats.total_runs || 0;
+                document.getElementById('completedRuns').textContent = stats.completed || 0;
+                document.getElementById('runningRuns').textContent = stats.running || 0;
+                document.getElementById('failedRuns').textContent = stats.failed || 0;
+                document.getElementById('successRate').textContent = 
+                    (stats.success_rate || 0).toFixed(1) + '%';
+                document.getElementById('avgDuration').textContent = 
+                    formatDuration(stats.average_duration_ms || 0);
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        // Load runs
+        async function loadRuns() {
+            try {
+                const workflow = document.getElementById('workflowFilter').value;
+                const status = document.getElementById('statusFilter').value;
+                
+                let url = `${API_BASE}/api/runs?per_page=50`;
+                if (workflow) url += `&workflow=${encodeURIComponent(workflow)}`;
+                if (status) url += `&status=${encodeURIComponent(status)}`;
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to load runs');
+                
+                const data = await response.json();
+                runs = data.runs || [];
+                
+                renderRuns();
+            } catch (error) {
+                console.error('Error loading runs:', error);
+                document.getElementById('runList').innerHTML = `
+                    <div class="empty-state">
+                        <p>Failed to load runs. Is the API running?</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Load workflow list for filter
+        async function loadWorkflows() {
+            try {
+                const response = await fetch(`${API_BASE}/api/runs/workflows/list`);
+                if (!response.ok) return;
+                
+                const data = await response.json();
+                const select = document.getElementById('workflowFilter');
+                
+                (data.workflows || []).forEach(wf => {
+                    const option = document.createElement('option');
+                    option.value = wf;
+                    option.textContent = wf;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading workflows:', error);
+            }
+        }
+        
+        // Render run list
+        function renderRuns() {
+            const list = document.getElementById('runList');
+            
+            if (runs.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M8 12h8M12 8v8"/>
+                        </svg>
+                        <p>No runs found</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            list.innerHTML = runs.map(run => `
+                <li class="run-item ${run.status} ${run.id === selectedRunId ? 'selected' : ''}"
+                    onclick="selectRun('${run.id}')">
+                    <div class="run-header">
+                        <span class="run-workflow">${escapeHtml(run.workflow_name)}</span>
+                        <span class="run-status status-${run.status}">${run.status}</span>
+                    </div>
+                    <div class="run-meta">
+                        <span>${formatTime(run.created_at)}</span>
+                        ${run.duration_ms ? `<span>${formatDuration(run.duration_ms)}</span>` : ''}
+                        ${run.step_count ? `<span>${run.step_count} steps</span>` : ''}
+                    </div>
+                </li>
+            `).join('');
+        }
+        
+        // Select and load run details
+        async function selectRun(runId) {
+            selectedRunId = runId;
+            renderRuns();
+            
+            // Disconnect from previous stream
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/runs/${runId}`);
+                if (!response.ok) throw new Error('Failed to load run details');
+                
+                const run = await response.json();
+                renderRunDetail(run);
+                
+                // Connect to live stream if running
+                if (run.status === 'running') {
+                    connectToStream(runId);
+                }
+            } catch (error) {
+                console.error('Error loading run details:', error);
+                document.getElementById('runDetail').innerHTML = `
+                    <div class="empty-state">
+                        <p>Failed to load run details</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Render run details
+        function renderRunDetail(run) {
+            const detail = document.getElementById('runDetail');
+            
+            const stepsHtml = run.steps && run.steps.length > 0 ? `
+                <div class="detail-section">
+                    <h3>Steps</h3>
+                    <ul class="step-list">
+                        ${run.steps.map((step, i) => `
+                            <li class="step-item">
+                                <div class="step-indicator ${step.status}">
+                                    ${step.status === 'completed' ? '✓' : 
+                                      step.status === 'running' ? '●' :
+                                      step.status === 'failed' ? '✗' : (i + 1)}
+                                </div>
+                                <div class="step-info">
+                                    <div class="step-name">${escapeHtml(step.step_name)}</div>
+                                    ${step.duration_ms ? 
+                                        `<div class="step-duration">${formatDuration(step.duration_ms)}</div>` : ''}
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            ` : '';
+            
+            const toolsHtml = run.tool_calls && run.tool_calls.length > 0 ? `
+                <div class="detail-section">
+                    <h3>Tool Calls</h3>
+                    <ul class="tool-calls">
+                        ${run.tool_calls.map(tool => `
+                            <li class="tool-item">
+                                <span class="tool-name">${escapeHtml(tool.tool_name)}</span>
+                                <span class="tool-status ${tool.success ? 'success' : 'error'}">
+                                    ${tool.success ? '✓' : '✗'} 
+                                    ${tool.duration_ms ? formatDuration(tool.duration_ms) : ''}
+                                </span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            ` : '';
+            
+            detail.innerHTML = `
+                <div class="run-detail-content">
+                    <div class="detail-section">
+                        <h3>Overview</h3>
+                        <div class="step-item">
+                            <div class="step-info">
+                                <div class="step-name">${escapeHtml(run.workflow_name)}</div>
+                                <div class="step-duration">
+                                    Status: <strong>${run.status}</strong> |
+                                    Started: ${run.started_at ? formatTime(run.started_at) : 'Not started'} |
+                                    ${run.duration_ms ? `Duration: ${formatDuration(run.duration_ms)}` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        ${run.error ? `
+                            <div class="step-item" style="border-left: 3px solid var(--error)">
+                                <div class="step-info">
+                                    <div class="step-name" style="color: var(--error)">Error</div>
+                                    <div class="step-duration">${escapeHtml(run.error)}</div>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    ${stepsHtml}
+                    ${toolsHtml}
+                    
+                    <div class="detail-section" id="liveEventsSection" style="display: none">
+                        <h3>Live Events</h3>
+                        <div class="live-events" id="liveEvents"></div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Connect to SSE stream
+        function connectToStream(runId) {
+            const dot = document.getElementById('connectionDot');
+            const text = document.getElementById('connectionText');
+            
+            eventSource = new EventSource(`${STREAM_BASE}/stream/runs/${runId}`);
+            
+            eventSource.onopen = () => {
+                dot.classList.add('connected');
+                text.textContent = 'Connected';
+                
+                document.getElementById('liveEventsSection').style.display = 'block';
+            };
+            
+            eventSource.onerror = () => {
+                dot.classList.remove('connected');
+                text.textContent = 'Disconnected';
+            };
+            
+            eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                addLiveEvent(data);
+                
+                // Refresh if run completed
+                if (['run_complete', 'run_error', 'run_cancelled'].includes(data.event_type)) {
+                    loadRuns();
+                    selectRun(runId);
+                }
+            };
+            
+            // Handle specific event types
+            ['run_start', 'run_step', 'run_tool_call', 'run_complete', 'run_error'].forEach(type => {
+                eventSource.addEventListener(type, (event) => {
+                    const data = JSON.parse(event.data);
+                    addLiveEvent(data);
+                });
+            });
+        }
+        
+        // Add live event to display
+        function addLiveEvent(event) {
+            const container = document.getElementById('liveEvents');
+            if (!container) return;
+            
+            const time = new Date(event.timestamp).toLocaleTimeString();
+            const eventHtml = `
+                <div class="event-item">
+                    <span class="event-time">${time}</span>
+                    <span class="event-type">${event.event_type}</span>
+                    <span class="event-data">${JSON.stringify(event.data).slice(0, 100)}</span>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('afterbegin', eventHtml);
+            
+            // Keep only last 50 events
+            while (container.children.length > 50) {
+                container.removeChild(container.lastChild);
+            }
+        }
+        
+        // Apply filters
+        function applyFilters() {
+            loadRuns();
+        }
+        
+        // Refresh
+        function refreshRuns() {
+            loadStats();
+            loadRuns();
+            if (selectedRunId) {
+                selectRun(selectedRunId);
+            }
+        }
+        
+        // Export runs
+        async function exportRuns() {
+            try {
+                const response = await fetch(`${API_BASE}/api/runs/export`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ format: 'json' })
+                });
+                
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'runs_export.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Export failed:', error);
+                alert('Export failed');
+            }
+        }
+        
+        // Utility functions
+        function formatDuration(ms) {
+            if (ms < 1000) return `${ms}ms`;
+            if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+            return `${(ms / 60000).toFixed(1)}m`;
+        }
+        
+        function formatTime(iso) {
+            if (!iso) return '';
+            const date = new Date(iso);
+            const now = new Date();
+            
+            if (date.toDateString() === now.toDateString()) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + 
+                   ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>

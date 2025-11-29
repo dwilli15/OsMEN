@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OsMEN - Workflow Builder</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e1e2e;
+            --darker: #11111b;
+            --light: #cdd6f4;
+            --muted: #6c7086;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: var(--light);
+            min-height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 280px 1fr 300px;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+            gap: 0;
+        }
+
+        /* Header */
+        header {
+            grid-column: 1 / -1;
+            background: rgba(30, 30, 46, 0.9);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Sidebar - Node Palette */
+        .sidebar {
+            background: rgba(30, 30, 46, 0.8);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .sidebar h3 {
+            color: var(--muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            margin-top: 16px;
+        }
+
+        .sidebar h3:first-child {
+            margin-top: 0;
+        }
+
+        .node-palette {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .palette-node {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: grab;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .palette-node:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .palette-node.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .node-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .node-icon.trigger { background: linear-gradient(135deg, #10b981, #059669); }
+        .node-icon.action { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+        .node-icon.logic { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .node-icon.output { background: linear-gradient(135deg, #ec4899, #db2777); }
+        .node-icon.ai { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+        .palette-node-info {
+            flex: 1;
+        }
+
+        .palette-node-info strong {
+            display: block;
+            font-size: 0.875rem;
+            margin-bottom: 2px;
+        }
+
+        .palette-node-info span {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        /* Canvas */
+        .canvas-container {
+            position: relative;
+            overflow: hidden;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.03) 0%, transparent 50%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 20px 20px, 20px 20px;
+        }
+
+        #workflow-canvas {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+
+        .workflow-node {
+            position: absolute;
+            background: rgba(30, 30, 46, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            min-width: 200px;
+            cursor: move;
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+
+        .workflow-node:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .workflow-node.selected {
+            border-color: var(--secondary);
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.4);
+        }
+
+        .node-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .node-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .node-delete {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .node-delete:hover {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .node-ports {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .node-port {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .port-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 2px solid var(--light);
+            cursor: crosshair;
+        }
+
+        .port-dot.output {
+            margin-left: auto;
+        }
+
+        /* Properties Panel */
+        .properties-panel {
+            background: rgba(30, 30, 46, 0.8);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .properties-panel h2 {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .property-group {
+            margin-bottom: 20px;
+        }
+
+        .property-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .property-group input,
+        .property-group select,
+        .property-group textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: var(--light);
+            font-size: 0.875rem;
+        }
+
+        .property-group input:focus,
+        .property-group select:focus,
+        .property-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .property-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Templates Section */
+        .templates-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .template-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+        }
+
+        .template-card h4 {
+            font-size: 0.875rem;
+            margin-bottom: 4px;
+        }
+
+        .template-card p {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        /* Connection Lines */
+        .connection-line {
+            stroke: var(--primary);
+            stroke-width: 2;
+            fill: none;
+            opacity: 0.6;
+        }
+
+        .connection-line:hover {
+            stroke: var(--secondary);
+            stroke-width: 3;
+            opacity: 1;
+        }
+
+        /* Zoom Controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: rgba(30, 30, 46, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .zoom-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--primary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: var(--light);
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+        }
+
+        /* Mini Map */
+        .mini-map {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 200px;
+            height: 150px;
+            background: rgba(30, 30, 46, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 60px 1fr;
+            }
+            .properties-panel {
+                display: none;
+            }
+            .sidebar {
+                padding: 8px;
+            }
+            .palette-node-info {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">🔄 OsMEN Workflow Builder</div>
+            <div class="workflow-name">
+                <input type="text" id="workflowName" value="New Workflow" 
+                       style="background: transparent; border: none; color: var(--light); font-size: 1rem; width: 200px;">
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="clearWorkflow()">
+                    🗑️ Clear
+                </button>
+                <button class="btn btn-secondary" onclick="importWorkflow()">
+                    📥 Import
+                </button>
+                <button class="btn btn-secondary" onclick="exportWorkflow()">
+                    📤 Export
+                </button>
+                <button class="btn btn-primary" onclick="deployWorkflow()">
+                    🚀 Deploy
+                </button>
+            </div>
+        </header>
+
+        <!-- Sidebar - Node Palette -->
+        <aside class="sidebar">
+            <h3>Triggers</h3>
+            <div class="node-palette">
+                <div class="palette-node" draggable="true" data-type="trigger" data-node="schedule">
+                    <div class="node-icon trigger">⏰</div>
+                    <div class="palette-node-info">
+                        <strong>Schedule</strong>
+                        <span>Cron-based trigger</span>
+                    </div>
+                </div>
+                <div class="palette-node" draggable="true" data-type="trigger" data-node="webhook">
+                    <div class="node-icon trigger">🔗</div>
+                    <div class="palette-node-info">
+                        <strong>Webhook</strong>
+                        <span>HTTP endpoint trigger</span>
+                    </div>
+                </div>
+                <div class="palette-node" draggable="true" data-type="trigger" data-node="email">
+                    <div class="node-icon trigger">📧</div>
+                    <div class="palette-node-info">
+                        <strong>Email Received</strong>
+                        <span>Trigger on new email</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Actions</h3>
+            <div class="node-palette">
+                <div class="palette-node" draggable="true" data-type="action" data-node="http">
+                    <div class="node-icon action">🌐</div>
+                    <div class="palette-node-info">
+                        <strong>HTTP Request</strong>
+                        <span>Make API calls</span>
+                    </div>
+                </div>
+                <div class="palette-node" draggable="true" data-type="action" data-node="email_send">
+                    <div class="node-icon action">📤</div>
+                    <div class="palette-node-info">
+                        <strong>Send Email</strong>
+                        <span>Send via Gmail/Outlook</span>
+                    </div>
+                </div>
+                <div class="palette-node" draggable="true" data-type="action" data-node="calendar">
+                    <div class="node-icon action">📅</div>
+                    <div class="palette-node-info">
+                        <strong>Calendar Event</strong>
+                        <span>Create/update events</span>
+                    </div>
+                </div>
+                <div class="palette-node" draggable="true" data-type="action" data-node="database">
+                    <div class="node-icon action">💾</div>
+                    <div class="palette-node-info">
+                        <strong>Database</strong>
+                        <span>Query PostgreSQL</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>AI & Agents</h3>
+            <div class="node-palette">
+                <div class="palette-node" draggable="true" data-type="ai" data-node="llm">
+                    <div class="node-icon ai">🤖</div>
+                    <div class="palette-node-info">
+                        <strong>LLM Chat</strong>
+                        <span>GPT, Claude, Ollama</span>
+                    </div>
+                </div>
+                <div class="palette-node" draggable="true" data-type="ai" data-node="agent">
+                    <div class="node-icon ai">🧠</div>
+                    <div class="palette-node-info">
+                        <strong>DeepAgent</strong>
+                        <span>Long-horizon task</span>
+                    </div>
+                </div>
+                <div class="palette-node" draggable="true" data-type="ai" data-node="embedding">
+                    <div class="node-icon ai">📊</div>
+                    <div class="palette-node-info">
+                        <strong>Embeddings</strong>
+                        <span>Generate vectors</span>
+                    </div>
+                </div>
+                <div class="palette-node" draggable="true" data-type="ai" data-node="rag">
+                    <div class="node-icon ai">🔍</div>
+                    <div class="palette-node-info">
+                        <strong>RAG Query</strong>
+                        <span>Quantum retrieval</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Logic</h3>
+            <div class="node-palette">
+                <div class="palette-node" draggable="true" data-type="logic" data-node="condition">
+                    <div class="node-icon logic">❓</div>
+                    <div class="palette-node-info">
+                        <strong>Condition</strong>
+                        <span>If/else branching</span>
+                    </div>
+                </div>
+                <div class="palette-node" draggable="true" data-type="logic" data-node="loop">
+                    <div class="node-icon logic">🔄</div>
+                    <div class="palette-node-info">
+                        <strong>Loop</strong>
+                        <span>Iterate over items</span>
+                    </div>
+                </div>
+                <div class="palette-node" draggable="true" data-type="logic" data-node="merge">
+                    <div class="node-icon logic">⚡</div>
+                    <div class="palette-node-info">
+                        <strong>Merge</strong>
+                        <span>Combine branches</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Output</h3>
+            <div class="node-palette">
+                <div class="palette-node" draggable="true" data-type="output" data-node="response">
+                    <div class="node-icon output">📨</div>
+                    <div class="palette-node-info">
+                        <strong>Response</strong>
+                        <span>Return data</span>
+                    </div>
+                </div>
+                <div class="palette-node" draggable="true" data-type="output" data-node="notify">
+                    <div class="node-icon output">🔔</div>
+                    <div class="palette-node-info">
+                        <strong>Notification</strong>
+                        <span>Send alerts</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Canvas -->
+        <main class="canvas-container" id="canvasContainer">
+            <svg id="connectionsSvg" role="img" aria-label="Workflow connections"></svg>
+            <div id="workflow-canvas">
+                <div class="empty-state" id="emptyState">
+                    <h3>🎨 Start Building</h3>
+                    <p>Drag nodes from the left panel to create your workflow</p>
+                </div>
+            </div>
+            
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomIn()">+</button>
+                <button class="zoom-btn" onclick="zoomOut()">−</button>
+                <button class="zoom-btn" onclick="resetZoom()">⟲</button>
+            </div>
+        </main>
+
+        <!-- Properties Panel -->
+        <aside class="properties-panel">
+            <h2>⚙️ Properties</h2>
+            
+            <div id="nodeProperties" style="display: none;">
+                <div class="property-group">
+                    <label>Node Name</label>
+                    <input type="text" id="propNodeName" placeholder="Enter name">
+                </div>
+                
+                <div class="property-group">
+                    <label>Description</label>
+                    <textarea id="propDescription" placeholder="Describe what this node does"></textarea>
+                </div>
+                
+                <div id="dynamicProperties"></div>
+            </div>
+            
+            <div id="noSelection">
+                <p style="color: var(--muted); text-align: center; padding: 20px;">
+                    Select a node to edit its properties
+                </p>
+            </div>
+
+            <div class="templates-section">
+                <h3 style="color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
+                    Templates
+                </h3>
+                
+                <div class="template-card" onclick="loadTemplate('daily_brief')">
+                    <h4>📰 Daily Brief</h4>
+                    <p>Morning briefing with weather, calendar, news</p>
+                </div>
+                
+                <div class="template-card" onclick="loadTemplate('email_processor')">
+                    <h4>📧 Email Processor</h4>
+                    <p>Auto-categorize and respond to emails</p>
+                </div>
+                
+                <div class="template-card" onclick="loadTemplate('research_agent')">
+                    <h4>🔬 Research Agent</h4>
+                    <p>Multi-step research with citations</p>
+                </div>
+                
+                <div class="template-card" onclick="loadTemplate('content_creator')">
+                    <h4>✍️ Content Creator</h4>
+                    <p>Generate blog posts and social media</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // Workflow state
+        let nodes = [];
+        let connections = [];
+        let selectedNode = null;
+        let zoom = 1;
+        let nodeIdCounter = 0;
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+
+        // Node types configuration
+        const nodeTypes = {
+            schedule: { name: 'Schedule Trigger', icon: '⏰', type: 'trigger', color: '#10b981', inputs: [], outputs: ['trigger'] },
+            webhook: { name: 'Webhook', icon: '🔗', type: 'trigger', color: '#10b981', inputs: [], outputs: ['data'] },
+            email: { name: 'Email Trigger', icon: '📧', type: 'trigger', color: '#10b981', inputs: [], outputs: ['email'] },
+            http: { name: 'HTTP Request', icon: '🌐', type: 'action', color: '#6366f1', inputs: ['trigger'], outputs: ['response'] },
+            email_send: { name: 'Send Email', icon: '📤', type: 'action', color: '#6366f1', inputs: ['trigger', 'data'], outputs: ['result'] },
+            calendar: { name: 'Calendar', icon: '📅', type: 'action', color: '#6366f1', inputs: ['trigger'], outputs: ['event'] },
+            database: { name: 'Database', icon: '💾', type: 'action', color: '#6366f1', inputs: ['query'], outputs: ['data'] },
+            llm: { name: 'LLM Chat', icon: '🤖', type: 'ai', color: '#8b5cf6', inputs: ['prompt'], outputs: ['response'] },
+            agent: { name: 'DeepAgent', icon: '🧠', type: 'ai', color: '#8b5cf6', inputs: ['task'], outputs: ['result'] },
+            embedding: { name: 'Embeddings', icon: '📊', type: 'ai', color: '#8b5cf6', inputs: ['text'], outputs: ['vector'] },
+            rag: { name: 'RAG Query', icon: '🔍', type: 'ai', color: '#8b5cf6', inputs: ['query'], outputs: ['context'] },
+            condition: { name: 'Condition', icon: '❓', type: 'logic', color: '#f59e0b', inputs: ['data'], outputs: ['true', 'false'] },
+            loop: { name: 'Loop', icon: '🔄', type: 'logic', color: '#f59e0b', inputs: ['items'], outputs: ['item', 'done'] },
+            merge: { name: 'Merge', icon: '⚡', type: 'logic', color: '#f59e0b', inputs: ['a', 'b'], outputs: ['merged'] },
+            response: { name: 'Response', icon: '📨', type: 'output', color: '#ec4899', inputs: ['data'], outputs: [] },
+            notify: { name: 'Notification', icon: '🔔', type: 'output', color: '#ec4899', inputs: ['message'], outputs: [] }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initDragAndDrop();
+            initCanvas();
+        });
+
+        function initDragAndDrop() {
+            const paletteNodes = document.querySelectorAll('.palette-node');
+            const canvas = document.getElementById('workflow-canvas');
+
+            paletteNodes.forEach(node => {
+                node.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('nodeType', node.dataset.node);
+                    node.classList.add('dragging');
+                });
+
+                node.addEventListener('dragend', () => {
+                    node.classList.remove('dragging');
+                });
+            });
+
+            canvas.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+
+            canvas.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const nodeType = e.dataTransfer.getData('nodeType');
+                if (nodeType) {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / zoom;
+                    const y = (e.clientY - rect.top) / zoom;
+                    createNode(nodeType, x, y);
+                }
+            });
+        }
+
+        function initCanvas() {
+            const canvas = document.getElementById('workflow-canvas');
+            
+            canvas.addEventListener('click', (e) => {
+                if (e.target === canvas || e.target.id === 'emptyState') {
+                    deselectNode();
+                }
+            });
+        }
+
+        function createNode(type, x, y) {
+            const config = nodeTypes[type];
+            if (!config) return;
+
+            const id = `node_${++nodeIdCounter}`;
+            const node = {
+                id,
+                type,
+                x: x - 100,
+                y: y - 30,
+                config: { ...config },
+                properties: {}
+            };
+
+            nodes.push(node);
+            renderNode(node);
+            hideEmptyState();
+            selectNode(id);
+        }
+
+        function renderNode(node) {
+            const canvas = document.getElementById('workflow-canvas');
+            const config = node.config;
+
+            const nodeEl = document.createElement('div');
+            nodeEl.className = 'workflow-node';
+            nodeEl.id = node.id;
+            nodeEl.style.left = `${node.x}px`;
+            nodeEl.style.top = `${node.y}px`;
+            nodeEl.style.borderColor = config.color;
+
+            nodeEl.innerHTML = `
+                <div class="node-header">
+                    <div class="node-icon ${config.type}" style="background: ${config.color}">${config.icon}</div>
+                    <span class="node-title">${config.name}</span>
+                    <button class="node-delete" onclick="deleteNode('${node.id}')">&times;</button>
+                </div>
+                <div class="node-ports">
+                    ${config.inputs.map(input => `
+                        <div class="node-port input">
+                            <span class="port-dot" data-port="${input}" data-direction="input"></span>
+                            <span>${input}</span>
+                        </div>
+                    `).join('')}
+                    ${config.outputs.map(output => `
+                        <div class="node-port output">
+                            <span>${output}</span>
+                            <span class="port-dot output" data-port="${output}" data-direction="output"></span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            // Make node draggable
+            nodeEl.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('port-dot') || e.target.classList.contains('node-delete')) return;
+                
+                selectNode(node.id);
+                isDragging = true;
+                dragOffset = {
+                    x: e.clientX - node.x,
+                    y: e.clientY - node.y
+                };
+            });
+
+            canvas.appendChild(nodeEl);
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging || !selectedNode) return;
+
+            const node = nodes.find(n => n.id === selectedNode);
+            if (!node) return;
+
+            node.x = e.clientX - dragOffset.x;
+            node.y = e.clientY - dragOffset.y;
+
+            const nodeEl = document.getElementById(node.id);
+            nodeEl.style.left = `${node.x}px`;
+            nodeEl.style.top = `${node.y}px`;
+
+            updateConnections();
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        function selectNode(id) {
+            deselectNode();
+            selectedNode = id;
+            
+            const nodeEl = document.getElementById(id);
+            if (nodeEl) {
+                nodeEl.classList.add('selected');
+            }
+
+            showNodeProperties(id);
+        }
+
+        function deselectNode() {
+            if (selectedNode) {
+                const prevEl = document.getElementById(selectedNode);
+                if (prevEl) {
+                    prevEl.classList.remove('selected');
+                }
+            }
+            selectedNode = null;
+            hideNodeProperties();
+        }
+
+        function deleteNode(id) {
+            const index = nodes.findIndex(n => n.id === id);
+            if (index > -1) {
+                nodes.splice(index, 1);
+            }
+
+            const nodeEl = document.getElementById(id);
+            if (nodeEl) {
+                nodeEl.remove();
+            }
+
+            connections = connections.filter(c => c.from !== id && c.to !== id);
+            updateConnections();
+
+            if (selectedNode === id) {
+                deselectNode();
+            }
+
+            if (nodes.length === 0) {
+                showEmptyState();
+            }
+        }
+
+        function showNodeProperties(id) {
+            const node = nodes.find(n => n.id === id);
+            if (!node) return;
+
+            document.getElementById('nodeProperties').style.display = 'block';
+            document.getElementById('noSelection').style.display = 'none';
+
+            document.getElementById('propNodeName').value = node.properties.name || node.config.name;
+            document.getElementById('propDescription').value = node.properties.description || '';
+
+            // Dynamic properties based on node type
+            const dynamicProps = document.getElementById('dynamicProperties');
+            dynamicProps.innerHTML = getNodeSpecificProperties(node.type);
+        }
+
+        function hideNodeProperties() {
+            document.getElementById('nodeProperties').style.display = 'none';
+            document.getElementById('noSelection').style.display = 'block';
+        }
+
+        function getNodeSpecificProperties(type) {
+            const props = {
+                schedule: `
+                    <div class="property-group">
+                        <label>Cron Expression</label>
+                        <input type="text" placeholder="0 9 * * *" value="0 9 * * *">
+                    </div>
+                `,
+                webhook: `
+                    <div class="property-group">
+                        <label>HTTP Method</label>
+                        <select>
+                            <option>POST</option>
+                            <option>GET</option>
+                            <option>PUT</option>
+                        </select>
+                    </div>
+                `,
+                http: `
+                    <div class="property-group">
+                        <label>URL</label>
+                        <input type="text" placeholder="https://api.example.com">
+                    </div>
+                    <div class="property-group">
+                        <label>Method</label>
+                        <select>
+                            <option>GET</option>
+                            <option>POST</option>
+                            <option>PUT</option>
+                            <option>DELETE</option>
+                        </select>
+                    </div>
+                `,
+                llm: `
+                    <div class="property-group">
+                        <label>Model</label>
+                        <select>
+                            <option>gpt-4</option>
+                            <option>gpt-3.5-turbo</option>
+                            <option>claude-3-opus</option>
+                            <option>ollama/llama3</option>
+                        </select>
+                    </div>
+                    <div class="property-group">
+                        <label>System Prompt</label>
+                        <textarea placeholder="You are a helpful assistant..."></textarea>
+                    </div>
+                `,
+                agent: `
+                    <div class="property-group">
+                        <label>Agent Template</label>
+                        <select>
+                            <option>Research Specialist</option>
+                            <option>Code Generator</option>
+                            <option>Data Analyst</option>
+                            <option>Calendar Manager</option>
+                        </select>
+                    </div>
+                `,
+                condition: `
+                    <div class="property-group">
+                        <label>Condition</label>
+                        <input type="text" placeholder="data.status === 'success'">
+                    </div>
+                `
+            };
+
+            return props[type] || '';
+        }
+
+        function updateConnections() {
+            // Implementation for drawing connection lines between nodes
+            const svg = document.getElementById('connectionsSvg');
+            svg.innerHTML = '';
+            
+            connections.forEach(conn => {
+                const fromNode = document.getElementById(conn.from);
+                const toNode = document.getElementById(conn.to);
+                
+                if (fromNode && toNode) {
+                    const fromRect = fromNode.getBoundingClientRect();
+                    const toRect = toNode.getBoundingClientRect();
+                    
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    const startX = fromRect.right - 10;
+                    const startY = fromRect.top + fromRect.height / 2;
+                    const endX = toRect.left + 10;
+                    const endY = toRect.top + toRect.height / 2;
+                    
+                    const d = `M ${startX} ${startY} C ${startX + 50} ${startY}, ${endX - 50} ${endY}, ${endX} ${endY}`;
+                    path.setAttribute('d', d);
+                    path.setAttribute('class', 'connection-line');
+                    
+                    svg.appendChild(path);
+                }
+            });
+        }
+
+        function hideEmptyState() {
+            document.getElementById('emptyState').style.display = 'none';
+        }
+
+        function showEmptyState() {
+            document.getElementById('emptyState').style.display = 'block';
+        }
+
+        // Zoom functions
+        function zoomIn() {
+            zoom = Math.min(2, zoom + 0.1);
+            applyZoom();
+        }
+
+        function zoomOut() {
+            zoom = Math.max(0.5, zoom - 0.1);
+            applyZoom();
+        }
+
+        function resetZoom() {
+            zoom = 1;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            const canvas = document.getElementById('workflow-canvas');
+            canvas.style.transform = `scale(${zoom})`;
+            canvas.style.transformOrigin = 'top left';
+        }
+
+        // Workflow functions
+        function clearWorkflow() {
+            if (confirm('Clear all nodes? This cannot be undone.')) {
+                nodes.forEach(n => {
+                    const el = document.getElementById(n.id);
+                    if (el) el.remove();
+                });
+                nodes = [];
+                connections = [];
+                nodeIdCounter = 0;
+                deselectNode();
+                showEmptyState();
+            }
+        }
+
+        function exportWorkflow() {
+            const workflow = {
+                name: document.getElementById('workflowName').value,
+                nodes: nodes,
+                connections: connections
+            };
+            
+            const blob = new Blob([JSON.stringify(workflow, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${workflow.name.replace(/\s+/g, '_').toLowerCase()}.json`;
+            a.click();
+        }
+
+        function importWorkflow() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const workflow = JSON.parse(e.target.result);
+                        loadWorkflow(workflow);
+                    } catch (err) {
+                        alert('Invalid workflow file');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function loadWorkflow(workflow) {
+            clearWorkflow();
+            document.getElementById('workflowName').value = workflow.name || 'Imported Workflow';
+            
+            workflow.nodes.forEach(node => {
+                nodes.push(node);
+                renderNode(node);
+            });
+            
+            connections = workflow.connections || [];
+            updateConnections();
+            hideEmptyState();
+        }
+
+        function deployWorkflow() {
+            const workflow = {
+                name: document.getElementById('workflowName').value,
+                nodes: nodes,
+                connections: connections
+            };
+            
+            alert(`Deploying workflow: ${workflow.name}\n\nNodes: ${nodes.length}\nConnections: ${connections.length}\n\nThis would deploy to Langflow and n8n.`);
+            
+            // In production, this would call the backend API
+            // fetch('/api/workflows/deploy', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(workflow)
+            // });
+        }
+
+        function loadTemplate(templateId) {
+            const templates = {
+                daily_brief: {
+                    name: 'Daily Brief',
+                    nodes: [
+                        { id: 'node_1', type: 'schedule', x: 50, y: 100, config: nodeTypes.schedule, properties: { cron: '0 7 * * *' } },
+                        { id: 'node_2', type: 'http', x: 300, y: 50, config: nodeTypes.http, properties: { url: 'weather.api.com' } },
+                        { id: 'node_3', type: 'calendar', x: 300, y: 150, config: nodeTypes.calendar, properties: {} },
+                        { id: 'node_4', type: 'llm', x: 550, y: 100, config: nodeTypes.llm, properties: {} },
+                        { id: 'node_5', type: 'email_send', x: 800, y: 100, config: nodeTypes.email_send, properties: {} }
+                    ],
+                    connections: [
+                        { from: 'node_1', to: 'node_2' },
+                        { from: 'node_1', to: 'node_3' },
+                        { from: 'node_2', to: 'node_4' },
+                        { from: 'node_3', to: 'node_4' },
+                        { from: 'node_4', to: 'node_5' }
+                    ]
+                },
+                email_processor: {
+                    name: 'Email Processor',
+                    nodes: [
+                        { id: 'node_1', type: 'email', x: 50, y: 100, config: nodeTypes.email, properties: {} },
+                        { id: 'node_2', type: 'llm', x: 300, y: 100, config: nodeTypes.llm, properties: {} },
+                        { id: 'node_3', type: 'condition', x: 550, y: 100, config: nodeTypes.condition, properties: {} },
+                        { id: 'node_4', type: 'email_send', x: 800, y: 50, config: nodeTypes.email_send, properties: {} },
+                        { id: 'node_5', type: 'notify', x: 800, y: 150, config: nodeTypes.notify, properties: {} }
+                    ],
+                    connections: [
+                        { from: 'node_1', to: 'node_2' },
+                        { from: 'node_2', to: 'node_3' },
+                        { from: 'node_3', to: 'node_4' },
+                        { from: 'node_3', to: 'node_5' }
+                    ]
+                },
+                research_agent: {
+                    name: 'Research Agent',
+                    nodes: [
+                        { id: 'node_1', type: 'webhook', x: 50, y: 100, config: nodeTypes.webhook, properties: {} },
+                        { id: 'node_2', type: 'agent', x: 300, y: 100, config: nodeTypes.agent, properties: {} },
+                        { id: 'node_3', type: 'rag', x: 550, y: 50, config: nodeTypes.rag, properties: {} },
+                        { id: 'node_4', type: 'llm', x: 550, y: 150, config: nodeTypes.llm, properties: {} },
+                        { id: 'node_5', type: 'response', x: 800, y: 100, config: nodeTypes.response, properties: {} }
+                    ],
+                    connections: [
+                        { from: 'node_1', to: 'node_2' },
+                        { from: 'node_2', to: 'node_3' },
+                        { from: 'node_2', to: 'node_4' },
+                        { from: 'node_3', to: 'node_5' },
+                        { from: 'node_4', to: 'node_5' }
+                    ]
+                },
+                content_creator: {
+                    name: 'Content Creator',
+                    nodes: [
+                        { id: 'node_1', type: 'schedule', x: 50, y: 100, config: nodeTypes.schedule, properties: {} },
+                        { id: 'node_2', type: 'http', x: 300, y: 100, config: nodeTypes.http, properties: {} },
+                        { id: 'node_3', type: 'llm', x: 550, y: 100, config: nodeTypes.llm, properties: {} },
+                        { id: 'node_4', type: 'loop', x: 800, y: 100, config: nodeTypes.loop, properties: {} },
+                        { id: 'node_5', type: 'response', x: 1050, y: 100, config: nodeTypes.response, properties: {} }
+                    ],
+                    connections: [
+                        { from: 'node_1', to: 'node_2' },
+                        { from: 'node_2', to: 'node_3' },
+                        { from: 'node_3', to: 'node_4' },
+                        { from: 'node_4', to: 'node_5' }
+                    ]
+                }
+            };
+
+            const template = templates[templateId];
+            if (template) {
+                loadWorkflow(template);
+            }
+        }
+    </script>
+</body>
+</html>
