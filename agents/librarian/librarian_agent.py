@@ -3,21 +3,23 @@
 Librarian Agent for OsMEN
 Semantic Memory & Lateral Thinking RAG Engine
 
-This agent provides:
+Integrates the full osmen-librarian repository as a git submodule,
+providing access to:
+- LangGraph orchestration (graph.py)
 - Three-mode RAG retrieval (foundation, lateral, factcheck)
-- LangGraph-based orchestration
-- Lateral thinking with Context7 dimensions
-- ChromaDB vector storage with Stella embeddings
-- Document ingestion and management
+- ChromaDB vector storage with Stella 1.5B embeddings
+- OpenAI Assistants API compatibility
+- Deep research and analysis capabilities
+- Middleware architecture (filesystem, todo, subagent, HITL)
+- 69 passing tests
 
-Ported from: https://github.com/dwilli15/osmen-librarian
+Source: https://github.com/dwilli15/osmen-librarian (git submodule)
 """
 
 import os
 import sys
 import json
 import logging
-import glob
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from datetime import datetime
@@ -27,21 +29,32 @@ from dataclasses import dataclass, field
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Try to import actual retrieval components
+# Add the osmen-librarian submodule to the path
+LIBRARIAN_PATH = Path(__file__).parent / "osmen-librarian" / "src"
+if LIBRARIAN_PATH.exists():
+    sys.path.insert(0, str(LIBRARIAN_PATH))
+    sys.path.insert(0, str(LIBRARIAN_PATH.parent))
+
+# Try to import from the actual osmen-librarian submodule
 REAL_RAG_AVAILABLE = False
 try:
-    from .src.retrieval import (
-        ChromaRetriever,
-        RetrieverConfig,
-        RetrievalResult as RealRetrievalResult,
-        DocumentChunk as RealDocumentChunk,
-        get_retriever,
-    )
-    from .src.lateral_thinking import LateralEngine, Context7
+    # Import from the submodule
+    from src.retrieval import ChromaRetriever
+    from src.retrieval.interfaces import RetrieverConfig, RetrievalResult, DocumentChunk as RealDocumentChunk
+    from src.lateral_thinking import LateralEngine, Context7
+    from src.rag_manager import query_knowledge_base, ingest_data, get_vector_store
+    from src.graph import app as langgraph_app, AgentState
     REAL_RAG_AVAILABLE = True
-    logger.info("Real RAG components loaded from src/")
+    logger.info("osmen-librarian submodule loaded successfully")
 except ImportError as e:
-    logger.warning(f"Real RAG components not available: {e}. Using fallback mode.")
+    logger.warning(f"osmen-librarian submodule not available: {e}. Using fallback mode.")
+    # Try partial imports
+    try:
+        from src.retrieval.interfaces import RetrieverConfig, RetrievalResult, DocumentChunk as RealDocumentChunk
+        from src.lateral_thinking import LateralEngine, Context7
+        logger.info("Partial osmen-librarian imports successful")
+    except ImportError:
+        logger.warning("No osmen-librarian components available. Fallback mode only.")
 
 
 @dataclass

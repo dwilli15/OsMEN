@@ -1,22 +1,24 @@
 # OsMEN + Librarian Integration Plan
 
 **Target Timeline**: 6 Hours to Production Ready  
-**Strategy**: Unified Single-Agent Implementation  
-**Version**: 3.0.0 (Real RAG Implementation)  
+**Strategy**: Git Submodule Integration  
+**Version**: 4.0.0 (Full Repository as Submodule)  
 **Created**: 2025-11-29  
-**Status**: ✅ COMPLETE - Full Source Code Ported
+**Status**: ✅ COMPLETE - osmen-librarian as Git Submodule
 
 ---
 
 ## Executive Summary
 
-This document outlines the completed integration of [osmen-librarian](https://github.com/dwilli15/osmen-librarian) into OsMEN as a core knowledge management node. The actual source code from osmen-librarian has been ported, including:
+This document outlines the completed integration of [osmen-librarian](https://github.com/dwilli15/osmen-librarian) into OsMEN as a **git submodule**, providing full access to the 69-test production-ready RAG system:
 
-- **Semantic Memory & Lateral Thinking Engine** (Context7 dimensions)
-- **ChromaDB Vector Store** with Stella 1.5B embeddings
-- **Three Retrieval Modes**: Foundation, Lateral, Factcheck
-- **Real Document Ingestion** with chunking and embedding generation
-- **Graceful Fallback** to mock mode when dependencies unavailable
+- **LangGraph Orchestration** - StateGraph with 15-field AgentState
+- **Three Retrieval Modes**: Foundation (Top-K), Lateral (MMR λ=0.5), Factcheck (High-precision)
+- **ChromaDB Vector Store** with Stella 1.5B embeddings (CUDA accelerated)
+- **DeepAgents Middleware** - Filesystem, Todo, Subagent spawning, HITL
+- **Specialized Subagents** - FactChecker, LateralResearcher, Summarizer, Executor
+- **OpenAI Assistants API** - Full compatibility with threads/runs/messages
+- **FastAPI Server** with CLI interface
 
 ### Integration Architecture
 
@@ -32,8 +34,8 @@ This document outlines the completed integration of [osmen-librarian](https://gi
 │         └──────────────────┼───────────────────────┘            │
 │                            │                                    │
 │                    ┌───────▼───────┐                           │
-│                    │   Librarian    │ ◄── REAL RAG ENGINE       │
-│                    │   RAG Node     │                           │
+│                    │   Librarian    │ ◄── GIT SUBMODULE         │
+│                    │ (69 tests ✅)  │     osmen-librarian        │
 │                    │  (Port 8200)   │                           │
 │                    └───────┬───────┘                           │
 │                            │                                    │
@@ -51,13 +53,11 @@ This document outlines the completed integration of [osmen-librarian](https://gi
 
 ## Implementation Checklist (COMPLETED)
 
-### Core RAG Integration ✅
-- [x] Create `agents/librarian/` directory structure
-- [x] Implement `LibrarianAgent` wrapper class with real ChromaDB integration
-- [x] Port ChromaRetriever from osmen-librarian src/retrieval/chroma.py
-- [x] Port retrieval interfaces from osmen-librarian src/retrieval/interfaces.py
-- [x] Port LateralEngine with Context7 dimensions
-- [x] Expose librarian API endpoints through FastAPI server
+### Git Submodule Integration ✅
+- [x] Add osmen-librarian as git submodule at `agents/librarian/osmen-librarian/`
+- [x] Update LibrarianAgent to import from submodule
+- [x] Expose full osmen-librarian capabilities
+- [x] Maintain graceful fallback when dependencies unavailable
 - [x] Add ChromaDB persistence to docker-compose
 
 **Files Created**:
