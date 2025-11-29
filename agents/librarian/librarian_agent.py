@@ -160,8 +160,8 @@ class LibrarianAgent:
         
         logger.info(f"Processing query in {mode} mode: {query[:50]}...")
         
-        # Simulate RAG query (in production, this calls the actual RAG engine)
-        # This is a placeholder that will be replaced with actual librarian integration
+        # TODO: Replace placeholder with actual ChromaDB retrieval from osmen-librarian
+        # See: https://github.com/dwilli15/osmen-librarian/blob/main/src/retrieval/chroma.py
         documents = self._retrieve_documents(query, mode, top_k)
         answer = self._generate_answer(query, documents, mode)
         confidence = self._calculate_confidence(documents, mode)
@@ -194,11 +194,12 @@ class LibrarianAgent:
         Returns:
             List of DocumentChunk objects
         """
-        # Placeholder - will be replaced with actual ChromaDB retrieval
+        # TODO: Replace with actual ChromaDB retrieval from osmen-librarian
         # The actual implementation will use different algorithms per mode:
         # - foundation: Top-K Cosine Similarity
         # - lateral: MMR (Maximal Marginal Relevance) with λ=0.5
         # - factcheck: High-precision Top-3
+        # See: https://github.com/dwilli15/osmen-librarian/blob/main/src/retrieval/chroma.py
         
         return [
             DocumentChunk(

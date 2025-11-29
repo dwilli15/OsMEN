@@ -139,8 +139,20 @@ class ReportResponse(BaseModel):
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize the agent on startup"""
-    agent.initialize()
+    """Initialize the agent on startup with error handling."""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        result = agent.initialize()
+        if result.get("status") == "initialized":
+            logger.info("Librarian agent initialized successfully")
+        else:
+            logger.warning(f"Librarian agent initialization returned unexpected status: {result}")
+    except Exception as e:
+        logger.error(f"Failed to initialize Librarian agent: {e}")
+        # Don't crash the server - allow health check to report the issue
+        # The agent will report as not_initialized in health checks
 
 
 @app.get("/health", response_model=HealthResponse, tags=["Health"])

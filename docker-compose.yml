@@ -279,7 +279,10 @@ services:
       - POSTGRES_PORT=5432
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - LIBRARIAN_URL=http://librarian:8200
+      # Librarian URL - optional, service may not be running
+      # Use --profile librarian to enable librarian service
+      - LIBRARIAN_URL=${LIBRARIAN_URL:-}
+      - LIBRARIAN_ENABLED=${LIBRARIAN_ENABLED:-false}
     volumes:
       - ./web:/app/web
       - ./agents:/app/agents
