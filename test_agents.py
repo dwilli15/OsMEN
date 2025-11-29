@@ -666,6 +666,89 @@ def test_team3_agent():
         return False
 
 
+def test_agent_teams():
+    """Test Agent Teams Framework"""
+    print("\n" + "="*50)
+    print("Testing Agent Teams Framework")
+    print("="*50)
+    
+    try:
+        from agents.teams import (
+            TeamManager, AgentTeam, TeamRole, TeamConfig, TeamResult, TeamStatus
+        )
+        from agents.teams.predefined import TEAM_TEMPLATES
+        
+        # Test TeamManager singleton
+        manager1 = TeamManager()
+        manager2 = TeamManager()
+        if manager1 is not manager2:
+            raise ValueError("TeamManager should be a singleton")
+        
+        # Test template listing
+        templates = manager1.list_templates()
+        if len(templates) < 5:
+            raise ValueError(f"Expected at least 5 templates, got {len(templates)}")
+        
+        expected_templates = ["research", "daily_ops", "content", "security", "full_stack"]
+        for name in expected_templates:
+            if name not in TEAM_TEMPLATES:
+                raise ValueError(f"Missing template: {name}")
+        
+        # Test team creation from template
+        research_team = manager1.create_team("research")
+        if not isinstance(research_team, AgentTeam):
+            raise ValueError("create_team should return AgentTeam")
+        if research_team.config.name != "research":
+            raise ValueError("Team name mismatch")
+        
+        # Test custom team creation
+        custom_roles = [
+            TeamRole(agent_type="daily_brief", role="lead", priority=10),
+            TeamRole(agent_type="personal_assistant", role="analyst", priority=5),
+        ]
+        custom_config = TeamConfig(name="custom_test", description="Test team")
+        custom_team = AgentTeam(config=custom_config, roles=custom_roles)
+        
+        if len(custom_team.roles) != 2:
+            raise ValueError(f"Expected 2 roles, got {len(custom_team.roles)}")
+        
+        # Verify roles are sorted by priority (higher first)
+        if custom_team.roles[0].priority < custom_team.roles[1].priority:
+            raise ValueError("Roles should be sorted by priority (descending)")
+        
+        # Test team listing
+        teams = manager1.list_teams()
+        if len(teams) < 1:
+            raise ValueError("Should have at least 1 team listed")
+        
+        # Test TeamRole capabilities auto-assignment
+        role = TeamRole(agent_type="research_intel", role="lead")
+        if not role.capabilities:
+            raise ValueError("Capabilities should be auto-assigned")
+        
+        # Test TeamStatus enum
+        statuses = [s.value for s in TeamStatus]
+        expected_statuses = ["pending", "running", "completed", "failed"]
+        for status in expected_statuses:
+            if status not in statuses:
+                raise ValueError(f"Missing status: {status}")
+        
+        print("✅ Agent Teams Framework: PASS")
+        print(f"  - TeamManager singleton: ✓")
+        print(f"  - Templates available: {len(templates)}")
+        print(f"  - Team creation: ✓")
+        print(f"  - Custom teams: ✓")
+        print(f"  - Role sorting: ✓")
+        print(f"  - Auto-capabilities: ✓")
+        
+        return True
+    except Exception as e:
+        print(f"❌ Agent Teams Framework: FAIL - {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
 def test_librarian_agent():
     """Test Librarian Agent (RAG Integration)"""
     print("\n" + "="*50)
@@ -781,6 +864,7 @@ def main():
     results.append(("Security Operations", test_security_ops()))
     results.append(("CLI Integrations", test_cli_integrations()))
     results.append(("Team 3 Agent", test_team3_agent()))
+    results.append(("Agent Teams", test_agent_teams()))
     results.append(("Librarian Agent", test_librarian_agent()))
     
     # Summary
