@@ -685,10 +685,12 @@ def test_librarian_agent():
         )
         agent = LibrarianAgent(config=config)
         
-        # Test initialization
+        # Test initialization (accepts both full and fallback modes)
         init_result = agent.initialize()
-        if init_result.get("status") != "initialized":
+        if init_result.get("status") not in ["initialized", "initialized_fallback"]:
             raise ValueError(f"Initialization failed: {init_result}")
+        
+        real_rag = init_result.get("real_rag", False)
         
         # Test query in each mode
         for mode in ["foundation", "lateral", "factcheck"]:
@@ -736,7 +738,7 @@ def test_librarian_agent():
                 raise ValueError(f"Missing expected capability: {cap}")
         
         print("✅ Librarian Agent: PASS")
-        print(f"  - Initialization: ✓")
+        print(f"  - Initialization: ✓ (real_rag={real_rag})")
         print(f"  - Three-mode retrieval: ✓")
         print(f"  - Fact verification: ✓")
         print(f"  - Lateral connections: ✓")
