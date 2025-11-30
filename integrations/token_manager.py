@@ -17,7 +17,7 @@ import json
 import time
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, Optional, Callable
+from typing import Dict, Optional, Callable, Any
 from threading import Thread, Event
 from loguru import logger
 
