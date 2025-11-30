@@ -80,6 +80,27 @@ See [v3.0 Implementation Guide](docs/v3.0_IMPLEMENTATION_GUIDE.md) for complete 
 
 See [CHANGELOG_V2.md](CHANGELOG_V2.md) and [6-Day Blitz Report](sprint/6_DAY_BLITZ_COMPLETION_REPORT.md) for complete v2.0 details.
 
+## 🧠 Librarian Integration
+
+OsMEN now integrates with [osmen-librarian](https://github.com/dwilli15/osmen-librarian), providing:
+
+- **Three-Mode RAG Retrieval**: Foundation (core concepts), Lateral (cross-disciplinary), Factcheck (verification)
+- **LangGraph Orchestration**: StateGraph pattern with 15-field AgentState
+- **Specialized Subagents**: FactChecker, LateralResearcher, Summarizer, Executor
+- **OpenAI Assistants API**: Compatible interface for threads and runs
+
+```bash
+# Start OsMEN with Librarian
+docker-compose --profile librarian up -d
+
+# Query the knowledge base
+curl -X POST http://localhost:8200/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is lateral thinking?", "mode": "lateral"}'
+```
+
+See [LIBRARIAN_INTEGRATION_PLAN.md](LIBRARIAN_INTEGRATION_PLAN.md) for details.
+
 ## 🏗️ Architecture
 
 **Agent Orchestration Platform:**
@@ -87,6 +108,7 @@ See [CHANGELOG_V2.md](CHANGELOG_V2.md) and [6-Day Blitz Report](sprint/6_DAY_BLI
 - **n8n**: Workflow automation with triggers and subflows
 - **LLM Agents**: OpenAI GPT-4, Claude, LM Studio (local), Ollama (local)
 - **Qdrant**: Vector database for agent memory
+- **Librarian**: Semantic Memory & RAG engine with ChromaDB
 - **PostgreSQL**: Persistent data storage
 - **Redis**: Caching layer
 - **Tool Layer**: Obsidian, FFmpeg, Simplewall, Sysinternals
@@ -97,7 +119,7 @@ See [CHANGELOG_V2.md](CHANGELOG_V2.md) and [6-Day Blitz Report](sprint/6_DAY_BLI
 **Agent Teams:**
 1. **Personal Productivity**: Personal Assistant, Focus Guardrails, Daily Brief
 2. **Content Processing**: Content Creator (basic), Audiobook Creator (planned), Podcast Creator (planned)
-3. **Knowledge Management**: Obsidian integration, Syllabus Parser, Note organization
+3. **Knowledge Management**: Obsidian integration, Syllabus Parser, Note organization, **Librarian RAG**
 4. **System Operations**: OS Optimizer, Boot Hardening, Security Operations
 
 **Flexible deployment** - Use cloud LLMs or run locally for privacy.

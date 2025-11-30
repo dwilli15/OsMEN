@@ -104,3 +104,11 @@ numpy>=1.26.0
 aiohttp>=3.9.0
 openai>=1.0.0
 anthropic>=0.30.0
+
+# Librarian RAG Integration (optional - for local development)
+# Note: Full librarian dependencies are in agents/librarian/requirements.txt
+# These are minimal deps for using librarian_agent locally
+chromadb>=0.5.0
+sentence-transformers>=2.0.0
+langgraph>=0.2.0
+

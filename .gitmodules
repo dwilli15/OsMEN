@@ -1,0 +1,3 @@
+[submodule "agents/librarian/osmen-librarian"]
+	path = agents/librarian/osmen-librarian
+	url = https://github.com/dwilli15/osmen-librarian.git
