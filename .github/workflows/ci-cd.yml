@@ -14,6 +14,30 @@ jobs:
     name: Test Suite (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     
+    services:
+      postgres:
+        image: postgres:15
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: osmen
+          POSTGRES_PASSWORD: osmen_test
+          POSTGRES_DB: osmen_test
+        options: >-
+          --health-cmd "pg_isready -U osmen"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12']
@@ -45,10 +69,24 @@ jobs:
           pytest tests/unit/ -v --cov --cov-report=xml --cov-report=term-missing --cov-report=html --tb=short
         continue-on-error: false
       
+      - name: Start Docker Compose services
+        run: |
+          docker compose -f docker-compose.yml up -d --build 2>&1 || true
+          for i in {1..24}; do
+            curl -sSf http://localhost:8080/healthz 2>/dev/null && break
+            echo "Waiting for services... ($i/24)"
+            sleep 5
+          done
+        continue-on-error: true
+      
       - name: Run integration tests
         run: |
           pytest tests/integration/ -v --tb=short
         continue-on-error: true
+      
+      - name: Stop Docker Compose services
+        if: always()
+        run: docker compose -f docker-compose.yml down --remove-orphans || true
       
       - name: Run agent tests
         run: |
