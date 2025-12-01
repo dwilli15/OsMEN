@@ -224,13 +224,13 @@ class BootHardeningAgent:
                 logger.debug(f"Sigcheck driver scan failed: {e}")
         else:
             # Fallback to driverquery (built-in)
+            # Note: driverquery doesn't show signature status directly,
+            # so we run it for completeness but cannot extract unsigned drivers
             try:
                 subprocess.run(
                     ['driverquery', '/v', '/fo', 'csv'],
                     capture_output=True, text=True, timeout=30
                 )
-                # Parse CSV output and identify drivers without signatures
-                # Note: driverquery doesn't show signature status directly
             except Exception as e:
                 logger.debug(f"Driverquery failed: {e}")
         
