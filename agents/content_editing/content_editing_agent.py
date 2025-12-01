@@ -26,13 +26,13 @@ Usage:
 import os
 import sys
 import json
-import asyncio
 import subprocess
 import shutil
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 import logging
+import importlib.util
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -54,17 +54,14 @@ else:
 
 # Check for Whisper
 WHISPER_AVAILABLE = False
-try:
-    import whisper
+if importlib.util.find_spec("whisper") is not None:
     WHISPER_AVAILABLE = True
     logger.info("OpenAI Whisper available for transcription")
-except ImportError:
-    try:
-        import openai
-        WHISPER_AVAILABLE = True
-        logger.info("OpenAI API available for transcription")
-    except ImportError:
-        logger.warning("Whisper not available - transcription will be limited")
+elif importlib.util.find_spec("openai") is not None:
+    WHISPER_AVAILABLE = True
+    logger.info("OpenAI API available for transcription")
+else:
+    logger.warning("Whisper not available - transcription will be limited")
 
 
 class ContentEditingAgent:
@@ -254,6 +251,7 @@ class ContentEditingAgent:
         duration = metadata.get('duration', 0)
         if bitrate > 0 and duration > 0:
             expected_size_mb = (bitrate * duration) / (8 * 1024 * 1024)
+            suggestions.append(f'Estimated file size based on bitrate and duration: {expected_size_mb:.1f}MB')
             if bitrate > 10_000_000:  # > 10 Mbps
                 suggestions.append(f'High bitrate ({bitrate//1000}kbps) - can reduce for smaller files')
         
@@ -402,9 +400,11 @@ class ContentEditingAgent:
         
         return result
     
-    async def generate_transcript(self, audio_file: str, language: str = None) -> Dict[str, Any]:
+    def generate_transcript(self, audio_file: str, language: str = None) -> Dict[str, Any]:
         """
         Generate transcript from audio/video using Whisper.
+        
+        This is a synchronous method that performs transcription directly.
         
         Args:
             audio_file: Path to audio or video file
@@ -605,7 +605,7 @@ class ContentEditingAgent:
                 result['status'] = 'success'
                 result['optimized'] = str(output_path)
                 result['new_size_mb'] = round(new_size / (1024 * 1024), 2)
-                result['compression_ratio'] = round(original_size / new_size, 2) if new_size > 0 else 0
+                result['compression_ratio'] = round(new_size / original_size, 2) if original_size > 0 else 0
                 result['savings_mb'] = round((original_size - new_size) / (1024 * 1024), 2)
                 result['ffmpeg_used'] = True
             else:
@@ -650,14 +650,12 @@ class ContentEditingAgent:
                 num, den = fps_str.split('/')
                 return round(float(num) / float(den), 2)
             return float(fps_str)
-        except:
+        except Exception:
             return 0.0
 
 
 def main():
     """Main entry point for the agent."""
-    import asyncio
-    
     agent = ContentEditingAgent()
     
     print("\n" + "=" * 60)

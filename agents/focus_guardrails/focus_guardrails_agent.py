@@ -12,13 +12,13 @@ Real Implementation Features:
 """
 
 import os
-import sys
 import json
 import platform
 import subprocess
 import ctypes
 import logging
 import shutil
+import base64
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Set
@@ -129,10 +129,14 @@ class FocusGuardrailsAgent:
         if self.is_windows:
             try:
                 return ctypes.windll.shell32.IsUserAnAdmin() != 0
-            except:
+            except Exception:
                 return False
         else:
-            return os.geteuid() == 0
+            try:
+                return os.geteuid() == 0
+            except AttributeError:
+                # os.geteuid() not available on this platform
+                return False
     
     def _load_state(self):
         """Load previous state from disk."""
@@ -172,7 +176,13 @@ class FocusGuardrailsAgent:
         Args:
             duration_minutes: Duration in minutes (default 25 for Pomodoro)
             block_sites: Whether to block distracting sites during session
+        
+        Raises:
+            ValueError: If duration_minutes is not a positive integer
         """
+        if duration_minutes <= 0:
+            raise ValueError("duration_minutes must be positive")
+        
         try:
             session_id = f"focus_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             session = FocusSession(
@@ -331,14 +341,18 @@ class FocusGuardrailsAgent:
             end_idx = current_content.find(marker_end)
             if end_idx != -1:
                 end_idx += len(marker_end)
-                current_content = current_content[:start_idx] + current_content[end_idx:]
+                if end_idx > start_idx:
+                    current_content = current_content[:start_idx] + current_content[end_idx:]
+                else:
+                    logging.warning("OsMEN hosts file markers found in wrong order; skipping removal of old entries.")
         
         # Build new block entries
         block_entries = [marker_start]
         for site in sites:
             # Redirect to localhost
             block_entries.append(f"127.0.0.1 {site}")
-            block_entries.append(f"127.0.0.1 www.{site}" if not site.startswith('www.') else '')
+            if not site.startswith('www.'):
+                block_entries.append(f"127.0.0.1 www.{site}")
             block_entries.append(f"::1 {site}")  # IPv6
             result['blocked'].append(site)
         block_entries.append(marker_end)
@@ -475,17 +489,22 @@ class FocusGuardrailsAgent:
         """Send a desktop notification."""
         try:
             if self.is_windows:
-                # Use PowerShell for toast notifications
+                # Use PowerShell for toast notifications with proper escaping
+                # Escape double quotes for PowerShell string literals
+                safe_title = title.replace('"', '`"')
+                safe_message = message.replace('"', '`"')
                 ps_script = f'''
-                [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
-                $template = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)
-                $textNodes = $template.GetElementsByTagName("text")
-                $textNodes.Item(0).AppendChild($template.CreateTextNode("{title}")) | Out-Null
-                $textNodes.Item(1).AppendChild($template.CreateTextNode("{message}")) | Out-Null
-                $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("OsMEN")
-                $notifier.Show([Windows.UI.Notifications.ToastNotification]::new($template))
-                '''
-                subprocess.run(['powershell', '-Command', ps_script], capture_output=True, timeout=5)
+[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+$template = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)
+$textNodes = $template.GetElementsByTagName("text")
+$textNodes.Item(0).AppendChild($template.CreateTextNode("{safe_title}")) | Out-Null
+$textNodes.Item(1).AppendChild($template.CreateTextNode("{safe_message}")) | Out-Null
+$notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("OsMEN")
+$notifier.Show([Windows.UI.Notifications.ToastNotification]::new($template))
+'''
+                # Encode the script as UTF-16LE and then base64 for -EncodedCommand
+                encoded_script = base64.b64encode(ps_script.encode('utf-16le')).decode('ascii')
+                subprocess.run(['powershell', '-NoProfile', '-EncodedCommand', encoded_script], capture_output=True, timeout=5)
             else:
                 # Linux - use notify-send
                 subprocess.run(['notify-send', title, message], capture_output=True, timeout=5)
@@ -539,7 +558,7 @@ class FocusGuardrailsAgent:
                         last_switch = time.time()
                     
                     time.sleep(1)
-                except:
+                except Exception:
                     time.sleep(1)
             
             # Final duration for last app
@@ -559,10 +578,14 @@ class FocusGuardrailsAgent:
                 else:
                     usage['distracted_time'] += duration
             
-            usage['productivity_score'] = round(
-                usage['productive_time'] / max(1, usage['productive_time'] + usage['distracted_time']) * 100,
-                1
-            )
+            total_time = usage['productive_time'] + usage['distracted_time']
+            if total_time == 0:
+                usage['productivity_score'] = 100.0  # No distraction occurred
+            else:
+                usage['productivity_score'] = round(
+                    usage['productive_time'] / total_time * 100,
+                    1
+                )
             
         except ImportError:
             usage['error'] = 'App monitoring requires win32gui, win32process, and psutil packages'
