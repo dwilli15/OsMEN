@@ -269,9 +269,9 @@ def template_context(request: Request, extra: Optional[dict] = None) -> dict:
     return ctx
 
 
-ViewerRole = Depends(role_required("viewer"))
-OperatorRole = Depends(role_required("operator"))
-AdminRole = Depends(role_required("admin"))
+# Role dependencies - used inline in route decorators
+
+
 
 
 def get_intake_agent():
@@ -440,7 +440,7 @@ async def services_api(user: dict = Depends(check_auth)):
 
 
 @app.get("/agents", response_class=HTMLResponse)
-async def agents_page(request: Request, user: dict = Depends(OperatorRole)):
+async def agents_page(request: Request, user: dict = Depends(role_required("operator"))):
     """Agent configuration page."""
     return templates.TemplateResponse(
         "agents.html",
@@ -460,7 +460,7 @@ async def agents_page(request: Request, user: dict = Depends(OperatorRole)):
 
 @app.post("/api/agents/{agent_name}/toggle")
 async def toggle_agent(
-    agent_name: str, request: Request, user: dict = Depends(OperatorRole)
+    agent_name: str, request: Request, user: dict = Depends(role_required("operator"))
 ):
     """Toggle agent enabled/disabled."""
     validate_csrf(request, request.headers.get("X-CSRF-Token"))
@@ -476,7 +476,7 @@ async def toggle_agent(
 
 
 @app.post("/api/memory/settings")
-async def update_memory_settings(request: Request, user: dict = Depends(OperatorRole)):
+async def update_memory_settings(request: Request, user: dict = Depends(role_required("operator"))):
     """Update memory settings."""
     form_data = await request.form()
     validate_csrf(request, form_data.get("csrf_token"))
@@ -495,7 +495,7 @@ async def update_memory_settings(request: Request, user: dict = Depends(Operator
 
 @app.post("/api/notifications/settings")
 async def update_notification_settings(
-    request: Request, user: dict = Depends(OperatorRole)
+    request: Request, user: dict = Depends(role_required("operator"))
 ):
     """Update notification settings."""
     form_data = await request.form()
@@ -515,7 +515,7 @@ async def update_notification_settings(
 
 
 @app.get("/digest", response_class=HTMLResponse)
-async def digest_page(request: Request, user: dict = Depends(ViewerRole)):
+async def digest_page(request: Request, user: dict = Depends(role_required("viewer"))):
     """Daily digest page."""
     date = request.query_params.get("date", datetime.now().strftime("%Y-%m-%d"))
     data = digest_generator.get_digest_data(date)

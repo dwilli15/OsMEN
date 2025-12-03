@@ -16,7 +16,7 @@ from fastapi import Depends, HTTPException, Request, status
 ADMIN_USERNAME = os.getenv("WEB_ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD_HASH = os.getenv(
     "WEB_ADMIN_PASSWORD_HASH",
-    "$2b$12$KIXxLV3qZ.gY8yH7n7P7Q.xQZ7vXZX8F1Y2Y3Z4Z5Z6Z7Z8Z9Z0Z1",
+    "$2b$12$M.YlE8WZR5bIjFvxpGmwveKsM/ib4zbB4i.ehYDbvvbA3r0aypkdG",
 )
 ADMIN_ROLE = os.getenv("WEB_ADMIN_ROLE", "admin")
 DEFAULT_ROLE = os.getenv("WEB_DEFAULT_ROLE", "viewer")
