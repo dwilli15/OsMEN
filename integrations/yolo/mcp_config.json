@@ -1,0 +1,152 @@
+{
+  "mcpServers": {
+    "yolo-ops": {
+      "command": "python",
+      "args": ["-m", "integrations.mcp_yolo_server"],
+      "cwd": "d:\\omen",
+      "env": {
+        "N8N_URL": "http://localhost:5678",
+        "LANGFLOW_URL": "http://localhost:7860",
+        "QDRANT_URL": "http://localhost:6333",
+        "LIBRARIAN_URL": "http://localhost:8200",
+        "GATEWAY_URL": "http://localhost:8080"
+      }
+    },
+    "osmen-gateway": {
+      "url": "http://localhost:8081/mcp",
+      "transport": "http"
+    }
+  },
+  "tools": [
+    {
+      "name": "yolo_execute_command",
+      "description": "Execute a shell command on the local system. Requires confirmation for destructive operations.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command": {"type": "string", "description": "The shell command to execute"},
+          "workingDir": {"type": "string", "description": "Working directory for command execution"},
+          "requiresConfirmation": {"type": "boolean", "description": "Whether this command needs user confirmation"}
+        },
+        "required": ["command"]
+      }
+    },
+    {
+      "name": "yolo_search_docs",
+      "description": "Search documents using Librarian RAG system",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string", "description": "Search query"},
+          "collection": {"type": "string", "description": "Document collection to search"},
+          "limit": {"type": "integer", "description": "Maximum results to return", "default": 10}
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "yolo_vector_search",
+      "description": "Search vector database (Qdrant) for semantic matches",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string", "description": "Search query to vectorize"},
+          "collection": {"type": "string", "description": "Qdrant collection name"},
+          "limit": {"type": "integer", "description": "Number of results", "default": 5}
+        },
+        "required": ["query", "collection"]
+      }
+    },
+    {
+      "name": "yolo_trigger_workflow",
+      "description": "Trigger an n8n workflow by name or webhook",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workflow": {"type": "string", "description": "Workflow name or ID"},
+          "webhookPath": {"type": "string", "description": "Webhook path to trigger"},
+          "payload": {"type": "object", "description": "Data to pass to workflow"}
+        },
+        "required": ["workflow"]
+      }
+    },
+    {
+      "name": "yolo_run_langflow",
+      "description": "Execute a Langflow agent/flow",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "flowId": {"type": "string", "description": "Langflow flow ID or name"},
+          "input": {"type": "string", "description": "Input message for the flow"},
+          "tweaks": {"type": "object", "description": "Runtime configuration overrides"}
+        },
+        "required": ["flowId", "input"]
+      }
+    },
+    {
+      "name": "yolo_memory_store",
+      "description": "Store information in YOLO-OPS persistent memory (Qdrant)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {"type": "string", "description": "Content to store"},
+          "metadata": {"type": "object", "description": "Associated metadata"},
+          "collection": {"type": "string", "description": "Memory collection", "default": "yolo_memory"}
+        },
+        "required": ["content"]
+      }
+    },
+    {
+      "name": "yolo_memory_recall",
+      "description": "Recall information from YOLO-OPS persistent memory",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string", "description": "What to recall"},
+          "timeRange": {"type": "string", "description": "Time range filter (e.g., 'last 7 days')"},
+          "limit": {"type": "integer", "description": "Max results", "default": 10}
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "yolo_spawn_subagent",
+      "description": "Spawn a specialized subagent for a specific task",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "agentType": {
+            "type": "string",
+            "enum": ["file-ops", "security-audit", "research", "code-gen", "system-admin", "data-analyst", "devops", "qa-tester", "docs-writer", "api-integrator"],
+            "description": "Type of subagent to spawn"
+          },
+          "task": {"type": "string", "description": "Task description for the subagent"},
+          "priority": {"type": "string", "enum": ["P1", "P2", "P3"], "default": "P2"}
+        },
+        "required": ["agentType", "task"]
+      }
+    },
+    {
+      "name": "yolo_check_services",
+      "description": "Check health status of all YOLO-OPS connected services",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "yolo_log_action",
+      "description": "Log an action to the YOLO-OPS audit trail",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {"type": "string", "description": "Action description"},
+          "result": {"type": "string", "description": "Action result"},
+          "severity": {"type": "string", "enum": ["info", "warning", "error", "critical"], "default": "info"}
+        },
+        "required": ["action"]
+      }
+    }
+  ]
+}

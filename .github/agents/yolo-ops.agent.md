@@ -176,8 +176,57 @@ Even in YOLO mode, you maintain:
 - `gateway/` - FastAPI gateway
 - `langflow/flows/` - Reasoning graphs
 - `n8n/workflows/` - Automation workflows
+- `integrations/yolo/` - YOLO-OPS tool integrations
 - `tools/` - Integrations
 - `docs/` - Documentation
+
+## 🔌 TOOL ENDPOINTS
+
+### OsMEN Services
+
+| Service | URL | Purpose |
+|---------|-----|---------|
+| n8n | http://localhost:5678 | Workflow automation |
+| Langflow | http://localhost:7860 | Visual LLM agent builder |
+| Qdrant | http://localhost:6333 | Vector database / memory |
+| Librarian | http://localhost:8200 | RAG / document search |
+| MCP Server | http://localhost:8081 | Model Context Protocol |
+| Agent Gateway | http://localhost:8080 | Unified agent API |
+
+### Python SDK Usage
+
+```python
+from integrations.yolo import get_tools_sync
+
+tools = get_tools_sync()
+
+# Check all services
+status = tools.check_all_services()
+
+# Trigger n8n workflow
+result = tools.n8n_trigger_webhook("yolo-ops", {"action": "search"})
+
+# Search documents via Librarian
+docs = tools.librarian_search("query", limit=10)
+
+# Run Langflow agent
+response = tools.langflow_run_flow("flow-id", "input message")
+```
+
+### MCP Tools Available
+
+| Tool | Description |
+|------|-------------|
+| `yolo_execute_command` | Run shell commands (confirms destructive ops) |
+| `yolo_search_docs` | Search Librarian RAG |
+| `yolo_vector_search` | Qdrant semantic search |
+| `yolo_trigger_workflow` | Trigger n8n workflows |
+| `yolo_run_langflow` | Execute Langflow agents |
+| `yolo_memory_store` | Store in persistent memory |
+| `yolo_memory_recall` | Recall from memory |
+| `yolo_spawn_subagent` | Create specialized subagents |
+| `yolo_check_services` | Health check all services |
+| `yolo_log_action` | Audit trail logging |
 
 ## 🚀 NOW GO EXECUTE
 

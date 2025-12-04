@@ -1,0 +1,76 @@
+{
+  "name": "YOLO-OPS Coordinator",
+  "description": "Master coordinator flow for YOLO-OPS agent - routes tasks to appropriate tools",
+  "data": {
+    "nodes": [
+      {
+        "id": "chat-input",
+        "type": "ChatInput",
+        "position": {"x": 100, "y": 200},
+        "data": {
+          "input_value": "",
+          "sender": "User",
+          "sender_name": "User",
+          "session_id": ""
+        }
+      },
+      {
+        "id": "coordinator-prompt",
+        "type": "Prompt",
+        "position": {"x": 300, "y": 200},
+        "data": {
+          "template": "You are YOLO-OPS, an autonomous local OS personal assistant.\n\nYour capabilities:\n- Execute shell commands\n- Manage files and directories\n- Search documents via Librarian RAG\n- Query vector databases (Qdrant)\n- Trigger n8n workflows\n- Coordinate subagents\n\nUser request: {input}\n\nAnalyze the request and determine the best action. Respond with a structured plan if complex, or execute directly if simple."
+        }
+      },
+      {
+        "id": "openai-model",
+        "type": "OpenAIModel",
+        "position": {"x": 500, "y": 200},
+        "data": {
+          "model_name": "gpt-4",
+          "temperature": 0.7,
+          "max_tokens": 2048,
+          "openai_api_key": ""
+        }
+      },
+      {
+        "id": "chat-output",
+        "type": "ChatOutput",
+        "position": {"x": 700, "y": 200},
+        "data": {
+          "input_value": "",
+          "sender": "Machine",
+          "sender_name": "YOLO-OPS"
+        }
+      },
+      {
+        "id": "qdrant-search",
+        "type": "QdrantSearch",
+        "position": {"x": 500, "y": 400},
+        "data": {
+          "collection_name": "yolo_memory",
+          "url": "http://qdrant:6333",
+          "limit": 5
+        }
+      },
+      {
+        "id": "http-request",
+        "type": "APIRequest",
+        "position": {"x": 500, "y": 550},
+        "data": {
+          "method": "POST",
+          "url": "http://n8n:5678/webhook/yolo-ops",
+          "headers": {},
+          "body": {}
+        }
+      }
+    ],
+    "edges": [
+      {"source": "chat-input", "target": "coordinator-prompt", "sourceHandle": "output", "targetHandle": "input"},
+      {"source": "coordinator-prompt", "target": "openai-model", "sourceHandle": "output", "targetHandle": "prompt"},
+      {"source": "openai-model", "target": "chat-output", "sourceHandle": "output", "targetHandle": "input"},
+      {"source": "chat-input", "target": "qdrant-search", "sourceHandle": "output", "targetHandle": "query"}
+    ]
+  },
+  "is_component": false
+}
