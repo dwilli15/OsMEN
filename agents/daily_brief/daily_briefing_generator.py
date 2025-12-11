@@ -1,13 +1,28 @@
 """
-Daily Briefing Generator
-Generates 90-second personalized audio briefings from check-in data
+Daily Briefing Generator - Production Ready
+============================================
 
-Workflow:
-1. AM Check-in completed → triggers this generator
-2. Reads AM check-in + previous PM check-in + course progress
-3. Generates script from template
-4. Synthesizes audio via Kokoro TTS
-5. Saves to daily_briefings/ and logs the generation
+Generates 90-second personalized audio briefings with FULL CONTEXT:
+
+Context Sources:
+1. Today's AM check-in (energy, priorities, ADHD state, meditation)
+2. Previous 3 days of check-ins (AM + PM) for continuity
+3. Previous 3 days of briefing scripts (what was emphasized)
+4. Current week's syllabus (readings, assignments, class schedule)
+5. Course progress tracker (readings behind, next deadline)
+6. ADHD patterns (energy trends, working strategies)
+7. Carryover tasks from yesterday's PM check-in
+8. Pending to-do items aggregated from all sources
+
+Briefing Structure (90 seconds):
+- Opening: Day, date, greeting
+- Energy check: Today's energy + 3-day trend context
+- Priority focus: Top priorities with carryover awareness
+- ADHD strategy: Contextual tip based on patterns
+- Course update: Readings, deadlines, class status
+- Meditation reminder: Practice continuity
+- Boundary reflection: Week-appropriate reminder
+- Closing: Encouragement + evening check-in reminder
 
 Integration:
 - Registered in: integrations/orchestration.py as Pipelines.DAILY_BRIEFING
@@ -18,12 +33,13 @@ Integration:
 
 import json
 import os
+import random
 import re
 import subprocess
 import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 # Add OsMEN root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -37,6 +53,13 @@ from integrations.logging_system import (
 
 # Import from unified orchestration layer (SOURCE OF TRUTH)
 from integrations.orchestration import OsMEN, Paths, Pipelines
+
+# Import the production context aggregator
+from agents.daily_brief.context_aggregator import (
+    AggregatedContext,
+    ContextAggregator,
+    gather_context_for_briefing,
+)
 
 # Use paths from orchestration layer (NEVER hardcode)
 OBSIDIAN_ROOT = Paths.HB411_OBSIDIAN
@@ -52,285 +75,275 @@ Paths.ensure_all()
 
 
 class DailyBriefingGenerator:
-    """Generate personalized 90-second daily briefings"""
+    """Generate personalized 90-second daily briefings with full context"""
 
     def __init__(self):
         self.logger, self.prompt = agent_startup_check("daily-briefing-generator")
         self.today = date.today()
         self.today_str = self.today.isoformat()
         self.yesterday = (self.today - timedelta(days=1)).isoformat()
+        
+        # Use production context aggregator
+        self.aggregator = ContextAggregator()
 
-    def gather_context(self) -> Dict[str, Any]:
-        """Gather all context needed for briefing generation"""
-        context = {
-            "date": self.today_str,
-            "day_name": self.today.strftime("%A"),
-            "date_formatted": self.today.strftime("%B %d, %Y"),
-        }
-
-        # Read AM check-in
-        am_checkin = self._read_checkin("am", self.today_str)
-        if am_checkin:
-            context.update(
-                {
-                    "am_energy": am_checkin.get("energy", 5),
-                    "am_focus": am_checkin.get("focus_capacity", "medium"),
-                    "am_priorities": am_checkin.get("priorities", []),
-                    "am_adhd_strategy": am_checkin.get("adhd_strategy", ""),
-                    "meditation_planned": am_checkin.get("meditation_planned", False),
-                    "meditation_type": am_checkin.get("meditation_type", ""),
-                }
-            )
-
-        # Read previous PM check-in
-        pm_checkin = self._read_checkin("pm", self.yesterday)
-        if pm_checkin:
-            context.update(
-                {
-                    "pm_productivity": pm_checkin.get("productivity_rate", 70),
-                    "pm_mood": pm_checkin.get("mood_trend", "stable"),
-                    "pm_carryover": pm_checkin.get("carryover_tasks", []),
-                    "pm_tomorrow_focus": pm_checkin.get("tomorrow_focus", ""),
-                }
-            )
-
-        # Read course progress
-        course = self._read_course_progress()
-        context.update(course)
-
-        # Generate ADHD tip based on context
-        context["adhd_tip"] = self._generate_adhd_tip(context)
-
-        # Generate boundary reminder from course content
-        context["boundary_reminder"] = self._get_boundary_reminder(
-            context.get("course_week", 1)
-        )
-
+    def gather_context(self) -> AggregatedContext:
+        """Gather comprehensive context using the production aggregator"""
+        context = self.aggregator.gather_full_context()
+        
         self.logger.log(
             action="gather_context",
             inputs={"date": self.today_str},
-            outputs={"context_keys": list(context.keys())},
+            outputs={
+                "checkins_found": len(context.checkins),
+                "briefings_found": len(context.briefings),
+                "pending_tasks": len(context.pending_tasks),
+                "syllabus_week": context.syllabus.current_week if context.syllabus else 0,
+            },
             status="completed",
         )
 
         return context
 
-    def _read_checkin(self, period: str, date_str: str) -> Optional[Dict]:
-        """Read a check-in file and extract key data"""
-        # Try to read from check-in log first
-        log_file = OSMEN_ROOT / "logs" / "check_ins" / f"{date_str}_checkin.json"
-        if log_file.exists():
-            with open(log_file) as f:
-                data = json.load(f)
-                if period == "am" and data.get("am_completed"):
-                    return data.get("am_data", {})
-                if period == "pm" and data.get("pm_completed"):
-                    return data.get("pm_data", {})
-
-        # Fallback: parse markdown file
-        md_file = JOURNAL_DIR / f"{date_str}-{period.upper()}.md"
-        if md_file.exists():
-            return self._parse_checkin_md(md_file)
-
-        return None
-
-    def _parse_checkin_md(self, filepath: Path) -> Dict:
-        """Parse a check-in markdown file for key values"""
-        # Simplified parser - in production, use proper YAML frontmatter parsing
-        data = {}
-        try:
-            content = filepath.read_text(encoding="utf-8")
-
-            # Extract energy level
-            energy_match = re.search(r"Energy Level[:\s]*(\d+)/10", content)
-            if energy_match:
-                data["energy"] = int(energy_match.group(1))
-
-            # Extract priorities
-            priorities = re.findall(r"^\d+\.\s+(.+)$", content, re.MULTILINE)
-            if priorities:
-                data["priorities"] = priorities[:3]
-
-            # Check meditation planned
-            data["meditation_planned"] = (
-                "session planned" in content.lower() or "[x]" in content.lower()
-            )
-
-        except Exception as e:
-            self.logger.log(
-                action="parse_checkin_error",
-                inputs={"file": str(filepath)},
-                outputs={"error": str(e)},
-                status="error",
-                level="warning",
-            )
-
-        return data
-
-    def _read_course_progress(self) -> Dict:
-        """Read course progress from tracker"""
-        progress_file = GOALS_DIR / "hb411_progress.md"
-
-        # Default values
-        data = {
-            "course_week": 1,
-            "week_topic": "Introduction to Boundaries",
-            "readings_due": [],
-            "readings_behind": 0,
-            "days_to_class": 7,
-        }
-
-        if progress_file.exists():
-            try:
-                content = progress_file.read_text(encoding="utf-8")
-
-                # Extract current week
-                week_match = re.search(r"Current Week[:\s]*(\d+)", content)
-                if week_match:
-                    data["course_week"] = int(week_match.group(1))
-
-            except Exception:
-                pass
-
-        return data
-
-    def _generate_adhd_tip(self, context: Dict) -> str:
-        """Generate context-aware ADHD tip"""
-        energy = context.get("am_energy", 5)
-        focus = context.get("am_focus", "medium")
-
-        tips = {
+    def _generate_adhd_tip(self, context: AggregatedContext) -> str:
+        """Generate context-aware ADHD tip based on patterns"""
+        adhd = context.adhd
+        am = context.today_am_checkin
+        
+        # Get current energy
+        energy = am.energy if am else 5
+        adhd_state = am.adhd_state if am else "moderate"
+        
+        # Tips organized by situation
+        tips_by_situation = {
             "low_energy": [
-                "Start with a 10-minute walk or movement. Get your body activated before tackling cognitive work.",
-                "Use body doubling or a virtual co-working session to help initiate focus.",
-                "Break your first task into 5-minute chunks. Lower the activation energy to start.",
+                "Energy is low today. Start with a 10-minute walk or movement to wake up your system. Protect your limited focus for one priority only.",
+                "At {energy} energy, your threshold to start is higher. Use body doubling or a virtual co-working session to lower activation energy.",
+                "Low energy day - break your first task into 5-minute chunks. One tiny start is better than paralysis.",
             ],
-            "medium_energy": [
-                "Use a visual timer for 25-minute focus blocks. The external structure helps.",
-                "Do your hardest task in the next 2 hours while energy peaks.",
-                "Keep your phone in another room during deep work blocks.",
+            "struggling": [
+                "Struggling to start is normal. Set a timer for just 5 minutes on your top priority. Permission to stop after, but you might not want to.",
+                "When initiation is hard, externalize the task. Write the first three steps on paper. Make the path visible.",
+                "Struggling state detected. Your working strategies have been {strategies}. Try one of those to get moving.",
+            ],
+            "foggy": [
+                "Brain fog today. Stay hydrated, move your body, and give yourself 30 minutes before tackling complex work.",
+                "Foggy start - consider pushing hard cognitive work to afternoon if possible. Use morning for routine tasks.",
+                "When foggy, reduce choices. Pick ONE thing and commit to it for the first hour.",
+            ],
+            "improving_energy": [
+                "Your energy has been improving over the past few days. Ride this momentum - tackle something you've been avoiding.",
+                "Energy trending up. This is a good day to front-load difficult tasks while you have capacity.",
+            ],
+            "declining_energy": [
+                "Energy has been declining. Consider whether you're overcommitting. Protect your recovery today.",
+                "Your trend shows declining energy. Be realistic about what you can accomplish. Quality over quantity.",
             ],
             "high_energy": [
-                "Capitalize on this energy! Tackle your most challenging task right now.",
-                "Set ambitious goals for the morning but have a low-energy backup plan for afternoon.",
-                "Document what's working today so you can replicate these conditions.",
+                "Energy is strong at {energy}. Capitalize on it now - your best work window is the next 2-3 hours.",
+                "High energy day! Challenge yourself but set a clear stopping point. Don't let hyperfocus burn you out.",
+            ],
+            "default": [
+                "Use a visual timer for {focus_length}-minute focus blocks. External structure helps.",
+                "Remember: done is better than perfect. What's the minimum viable version of your top task?",
+                "Your recommended focus block is {focus_length} minutes based on recent patterns. Set a timer.",
             ],
         }
-
-        if energy <= 4:
-            import random
-
-            return random.choice(tips["low_energy"])
-        elif energy <= 7:
-            import random
-
-            return random.choice(tips["medium_energy"])
+        
+        # Select appropriate tip category
+        if energy <= 3:
+            category = "low_energy"
+        elif adhd_state == "struggling":
+            category = "struggling"
+        elif adhd_state == "foggy":
+            category = "foggy"
+        elif adhd and adhd.energy_trend == "improving":
+            category = "improving_energy"
+        elif adhd and adhd.energy_trend == "declining":
+            category = "declining_energy"
+        elif energy >= 8:
+            category = "high_energy"
         else:
-            import random
-
-            return random.choice(tips["high_energy"])
+            category = "default"
+        
+        tips = tips_by_situation[category]
+        tip = random.choice(tips)
+        
+        # Fill in template variables
+        strategies = ", ".join(adhd.working_strategies[:2]) if adhd and adhd.working_strategies else "body doubling and timers"
+        focus_length = adhd.recommended_focus_block_length if adhd else 25
+        
+        tip = tip.format(
+            energy=energy,
+            strategies=strategies,
+            focus_length=focus_length,
+        )
+        
+        return tip
 
     def _get_boundary_reminder(self, week: int) -> str:
         """Get a boundary reminder relevant to current course week"""
         reminders = {
             1: "Boundaries define where you end and others begin. Notice your edges today.",
-            2: "Your boundaries were shaped in childhood. Understanding them is the first step to changing them.",
-            3: "Which boundary problem shows up for you? Compliant, avoidant, controller, or nonresponsive?",
-            4: "Remember: You are responsible TO others, not FOR others. Where can you release responsibility today?",
-            5: "Boundary myths keep us stuck. What belief about boundaries might be limiting you?",
-            6: "Self-boundaries are about self-control, not controlling others. What do you need to say no to within yourself?",
-            7: "Healing from narcissistic patterns takes time. Be patient with your process.",
-            8: "Family boundaries require the most courage. Small steps count.",
-            9: "Ministry and work boundaries protect your calling. Burnout serves no one.",
-            10: "Recovery is not linear. Some days are harder. That's part of the journey.",
-            11: "The damage was real, but so is healing. You are already on the path.",
-            12: "Integration means living your boundaries, not just knowing about them.",
-            13: "Your spiritual boundaries matter too. Guilt is not from God.",
-            14: "Digital boundaries are boundaries too. Your attention is sacred.",
-            15: "You've learned so much. Trust your growth. You know what you need.",
+            2: "Today's framework: boundaries are about 'what' not 'who'. What boundaries serve you?",
+            3: "Your ethical commitments are your guardrails. Let them guide your nos and yeses today.",
+            4: "Integration means living your values, not just knowing them. Where can you embody a boundary?",
+            5: "Self and systems interact. Your boundaries affect others and theirs affect you. Notice the dance.",
+            6: "Shared wisdom: your self-knowledge is a tool for service. What do your patterns tell you?",
+            7: "Sharing your work today. Remember: feedback on boundaries work is itself a boundary practice.",
+            8: "Trauma shapes our boundaries. Today, notice where old wounds inform current reactions.",
+            9: "Async week. A boundary around your time. Use it wisely for what matters most.",
+            10: "Break week. Rest is a boundary. You don't have to be productive to be worthy.",
+            11: "Technology boundaries matter. Your attention is sacred. Guard it today.",
+            12: "Conflict is where boundaries get tested. How you handle disagreement reveals your edges.",
+            13: "Connection requires boundaries. True intimacy needs healthy separation first.",
+            14: "Presenting your work. Own your learning. You know what you need.",
+            15: "Final presentations. You've learned so much. Trust your growth.",
+            16: "Course complete. Integration continues. You carry these boundaries forward.",
         }
         return reminders.get(week, reminders[1])
 
-    def generate_script(self, context: Dict) -> str:
-        """Generate the 90-second briefing script"""
-
-        priority_1 = (
-            context.get("am_priorities", ["your top priority"])[0]
-            if context.get("am_priorities")
-            else "your top priority"
+    def generate_script(self, context: AggregatedContext) -> str:
+        """Generate the 90-second briefing script with full context"""
+        
+        # Extract key data with safe defaults
+        am = context.today_am_checkin
+        yesterday_pm = context.yesterday_pm_checkin
+        syllabus = context.syllabus
+        adhd = context.adhd
+        progress = context.progress
+        
+        # Core data
+        energy = am.energy if am else 5
+        priorities = am.priorities if am else context.pending_tasks[:3]
+        priority_1 = priorities[0] if priorities else "your most important task"
+        priority_2 = priorities[1] if len(priorities) > 1 else None
+        
+        # Carryover awareness
+        carryover = context.carryover_from_yesterday
+        
+        script_parts = []
+        
+        # ===== OPENING (10 sec) =====
+        script_parts.append(
+            f"Good morning. It's {context.day_name}, {context.date_formatted}. "
+            f"Here's your 90-second focus briefing."
         )
-        priority_2 = (
-            context.get("am_priorities", [None, None])[1]
-            if len(context.get("am_priorities", [])) > 1
-            else None
-        )
-
-        energy = context.get("am_energy", 5)
-        energy_section = ""
-        if energy <= 4:
-            energy_section = f"Your energy is at {energy} today. Start with something energizing—movement, music, or a quick win. Protect your peak hours for priority work."
+        
+        # ===== ENERGY CHECK WITH TREND (15 sec) =====
+        energy_trend = adhd.energy_trend if adhd else "stable"
+        avg_energy = adhd.avg_energy_3day if adhd else energy
+        
+        if energy <= 3:
+            energy_section = (
+                f"Your energy is at {energy} today. "
+                f"Your 3-day average is {avg_energy:.0f}, so this is {'below your recent baseline' if energy < avg_energy else 'consistent'}. "
+                f"Be gentle with yourself. Focus on one thing only."
+            )
+        elif energy <= 5:
+            trend_note = ""
+            if energy_trend == "declining":
+                trend_note = "It's been declining—consider what's draining you. "
+            elif energy_trend == "improving":
+                trend_note = "You're on an upward trend. Build on that momentum. "
+            energy_section = (
+                f"Energy at {energy}, moderate capacity. {trend_note}"
+                f"Good enough to get meaningful work done with the right structure."
+            )
         else:
-            energy_section = f"You're at {energy} energy today. Good foundation. Channel it into your top priority early."
-
-        script_parts = [
-            # Opening (10 sec)
-            f"Good morning. It's {context['day_name']}, {context['date_formatted']}. Here's your 90-second focus briefing.",
-            # Energy Check (15 sec)
-            energy_section,
-            # Priority Focus (20 sec)
-            f"Your number one today: {priority_1}.",
-        ]
-
+            energy_section = (
+                f"You're at {energy} energy today—strong foundation. "
+                f"{"Capitalize on this uptrend by front-loading hard work." if energy_trend == "improving" else "Channel it into your top priority early."}"
+            )
+        
+        script_parts.append(energy_section)
+        
+        # ===== CARRYOVER & PRIORITIES (20 sec) =====
+        if carryover:
+            script_parts.append(
+                f"Carried over from yesterday: {carryover[0]}. "
+                f"Consider whether this is still your top priority or can be delegated."
+            )
+        
+        script_parts.append(f"Your number one today: {priority_1}.")
+        
         if priority_2:
             script_parts.append(f"Second: {priority_2}.")
-
+        
         script_parts.append(
             "Block focused time for these. Everything else can wait or be delegated."
         )
-
-        # ADHD Strategy (15 sec)
-        script_parts.append(
-            context.get(
-                "adhd_tip", "Use a timer and take breaks. Your brain needs rhythm."
-            )
-        )
-
-        # Course Update (15 sec)
-        readings_behind = context.get("readings_behind", 0)
-        if readings_behind > 0:
+        
+        # ===== ADHD STRATEGY (15 sec) =====
+        adhd_tip = self._generate_adhd_tip(context)
+        script_parts.append(adhd_tip)
+        
+        # ===== COURSE UPDATE (15 sec) =====
+        if syllabus:
+            if syllabus.is_break_week:
+                script_parts.append(
+                    f"Week {syllabus.current_week} is a break week. "
+                    f"No class, but use the time wisely for your final project."
+                )
+            elif syllabus.is_class_today:
+                script_parts.append(
+                    f"Class today at {syllabus.class_time}. "
+                    f"Topic: {syllabus.week_topic}. Make sure you're prepared."
+                )
+            else:
+                readings_behind = progress.readings_behind if progress else 0
+                if readings_behind > 0:
+                    script_parts.append(
+                        f"You're about {readings_behind} readings behind for Week {syllabus.current_week}: {syllabus.week_topic}. "
+                        f"Consider audiobook during commute or chores to catch up."
+                    )
+                else:
+                    script_parts.append(
+                        f"On track with Week {syllabus.current_week}: {syllabus.week_topic}. "
+                        f"{'Class in ' + str(syllabus.days_until_class) + ' days.' if syllabus.days_until_class <= 3 else 'Keep the momentum.'}"
+                    )
+                
+                # Next deadline reminder
+                if syllabus.next_deadline and syllabus.next_deadline["days_until"] <= 7:
+                    script_parts.append(
+                        f"Reminder: {syllabus.next_deadline['name']} due in {syllabus.next_deadline['days_until']} days."
+                    )
+        
+        # ===== MEDITATION REMINDER (10 sec) =====
+        meditation_done = am.meditation_completed if am else False
+        meditation_type = am.meditation_type if am else ""
+        meditation_streak = progress.meditation_sessions_this_week if progress else 0
+        
+        if meditation_done:
             script_parts.append(
-                f"You're {readings_behind} readings behind for Week {context.get('course_week', 1)}. Consider audiobook during commute or chores."
+                f"{'Your ' + meditation_type + ' practice' if meditation_type else 'Morning practice'} complete. "
+                f"{'That makes ' + str(meditation_streak) + ' sessions this week.' if meditation_streak > 1 else 'Your practice is your anchor.'}"
             )
         else:
             script_parts.append(
-                f"On track with Week {context.get('course_week', 1)}: {context.get('week_topic', 'course content')}. Nice work."
+                "Remember your practice commitments. Even 10 minutes of sitting shifts the day. "
+                "Don't let 'not enough time' become 'no time.'"
             )
-
-        # Meditation Reminder (10 sec)
-        if context.get("meditation_planned"):
-            script_parts.append(
-                f"{context.get('meditation_type', 'Your')} practice is planned. Protect that time. Your practice is your anchor."
-            )
-        else:
-            script_parts.append(
-                "Remember your practice commitments. Even 10 minutes of Trekchö shifts the day."
-            )
-
-        # Boundary Reflection (10 sec)
+        
+        # ===== BOUNDARY REFLECTION (10 sec) =====
+        week = syllabus.current_week if syllabus else 1
+        boundary_reminder = self._get_boundary_reminder(week)
+        script_parts.append(boundary_reminder)
+        
+        # ===== CLOSING (5 sec) =====
         script_parts.append(
-            context.get(
-                "boundary_reminder", "Notice where you say yes when you mean no today."
-            )
+            "You've got this. Check in tonight to close the loop. Have a focused day."
         )
-
-        # Closing (5 sec)
-        script_parts.append("You've got this. Check in tonight. Have a focused day.")
-
+        
         script = " ".join(script_parts)
-
+        
         self.logger.log(
             action="generate_script",
-            inputs={"context_keys": list(context.keys())},
+            inputs={
+                "energy": energy,
+                "priorities_count": len(priorities),
+                "carryover_count": len(carryover),
+                "syllabus_week": syllabus.current_week if syllabus else 0,
+            },
             outputs={"script_length": len(script), "word_count": len(script.split())},
             status="completed",
         )
@@ -342,9 +355,11 @@ class DailyBriefingGenerator:
 
         # Save script to file
         script_file = SCRIPTS_DIR / f"{self.today_str}.txt"
+        script_file.parent.mkdir(parents=True, exist_ok=True)
         script_file.write_text(script, encoding="utf-8")
 
         output_file = OUTPUT_DIR / f"{self.today_str}_briefing.mp3"
+        output_file.parent.mkdir(parents=True, exist_ok=True)
 
         try:
             # Use the TTS system - simplified call
@@ -373,7 +388,7 @@ class DailyBriefingGenerator:
                 status="skipped",
                 level="warning",
             )
-            print(f"⚠️ TTS not available. Script saved to: {script_file}")
+            print(f"[INFO] TTS not available. Script saved to: {script_file}")
             return None
 
         except Exception as e:
@@ -384,41 +399,58 @@ class DailyBriefingGenerator:
                 status="error",
                 level="error",
             )
+            print(f"[ERROR] Audio synthesis failed: {e}")
             return None
 
     def run(self) -> Dict:
         """Run the full briefing generation pipeline"""
-        print(f"🎙️ Daily Briefing Generator - {self.today_str}")
-        print("=" * 50)
+        print(f"\n{'=' * 60}")
+        print(f"  Daily Briefing Generator - {self.today_str}")
+        print(f"{'=' * 60}")
 
         # Check if AM check-in exists
         tracker = CheckInTracker()
         if self.prompt:
-            print(f"\n⚠️ {self.prompt}")
+            print(f"\n[WARN] {self.prompt}")
             print("Proceeding with available data...\n")
 
-        # Gather context
-        print("📊 Gathering context...")
+        # Gather comprehensive context
+        print("[1/4] Gathering context...")
         context = self.gather_context()
+        
+        print(f"      - Check-ins found: {len(context.checkins)}")
+        print(f"      - Previous briefings: {len(context.briefings)}")
+        print(f"      - Pending tasks: {len(context.pending_tasks)}")
+        if context.syllabus:
+            print(f"      - Course week: {context.syllabus.current_week}")
+            print(f"      - Topic: {context.syllabus.week_topic[:50]}...")
 
         # Generate script
-        print("📝 Generating script...")
+        print("\n[2/4] Generating script...")
         script = self.generate_script(context)
         word_count = len(script.split())
-        print(f"   Word count: {word_count} (~{word_count * 0.4:.0f} seconds)")
+        duration_est = word_count * 0.4  # ~2.5 words per second at normal pace
+        print(f"      - Words: {word_count}")
+        print(f"      - Est. duration: {duration_est:.0f} seconds")
 
         # Synthesize audio
-        print("🔊 Synthesizing audio...")
+        print("\n[3/4] Synthesizing audio...")
         audio_file = self.synthesize_audio(script)
 
         # Log the generation
+        print("\n[4/4] Logging generation...")
         AudioGenerationLog.log_generation(
             audio_type="briefing",
             script_file=str(SCRIPTS_DIR / f"{self.today_str}.txt"),
             audio_file=str(audio_file) if audio_file else "",
-            duration_sec=90,
+            duration_sec=int(duration_est),
             voice="af_nicole",
-            source_data={"am_checkin": self.today_str, "pm_checkin": self.yesterday},
+            source_data={
+                "checkins_used": len(context.checkins),
+                "briefings_referenced": len(context.briefings),
+                "pending_tasks": len(context.pending_tasks),
+                "syllabus_week": context.syllabus.current_week if context.syllabus else 0,
+            },
         )
 
         # Update check-in tracker
@@ -438,14 +470,26 @@ class DailyBriefingGenerator:
             "script_file": str(SCRIPTS_DIR / f"{self.today_str}.txt"),
             "audio_file": str(audio_file) if audio_file else None,
             "word_count": word_count,
-            "script_preview": script[:200] + "...",
+            "duration_seconds": int(duration_est),
+            "context_summary": {
+                "checkins": len(context.checkins),
+                "briefings": len(context.briefings),
+                "pending_tasks": len(context.pending_tasks),
+                "syllabus_week": context.syllabus.current_week if context.syllabus else 0,
+            },
+            "script_preview": script[:300] + "..." if len(script) > 300 else script,
         }
 
-        print("\n" + "=" * 50)
-        print("✅ Briefing generation complete!")
-        print(f"   Script: {result['script_file']}")
+        print(f"\n{'=' * 60}")
+        print("  BRIEFING GENERATION COMPLETE")
+        print(f"{'=' * 60}")
+        print(f"  Script: {result['script_file']}")
         if audio_file:
-            print(f"   Audio: {result['audio_file']}")
+            print(f"  Audio:  {result['audio_file']}")
+        else:
+            print("  Audio:  [Skipped - TTS not configured]")
+        print(f"  Words:  {word_count} (~{duration_est:.0f} sec)")
+        print(f"{'=' * 60}\n")
 
         return result
 

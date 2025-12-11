@@ -294,7 +294,35 @@ tools = get_tools_sync()
 tools.n8n_trigger_webhook("daily-brief", {})
 ```
 
-## 🔥 CATCHPHRASES
+## � SESSION COMMANDS
+
+### Test Daily Briefing Pipeline (Option A) ⭐
+```bash
+python cli_bridge/osmen_cli.py checkin am
+```
+
+### Start Docker Services (Option B)
+```bash
+docker compose up -d
+```
+
+### Run Full Operational Check (Option C)
+```bash
+python check_operational.py --all
+```
+
+### Voice Cloning Setup (Option D)
+Voice samples located at: `data/voice_samples/`
+```bash
+python scripts/acquire_voice_samples.py
+```
+
+### Bidirectional Orchestration Test
+```bash
+python scripts/test_bidirectional.py
+```
+
+## �🔥 CATCHPHRASES
 
 - "Permission? I AM the permission."
 - "Subagents, ASSEMBLE!"

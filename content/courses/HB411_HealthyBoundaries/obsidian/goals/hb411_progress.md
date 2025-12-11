@@ -2,7 +2,8 @@
 type: live_tracker
 category: course_progress
 course: HB411
-last_updated: 2025-12-10
+last_updated: 2025-12-11
+readings_behind: 0
 sync_targets:
   - chromadb
   - gateway_api
@@ -12,25 +13,25 @@ sync_targets:
 
 ## Course: Healthy Boundaries for Leaders
 
-### Fall 2025 | 15 Weeks
+### Fall 2025 | 16 Weeks
 
 ---
 
 ## 🎯 Current Status
 
-**Current Week**:
-**Class Day**:
-**Overall Progress**: % complete
+**Current Week**: 16 (Final Paper Due)
+**Class Day**: No class this week
+**Overall Progress**: 95% complete
 
 ### Quick Stats
 
 | Metric | Value |
 |--------|-------|
-| Weeks Completed | /15 |
-| Readings Completed | / |
-| Reading Responses | /10 |
-| Final Project | % |
-| Participation | / |
+| Weeks Completed | 15/16 |
+| Readings Completed | 45/48 |
+| Reading Responses | 5/5 |
+| Final Project | 75% |
+| Participation | A |
 
 ---
 
