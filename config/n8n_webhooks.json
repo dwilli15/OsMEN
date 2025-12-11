@@ -1,0 +1,8 @@
+{
+  "coordinator": "/webhook/coordinator",
+  "daily_brief": "/webhook/daily-brief",
+  "knowledge": "/webhook/knowledge-query",
+  "security": "/webhook/security-alert",
+  "task": "/webhook/task-create",
+  "voice": "/webhook/voice-input"
+}

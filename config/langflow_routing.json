@@ -1,0 +1,13 @@
+{
+  "flow_routing": {
+    "knowledge": null,
+    "security": null,
+    "daily_brief": null,
+    "research": null
+  },
+  "tools": {
+    "mcp_url": "http://localhost:8081",
+    "librarian_url": "http://localhost:8200",
+    "n8n_webhook_base": "http://localhost:5678/webhook"
+  }
+}

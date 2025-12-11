@@ -1,0 +1,366 @@
+{
+  "name": "Workspace Map Auto-Update",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "D:\\OsMEN",
+        "events": [
+          "add",
+          "change",
+          "delete"
+        ],
+        "options": {
+          "depth": 10,
+          "ignored": [
+            ".git",
+            ".venv",
+            "__pycache__",
+            "node_modules",
+            "*.pyc",
+            "*.log"
+          ]
+        }
+      },
+      "id": "file_watcher",
+      "name": "Watch Workspace Files",
+      "type": "n8n-nodes-base.localFileTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "schedule_trigger",
+      "name": "Scheduled Full Scan",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "workspace-scan",
+        "responseMode": "lastNode"
+      },
+      "id": "webhook_trigger",
+      "name": "Manual Scan Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Debounce rapid file changes\nconst now = Date.now();\nconst lastUpdate = $workflow.staticData.lastUpdate || 0;\nconst debounceMs = 5000; // 5 seconds\n\nif (now - lastUpdate < debounceMs) {\n  return []; // Skip this update\n}\n\n$workflow.staticData.lastUpdate = now;\n\n// Get the event type and path\nconst event = $input.item.json;\nreturn [{\n  json: {\n    event_type: event.eventType || 'change',\n    file_path: event.path || 'unknown',\n    timestamp: new Date().toISOString(),\n    trigger: 'file_watcher'\n  }\n}];"
+      },
+      "id": "debounce_filter",
+      "name": "Debounce Changes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    trigger: 'scheduled',\n    full_scan: true,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "schedule_prep",
+      "name": "Prepare Scheduled Scan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    trigger: 'manual',\n    full_scan: true,\n    timestamp: new Date().toISOString(),\n    requested_by: $input.item.json.body?.user || 'unknown'\n  }\n}];"
+      },
+      "id": "webhook_prep",
+      "name": "Prepare Manual Scan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Merge all trigger inputs\nconst allInputs = $input.all();\nconst triggerData = allInputs[0]?.json || {};\n\nreturn [{\n  json: {\n    ...triggerData,\n    scan_command: triggerData.full_scan ? 'full' : 'incremental'\n  }\n}];"
+      },
+      "id": "merge_triggers",
+      "name": "Merge Triggers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        650,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cd D:\\OsMEN && python -m agents.workspace_scanner.workspace_scanner_agent",
+        "executeInBackground": false
+      },
+      "id": "run_scanner",
+      "name": "Run Workspace Scanner",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        850,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const stdout = $input.item.json.stdout || '';\nconst stderr = $input.item.json.stderr || '';\nconst exitCode = $input.item.json.exitCode;\n\nconst success = exitCode === 0;\nconst statsMatch = stdout.match(/Scan complete: (\\d+) files, (\\d+) dirs, (\\d+) agents, (\\d+) capabilities/);\n\nreturn [{\n  json: {\n    success,\n    exit_code: exitCode,\n    stats: statsMatch ? {\n      files: parseInt(statsMatch[1]),\n      directories: parseInt(statsMatch[2]),\n      agents: parseInt(statsMatch[3]),\n      capabilities: parseInt(statsMatch[4])\n    } : null,\n    error: success ? null : stderr,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "parse_result",
+      "name": "Parse Scanner Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1050,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.success }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check_success",
+      "name": "Check Success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8080/api/workspace/map-updated",
+        "method": "POST",
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}"
+            },
+            {
+              "name": "stats",
+              "value": "={{ JSON.stringify($json.stats) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "notify_gateway",
+      "name": "Notify Gateway",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1450,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "message": "Workspace map updated successfully",
+        "additionalFields": {
+          "timestamp": "={{ $json.timestamp }}",
+          "stats": "={{ $json.stats }}"
+        }
+      },
+      "id": "log_success",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "message": "Workspace scan failed",
+        "additionalFields": {
+          "error": "={{ $json.error }}",
+          "exit_code": "={{ $json.exit_code }}"
+        }
+      },
+      "id": "log_error",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        800
+      ]
+    }
+  ],
+  "connections": {
+    "Watch Workspace Files": {
+      "main": [
+        [
+          {
+            "node": "Debounce Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scheduled Full Scan": {
+      "main": [
+        [
+          {
+            "node": "Prepare Scheduled Scan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Scan Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Manual Scan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Debounce Changes": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Scheduled Scan": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Manual Scan": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Triggers": {
+      "main": [
+        [
+          {
+            "node": "Run Workspace Scanner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Workspace Scanner": {
+      "main": [
+        [
+          {
+            "node": "Parse Scanner Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Scanner Result": {
+      "main": [
+        [
+          {
+            "node": "Check Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Success": {
+      "main": [
+        [
+          {
+            "node": "Notify Gateway",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    "infrastructure",
+    "workspace",
+    "automation"
+  ],
+  "triggerCount": 3,
+  "updatedAt": "2025-12-09T00:00:00.000Z",
+  "id": "workspace_map_updater"
+}

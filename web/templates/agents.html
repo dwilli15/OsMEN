@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - OsMEN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen" x-data="agentsApp()">
+    <!-- Navigation -->
+    <nav class="gradient-bg border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-3">
+                        <i class="fas fa-brain text-2xl text-blue-400"></i>
+                        <span class="text-xl font-bold">OsMEN</span>
+                    </a>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="/" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-home mr-2"></i>Dashboard
+                            </a>
+                            <a href="/syllabus" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-file-alt mr-2"></i>Syllabus
+                            </a>
+                            <a href="/calendar" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-calendar mr-2"></i>Calendar
+                            </a>
+                            <a href="/tasks" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-tasks mr-2"></i>Tasks
+                            </a>
+                            <a href="/agents" class="px-3 py-2 rounded-md text-sm font-medium bg-slate-700">
+                                <i class="fas fa-robot mr-2"></i>Agents
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2">Agent Status</h1>
+            <p class="text-slate-400">Monitor and manage your AI agents</p>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-slate-800 rounded-lg p-4 text-center">
+                <p class="text-2xl font-bold text-green-400" x-text="agents.filter(a => a.status === 'operational').length"></p>
+                <p class="text-sm text-slate-400">Operational</p>
+            </div>
+            <div class="bg-slate-800 rounded-lg p-4 text-center">
+                <p class="text-2xl font-bold text-amber-400" x-text="agents.filter(a => a.status === 'degraded').length"></p>
+                <p class="text-sm text-slate-400">Degraded</p>
+            </div>
+            <div class="bg-slate-800 rounded-lg p-4 text-center">
+                <p class="text-2xl font-bold text-red-400" x-text="agents.filter(a => a.status === 'offline').length"></p>
+                <p class="text-sm text-slate-400">Offline</p>
+            </div>
+            <div class="bg-slate-800 rounded-lg p-4 text-center">
+                <p class="text-2xl font-bold text-blue-400" x-text="agents.length"></p>
+                <p class="text-sm text-slate-400">Total Agents</p>
+            </div>
+        </div>
+
+        <!-- Agent Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <template x-for="agent in agents" :key="agent.name">
+                <div class="bg-slate-800 rounded-xl p-6 hover:bg-slate-700/50 transition-colors">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div 
+                                class="w-10 h-10 rounded-lg flex items-center justify-center"
+                                :class="{
+                                    'bg-green-500/20': agent.status === 'operational',
+                                    'bg-amber-500/20': agent.status === 'degraded',
+                                    'bg-red-500/20': agent.status === 'offline'
+                                }"
+                            >
+                                <i 
+                                    class="fas text-lg"
+                                    :class="{
+                                        'fa-shield-alt': agent.name.includes('Security') || agent.name.includes('Boot'),
+                                        'fa-sun': agent.name.includes('Daily'),
+                                        'fa-crosshairs': agent.name.includes('Focus'),
+                                        'fa-book': agent.name.includes('Knowledge') || agent.name.includes('Librarian'),
+                                        'fa-video': agent.name.includes('Content'),
+                                        'fa-flask': agent.name.includes('Research'),
+                                        'fa-user-tie': agent.name.includes('Personal'),
+                                        'fa-envelope': agent.name.includes('Email'),
+                                        'fa-microchip': agent.name.includes('OS'),
+                                        'fa-sitemap': agent.name.includes('Orchestration'),
+                                        'fa-robot': !['Security', 'Boot', 'Daily', 'Focus', 'Knowledge', 'Librarian', 'Content', 'Research', 'Personal', 'Email', 'OS', 'Orchestration'].some(k => agent.name.includes(k))
+                                    }"
+                                    :style="{ color: agent.status === 'operational' ? '#22c55e' : agent.status === 'degraded' ? '#f59e0b' : '#ef4444' }"
+                                ></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold" x-text="agent.name"></h3>
+                                <p class="text-xs text-slate-400" x-text="agent.category || 'General'"></p>
+                            </div>
+                        </div>
+                        <span 
+                            class="w-3 h-3 rounded-full"
+                            :class="{
+                                'bg-green-500': agent.status === 'operational',
+                                'bg-amber-500': agent.status === 'degraded',
+                                'bg-red-500': agent.status === 'offline'
+                            }"
+                        ></span>
+                    </div>
+                    
+                    <p class="text-sm text-slate-400 mb-4" x-text="agent.description"></p>
+                    
+                    <!-- Capabilities -->
+                    <div x-show="agent.capabilities && agent.capabilities.length > 0" class="mb-4">
+                        <p class="text-xs text-slate-500 mb-2">Capabilities:</p>
+                        <div class="flex flex-wrap gap-1">
+                            <template x-for="cap in agent.capabilities.slice(0, 3)" :key="cap">
+                                <span class="text-xs bg-slate-700 px-2 py-0.5 rounded" x-text="cap"></span>
+                            </template>
+                            <span 
+                                x-show="agent.capabilities.length > 3" 
+                                class="text-xs text-slate-500"
+                                x-text="'+' + (agent.capabilities.length - 3) + ' more'"
+                            ></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Status Info -->
+                    <div class="flex items-center justify-between text-xs">
+                        <span 
+                            class="px-2 py-1 rounded-full"
+                            :class="{
+                                'bg-green-500/20 text-green-400': agent.status === 'operational',
+                                'bg-amber-500/20 text-amber-400': agent.status === 'degraded',
+                                'bg-red-500/20 text-red-400': agent.status === 'offline'
+                            }"
+                            x-text="agent.status"
+                        ></span>
+                        <span class="text-slate-500" x-text="agent.last_active || 'Never'"></span>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Loading State -->
+        <div x-show="loading" class="text-center py-12">
+            <i class="fas fa-spinner fa-spin text-4xl text-blue-400 mb-4"></i>
+            <p class="text-slate-400">Loading agents...</p>
+        </div>
+
+        <!-- Error State -->
+        <div x-show="error" class="bg-red-500/20 border border-red-500 rounded-xl p-6 text-center">
+            <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+            <p class="text-red-400" x-text="error"></p>
+            <button 
+                @click="loadAgents()"
+                class="mt-4 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg"
+            >
+                Retry
+            </button>
+        </div>
+    </main>
+
+    <script>
+        function agentsApp() {
+            return {
+                agents: [],
+                loading: true,
+                error: null,
+
+                async init() {
+                    await this.loadAgents();
+                },
+
+                async loadAgents() {
+                    this.loading = true;
+                    this.error = null;
+                    
+                    try {
+                        const response = await fetch('/api/agents/status');
+                        const data = await response.json();
+                        this.agents = data.agents || [];
+                    } catch (error) {
+                        console.error('Error loading agents:', error);
+                        this.error = 'Failed to load agent status. Please try again.';
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            };
+        }
+    </script>
+</body>
+</html>

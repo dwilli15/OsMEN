@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flows & Workflows - OsMEN Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.6/dist/vis-network.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        #flow-graph { height: 400px; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div x-data="flowsManager()" x-init="init()">
+        <!-- Header -->
+        <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="/admin" class="text-gray-400 hover:text-white">&larr; Admin Hub</a>
+                    <h1 class="text-2xl font-bold text-cyan-400">🔄 Flows & Workflows</h1>
+                </div>
+                <div class="flex gap-3">
+                    <a href="http://localhost:7860" target="_blank"
+                       class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center gap-2">
+                        Open Langflow
+                    </a>
+                    <a href="http://localhost:5678" target="_blank"
+                       class="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg flex items-center gap-2">
+                        Open n8n
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6">
+            <!-- Stats Row -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                    <div class="text-sm text-gray-400">Total Pipelines</div>
+                    <div class="text-2xl font-bold text-cyan-400" x-text="registry.total || (langflowFlows.length + n8nWorkflows.length)"></div>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                    <div class="text-sm text-gray-400">Langflow Flows</div>
+                    <div class="text-2xl font-bold text-purple-400" x-text="langflowFlows.length"></div>
+                    <div class="text-xs text-gray-500" x-text="(registry.langflow_count || 0) + ' registered'"></div>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                    <div class="text-sm text-gray-400">n8n Workflows</div>
+                    <div class="text-2xl font-bold text-orange-400" x-text="n8nWorkflows.length"></div>
+                    <div class="text-xs text-gray-500" x-text="(registry.n8n_count || 0) + ' registered'"></div>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                    <div class="text-sm text-gray-400">Langflow Status</div>
+                    <div class="text-lg font-semibold" 
+                         :class="langflowStatus === 'online' ? 'text-green-400' : 'text-red-400'"
+                         x-text="langflowStatus"></div>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                    <div class="text-sm text-gray-400">n8n Status</div>
+                    <div class="text-lg font-semibold"
+                         :class="n8nStatus === 'online' ? 'text-green-400' : 'text-red-400'"
+                         x-text="n8nStatus"></div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="border-b border-gray-700 mb-6">
+                <nav class="flex gap-4">
+                    <button @click="activeTab = 'langflow'" 
+                            :class="activeTab === 'langflow' ? 'border-purple-400 text-purple-400' : 'border-transparent text-gray-400 hover:text-white'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        🧠 Langflow Flows
+                    </button>
+                    <button @click="activeTab = 'n8n'" 
+                            :class="activeTab === 'n8n' ? 'border-orange-400 text-orange-400' : 'border-transparent text-gray-400 hover:text-white'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        ⚡ n8n Workflows
+                    </button>
+                    <button @click="activeTab = 'graph'" 
+                            :class="activeTab === 'graph' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-gray-400 hover:text-white'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        📊 Integration Graph
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Langflow Tab -->
+            <div x-show="activeTab === 'langflow'" x-cloak>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <template x-for="flow in langflowFlows" :key="flow.name">
+                        <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                            <div class="px-4 py-3 border-b border-gray-700 bg-purple-900/30 flex justify-between items-center">
+                                <h3 class="font-semibold" x-text="flow.display_name"></h3>
+                                <span x-show="flow.registered" class="px-2 py-0.5 bg-green-600/50 text-green-300 text-xs rounded">Registered</span>
+                            </div>
+                            <div class="p-4">
+                                <div class="text-sm text-gray-400 mb-3" x-text="flow.description || 'No description'"></div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Nodes:</span>
+                                        <span x-text="flow.node_count"></span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Type:</span>
+                                        <span class="capitalize" x-text="flow.type"></span>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex gap-2">
+                                    <a :href="'http://localhost:7860/flow/' + flow.name" target="_blank"
+                                       class="flex-1 text-center px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded text-sm">
+                                        Open in Langflow
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- n8n Tab -->
+            <div x-show="activeTab === 'n8n'" x-cloak>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <template x-for="workflow in n8nWorkflows" :key="workflow.name">
+                        <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                            <div class="px-4 py-3 border-b border-gray-700 bg-orange-900/30 flex justify-between items-center">
+                                <h3 class="font-semibold" x-text="workflow.display_name"></h3>
+                                <span x-show="workflow.registered" class="px-2 py-0.5 bg-green-600/50 text-green-300 text-xs rounded">Registered</span>
+                            </div>
+                            <div class="p-4">
+                                <div class="text-sm text-gray-400 mb-3" x-text="workflow.description || 'Automation workflow'"></div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Nodes:</span>
+                                        <span x-text="workflow.node_count"></span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Trigger:</span>
+                                        <span class="capitalize" x-text="workflow.trigger_type"></span>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex gap-2">
+                                    <a href="http://localhost:5678" target="_blank"
+                                       class="flex-1 text-center px-3 py-2 bg-orange-600 hover:bg-orange-700 rounded text-sm">
+                                        Open in n8n
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Graph Tab -->
+            <div x-show="activeTab === 'graph'" x-cloak>
+                <div class="bg-gray-800 rounded-lg border border-gray-700 p-4">
+                    <h3 class="font-semibold mb-4">Flow Integration Map</h3>
+                    <div id="flow-graph" class="bg-gray-900 rounded-lg"></div>
+                    <div class="mt-4 flex gap-4 text-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4 bg-purple-500 rounded"></span>
+                            <span>Langflow Flow</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4 bg-orange-500 rounded"></span>
+                            <span>n8n Workflow</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4 bg-cyan-500 rounded"></span>
+                            <span>Agent</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function flowsManager() {
+            return {
+                activeTab: 'langflow',
+                langflowFlows: [],
+                n8nWorkflows: [],
+                registry: {},
+                langflowStatus: 'checking...',
+                n8nStatus: 'checking...',
+                network: null,
+                
+                async init() {
+                    await Promise.all([
+                        this.loadFlows(),
+                        this.checkServices()
+                    ]);
+                    
+                    // Initialize graph when tab is shown
+                    this.$watch('activeTab', (tab) => {
+                        if (tab === 'graph') {
+                            this.$nextTick(() => this.renderGraph());
+                        }
+                    });
+                },
+                
+                async loadFlows() {
+                    try {
+                        const res = await fetch('/api/admin/flows');
+                        const data = await res.json();
+                        this.langflowFlows = data.langflow || [];
+                        this.n8nWorkflows = data.n8n || [];
+                        this.registry = data.registry || {};
+                    } catch (e) {
+                        console.error('Failed to load flows:', e);
+                    }
+                },
+                
+                async checkServices() {
+                    // Check Langflow
+                    try {
+                        const res = await fetch('http://localhost:7860/health', { 
+                            mode: 'no-cors',
+                            signal: AbortSignal.timeout(3000)
+                        });
+                        this.langflowStatus = 'online';
+                    } catch (e) {
+                        this.langflowStatus = 'offline';
+                    }
+                    
+                    // Check n8n
+                    try {
+                        const res = await fetch('http://localhost:5678/healthz', {
+                            mode: 'no-cors',
+                            signal: AbortSignal.timeout(3000)
+                        });
+                        this.n8nStatus = 'online';
+                    } catch (e) {
+                        this.n8nStatus = 'offline';
+                    }
+                },
+                
+                renderGraph() {
+                    const container = document.getElementById('flow-graph');
+                    if (!container) return;
+                    
+                    // Build nodes and edges
+                    const nodes = [];
+                    const edges = [];
+                    let nodeId = 1;
+                    
+                    // Add Langflow flows
+                    this.langflowFlows.forEach(flow => {
+                        nodes.push({
+                            id: nodeId,
+                            label: flow.display_name,
+                            group: 'langflow',
+                            shape: 'box',
+                            color: { background: '#9333ea', border: '#a855f7' }
+                        });
+                        
+                        // Connect to related agent if name matches
+                        const agentMatch = flow.name.replace('_specialist', '').replace('_', ' ');
+                        nodeId++;
+                    });
+                    
+                    // Add n8n workflows
+                    this.n8nWorkflows.forEach(workflow => {
+                        nodes.push({
+                            id: nodeId,
+                            label: workflow.display_name,
+                            group: 'n8n',
+                            shape: 'box',
+                            color: { background: '#ea580c', border: '#f97316' }
+                        });
+                        nodeId++;
+                    });
+                    
+                    // Add coordinator as central node
+                    nodes.push({
+                        id: nodeId,
+                        label: 'Coordinator',
+                        group: 'coordinator',
+                        shape: 'ellipse',
+                        color: { background: '#06b6d4', border: '#22d3ee' },
+                        font: { size: 16, bold: true }
+                    });
+                    
+                    const coordinatorId = nodeId;
+                    
+                    // Connect flows to coordinator
+                    for (let i = 1; i < coordinatorId; i++) {
+                        edges.push({ from: coordinatorId, to: i, dashes: true });
+                    }
+                    
+                    const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+                    
+                    const options = {
+                        layout: {
+                            hierarchical: {
+                                direction: 'UD',
+                                sortMethod: 'directed',
+                                levelSeparation: 100
+                            }
+                        },
+                        physics: false,
+                        nodes: {
+                            font: { color: '#ffffff', size: 12 }
+                        },
+                        edges: {
+                            color: { color: '#4b5563' },
+                            arrows: { to: true }
+                        }
+                    };
+                    
+                    this.network = new vis.Network(container, data, options);
+                }
+            };
+        }
+    </script>
+</body>
+</html>

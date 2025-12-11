@@ -1,0 +1,111 @@
+{
+  "title": "The Wolf Shall Dwell with the Lamb",
+  "author": "Unknown",
+  "source_file": "D:\\OsMEN\\content\\courses\\M483INT_Pastoral_Ministry\\processed\\Wolf Shall Dwell with the Lamb, The - Law, Eric;.epub",
+  "format": "EPUB",
+  "total_chapters": 14,
+  "total_words": 30088,
+  "estimated_hours": 3.3,
+  "extraction_date": "2025-12-10T05:07:35.861140",
+  "chapters": [
+    {
+      "number": 1,
+      "title": "Contents",
+      "word_count": 162,
+      "estimated_minutes": 1.1,
+      "text_file": "chapter_001.txt"
+    },
+    {
+      "number": 2,
+      "title": "Introduction",
+      "word_count": 952,
+      "estimated_minutes": 6.3,
+      "text_file": "chapter_002.txt"
+    },
+    {
+      "number": 3,
+      "title": "CHAPTER 1The \u201cPeaceable Realm\u201d as a Vision of an Ideal Multicultural Community",
+      "word_count": 3672,
+      "estimated_minutes": 24.5,
+      "text_file": "chapter_003.txt"
+    },
+    {
+      "number": 4,
+      "title": "CHAPTER 3Differences in the Perception of Power and Their Consequences for Leade",
+      "word_count": 2425,
+      "estimated_minutes": 16.2,
+      "text_file": "chapter_004.txt"
+    },
+    {
+      "number": 5,
+      "title": "CHAPTER 4What Does the Bible Say to the Powerful and the Powerless?",
+      "word_count": 2095,
+      "estimated_minutes": 14.0,
+      "text_file": "chapter_005.txt"
+    },
+    {
+      "number": 6,
+      "title": "CHAPTER 5A Fresh Look at Pentecost as the Beginning of a Multicultural Church Co",
+      "word_count": 2220,
+      "estimated_minutes": 14.8,
+      "text_file": "chapter_006.txt"
+    },
+    {
+      "number": 7,
+      "title": "CHAPTER 6Who Has Power and Who Doesn\u2019t? Power Analysis, an Essential Skill for L",
+      "word_count": 2967,
+      "estimated_minutes": 19.8,
+      "text_file": "chapter_007.txt"
+    },
+    {
+      "number": 8,
+      "title": "CHAPTER 7The Wolves Lie Down with the Lambs",
+      "word_count": 2036,
+      "estimated_minutes": 13.6,
+      "text_file": "chapter_008.txt"
+    },
+    {
+      "number": 9,
+      "title": "CHAPTER 8Living Out the Fullness of the Gospel in the Peaceable Realm",
+      "word_count": 2016,
+      "estimated_minutes": 13.4,
+      "text_file": "chapter_009.txt"
+    },
+    {
+      "number": 10,
+      "title": "CHAPTER 9Mutual Invitation as Mutual Empowerment",
+      "word_count": 3268,
+      "estimated_minutes": 21.8,
+      "text_file": "chapter_010.txt"
+    },
+    {
+      "number": 11,
+      "title": "CHAPTER 11Liturgy as Spiritual Discipline for Leadership in a Multicultural Comm",
+      "word_count": 4006,
+      "estimated_minutes": 26.7,
+      "text_file": "chapter_011.txt"
+    },
+    {
+      "number": 12,
+      "title": "Appendix AMutual Invitation",
+      "word_count": 431,
+      "estimated_minutes": 2.9,
+      "text_file": "chapter_012.txt"
+    },
+    {
+      "number": 13,
+      "title": "Appendix BUsing Photolanguage in Small Group Communication",
+      "word_count": 1191,
+      "estimated_minutes": 7.9,
+      "text_file": "chapter_013.txt"
+    },
+    {
+      "number": 14,
+      "title": "Appendix CCommunity Bible Study",
+      "word_count": 2647,
+      "estimated_minutes": 17.6,
+      "text_file": "chapter_014.txt"
+    }
+  ],
+  "output_dir": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries\\readings\\raw\\The_Wolf_Shall_Dwell_with_the_Lamb"
+}

@@ -112,3 +112,33 @@ chromadb>=0.5.0
 sentence-transformers>=2.0.0
 langgraph>=0.2.0
 
+# ============================================================================
+# OsMEN Extended Integrations (v3.1)
+# ============================================================================
+
+# System Monitoring
+nvidia-ml-py>=12.0.0          # GPU monitoring (replaces deprecated pynvml)
+pywin32>=306                   # Windows Task Scheduler, Registry access
+
+# Voice/Audio Integration
+audiblez>=0.4.9               # Audiobook creator (Kokoro TTS, EPUB/PDF to M4B)
+kokoro-onnx>=0.3.3            # Kokoro TTS ONNX runtime (lightweight, 54 voices)
+ebooklib>=0.18                # EPUB parsing
+edge-tts>=6.0.0               # Microsoft Edge TTS (free, high quality)
+pyttsx3>=2.90                 # Local TTS engine
+soundfile>=0.12.0             # Audio file I/O
+# faster-whisper>=0.10.0      # Local STT (optional - requires CUDA for best perf)
+# elevenlabs>=0.2.0           # Premium TTS (optional - requires API key)
+
+# Voice Cloning (optional - heavy dependencies, requires GPU for good performance)
+# TTS>=0.22.0                 # Coqui TTS with XTTS for zero-shot voice cloning
+# Note: Install manually with `pip install TTS` for voice cloning support
+
+# Media Entertainment
+# tmdb>=0.1.0                 # TMDB API (deprecated, using direct requests)
+# Note: TMDB and OpenSubtitles use aiohttp (already included above)
+
+# Creative Tools (optional - heavy dependencies)
+# shap-e>=0.1.0               # Text-to-3D (optional - requires PyTorch)
+# Note: InvokeAI and ComfyUI are separate installations
+

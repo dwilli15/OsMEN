@@ -1,84 +1,339 @@
 {
-  "name": "OsMEN Coordinator Agent",
-  "description": "Main coordinator agent that routes tasks to specialist agents",
-  "nodes": [
-    {
-      "id": "input",
-      "type": "ChatInput",
-      "data": {
-        "message": "User input"
+  "name": "OsMEN Coordinator",
+  "description": "Main coordinator agent that routes tasks to specialist agents using Ollama and ChromaDB",
+  "data": {
+    "nodes": [
+      {
+        "id": "ChatInput-OsMEN1",
+        "type": "genericNode",
+        "position": {
+          "x": 100,
+          "y": 300
+        },
+        "data": {
+          "id": "ChatInput-OsMEN1",
+          "description": "Get chat inputs from the user",
+          "display_name": "Chat Input",
+          "node": {
+            "base_classes": [
+              "Message"
+            ],
+            "description": "Get chat inputs from the Playground.",
+            "display_name": "Chat Input",
+            "icon": "MessagesSquare",
+            "template": {
+              "input_value": {
+                "display_name": "Text",
+                "info": "Message to be passed as input.",
+                "value": "",
+                "type": "str",
+                "show": true
+              },
+              "sender": {
+                "value": "User",
+                "options": [
+                  "Machine",
+                  "User"
+                ],
+                "type": "str",
+                "show": true
+              },
+              "sender_name": {
+                "value": "User",
+                "type": "str",
+                "show": true
+              },
+              "should_store_message": {
+                "value": true,
+                "type": "bool",
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "message",
+                "display_name": "Message",
+                "types": [
+                  "Message"
+                ],
+                "method": "message_response"
+              }
+            ]
+          },
+          "type": "ChatInput"
+        }
+      },
+      {
+        "id": "Prompt-OsMEN2",
+        "type": "genericNode",
+        "position": {
+          "x": 100,
+          "y": 550
+        },
+        "data": {
+          "id": "Prompt-OsMEN2",
+          "description": "System prompt for the OsMEN coordinator",
+          "display_name": "System Prompt",
+          "node": {
+            "base_classes": [
+              "Message"
+            ],
+            "description": "Create a prompt template with dynamic variables.",
+            "display_name": "Prompt",
+            "icon": "braces",
+            "template": {
+              "template": {
+                "display_name": "Template",
+                "type": "prompt",
+                "value": "You are OsMEN Coordinator, an intelligent AI assistant for system management and automation.\n\nYou can help with:\n- Boot security and system hardening\n- Daily briefings and task summaries\n- Focus and productivity management\n- Knowledge management and note-taking\n- System optimization\n\nAnalyze the user's request and respond helpfully. If a task requires a specialist agent, indicate which one should handle it.\n\nUser request: {user_input}\n\nProvide a helpful response:",
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "prompt",
+                "display_name": "Prompt",
+                "types": [
+                  "Message"
+                ],
+                "method": "build_prompt"
+              }
+            ]
+          },
+          "type": "Prompt"
+        }
+      },
+      {
+        "id": "ChatOllama-OsMEN3",
+        "type": "genericNode",
+        "position": {
+          "x": 500,
+          "y": 400
+        },
+        "data": {
+          "id": "ChatOllama-OsMEN3",
+          "description": "Local LLM via Ollama",
+          "display_name": "Ollama Chat",
+          "node": {
+            "base_classes": [
+              "LanguageModel",
+              "Message"
+            ],
+            "description": "Generate text using Ollama local models.",
+            "display_name": "Ollama",
+            "icon": "Ollama",
+            "template": {
+              "model_name": {
+                "display_name": "Model Name",
+                "type": "str",
+                "value": "llama3.2",
+                "show": true
+              },
+              "base_url": {
+                "display_name": "Base URL",
+                "type": "str",
+                "value": "http://localhost:11434",
+                "show": true
+              },
+              "temperature": {
+                "display_name": "Temperature",
+                "type": "float",
+                "value": 0.7,
+                "show": true
+              },
+              "input_value": {
+                "display_name": "Input",
+                "type": "str",
+                "input_types": [
+                  "Message"
+                ],
+                "show": true
+              },
+              "system_message": {
+                "display_name": "System Message",
+                "type": "str",
+                "input_types": [
+                  "Message"
+                ],
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "text_output",
+                "display_name": "Text Response",
+                "types": [
+                  "Message"
+                ],
+                "method": "text_response"
+              },
+              {
+                "name": "model_output",
+                "display_name": "Language Model",
+                "types": [
+                  "LanguageModel"
+                ],
+                "method": "build_model"
+              }
+            ]
+          },
+          "type": "ChatOllama"
+        }
+      },
+      {
+        "id": "ChatOutput-OsMEN4",
+        "type": "genericNode",
+        "position": {
+          "x": 900,
+          "y": 400
+        },
+        "data": {
+          "id": "ChatOutput-OsMEN4",
+          "description": "Display the response to the user",
+          "display_name": "Chat Output",
+          "node": {
+            "base_classes": [
+              "Message"
+            ],
+            "description": "Display a chat message in the Playground.",
+            "display_name": "Chat Output",
+            "icon": "MessagesSquare",
+            "template": {
+              "input_value": {
+                "display_name": "Text",
+                "info": "Message to be passed as output.",
+                "type": "str",
+                "input_types": [
+                  "Message",
+                  "Data"
+                ],
+                "show": true
+              },
+              "sender": {
+                "value": "Machine",
+                "options": [
+                  "Machine",
+                  "User"
+                ],
+                "type": "str",
+                "show": true
+              },
+              "sender_name": {
+                "value": "OsMEN",
+                "type": "str",
+                "show": true
+              },
+              "should_store_message": {
+                "value": true,
+                "type": "bool",
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "message",
+                "display_name": "Message",
+                "types": [
+                  "Message"
+                ],
+                "method": "message_response"
+              }
+            ]
+          },
+          "type": "ChatOutput"
+        }
       }
-    },
-    {
-      "id": "llm",
-      "type": "ChatOllama",
-      "data": {
-        "model": "llama2",
-        "base_url": "http://ollama:11434",
-        "temperature": 0.7
-      }
-    },
-    {
-      "id": "router",
-      "type": "ConditionalRouter",
-      "data": {
-        "routes": [
-          {
-            "condition": "boot_hardening",
-            "target": "boot_hardening_agent"
+    ],
+    "edges": [
+      {
+        "id": "edge-1",
+        "source": "ChatInput-OsMEN1",
+        "target": "ChatOllama-OsMEN3",
+        "sourceHandle": "{\"dataType\": \"ChatInput\", \"id\": \"ChatInput-OsMEN1\", \"name\": \"message\", \"output_types\": [\"Message\"]}",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"ChatOllama-OsMEN3\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}",
+        "data": {
+          "sourceHandle": {
+            "dataType": "ChatInput",
+            "id": "ChatInput-OsMEN1",
+            "name": "message",
+            "output_types": [
+              "Message"
+            ]
           },
-          {
-            "condition": "daily_brief",
-            "target": "daily_brief_agent"
-          },
-          {
-            "condition": "focus_guardrails",
-            "target": "focus_guardrails_agent"
-          },
-          {
-            "condition": "content_editing",
-            "target": "content_editing_agent"
-          },
-          {
-            "condition": "research_intel",
-            "target": "research_intel_agent"
+          "targetHandle": {
+            "fieldName": "input_value",
+            "id": "ChatOllama-OsMEN3",
+            "inputTypes": [
+              "Message"
+            ],
+            "type": "str"
           }
-        ]
+        }
+      },
+      {
+        "id": "edge-2",
+        "source": "Prompt-OsMEN2",
+        "target": "ChatOllama-OsMEN3",
+        "sourceHandle": "{\"dataType\": \"Prompt\", \"id\": \"Prompt-OsMEN2\", \"name\": \"prompt\", \"output_types\": [\"Message\"]}",
+        "targetHandle": "{\"fieldName\": \"system_message\", \"id\": \"ChatOllama-OsMEN3\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}",
+        "data": {
+          "sourceHandle": {
+            "dataType": "Prompt",
+            "id": "Prompt-OsMEN2",
+            "name": "prompt",
+            "output_types": [
+              "Message"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "system_message",
+            "id": "ChatOllama-OsMEN3",
+            "inputTypes": [
+              "Message"
+            ],
+            "type": "str"
+          }
+        }
+      },
+      {
+        "id": "edge-3",
+        "source": "ChatOllama-OsMEN3",
+        "target": "ChatOutput-OsMEN4",
+        "sourceHandle": "{\"dataType\": \"ChatOllama\", \"id\": \"ChatOllama-OsMEN3\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"ChatOutput-OsMEN4\", \"inputTypes\": [\"Message\", \"Data\"], \"type\": \"str\"}",
+        "data": {
+          "sourceHandle": {
+            "dataType": "ChatOllama",
+            "id": "ChatOllama-OsMEN3",
+            "name": "text_output",
+            "output_types": [
+              "Message"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "input_value",
+            "id": "ChatOutput-OsMEN4",
+            "inputTypes": [
+              "Message",
+              "Data"
+            ],
+            "type": "str"
+          }
+        }
       }
-    },
-    {
-      "id": "memory",
-      "type": "VectorStoreRetriever",
-      "data": {
-        "vector_store": "qdrant",
-        "collection_name": "osmen_memory",
-        "host": "http://qdrant:6333"
-      }
-    },
-    {
-      "id": "output",
-      "type": "ChatOutput",
-      "data": {
-        "message": "Agent response"
-      }
+    ],
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 0.8
     }
-  ],
-  "edges": [
-    {
-      "source": "input",
-      "target": "llm"
-    },
-    {
-      "source": "llm",
-      "target": "router"
-    },
-    {
-      "source": "llm",
-      "target": "memory"
-    },
-    {
-      "source": "router",
-      "target": "output"
-    }
+  },
+  "id": "osmen-coordinator-v1",
+  "is_component": false,
+  "last_tested_version": "1.5.0",
+  "tags": [
+    "osmen",
+    "coordinator",
+    "agent"
   ]
 }

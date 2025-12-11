@@ -1,0 +1,267 @@
+{
+  "name": "HB411 Podcast Specialist",
+  "description": "Generates 22-minute podcast scripts summarizing weekly HB411 course content",
+  "data": {
+    "nodes": [
+      {
+        "id": "PodcastInput-001",
+        "type": "genericNode",
+        "position": {
+          "x": 100,
+          "y": 300
+        },
+        "data": {
+          "id": "PodcastInput-001",
+          "description": "Receive podcast generation request with week context",
+          "display_name": "Podcast Request",
+          "node": {
+            "base_classes": [
+              "Message"
+            ],
+            "description": "Receive podcast generation request",
+            "display_name": "Chat Input",
+            "icon": "MessagesSquare",
+            "template": {
+              "input_value": {
+                "display_name": "Request",
+                "info": "Week number, topic, and RAG context",
+                "value": "",
+                "type": "str",
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "message",
+                "display_name": "Message",
+                "types": [
+                  "Message"
+                ],
+                "method": "message_response"
+              }
+            ]
+          },
+          "type": "ChatInput"
+        }
+      },
+      {
+        "id": "PodcastPrompt-001",
+        "type": "genericNode",
+        "position": {
+          "x": 100,
+          "y": 550
+        },
+        "data": {
+          "id": "PodcastPrompt-001",
+          "description": "Podcast script generation prompt",
+          "display_name": "Podcast Script Prompt",
+          "node": {
+            "base_classes": [
+              "Message"
+            ],
+            "description": "System prompt for podcast generation",
+            "display_name": "Prompt",
+            "icon": "braces",
+            "template": {
+              "template": {
+                "display_name": "Template",
+                "type": "prompt",
+                "value": "You are a professional podcast host for the HB411 Healthy Boundaries for Leaders course at a theological seminary. Your podcast helps ministry students integrate course content through engaging audio lectures.\n\n## PODCAST SPECIFICATIONS\n- Target Duration: 22 minutes (~3,300 words)\n- Tone: Warm, professional, pastoral\n- Audience: Seminary students, ministry leaders\n- Style: Educational but conversational, like a thoughtful mentor\n\n## REQUIRED STRUCTURE\n\n### INTRO (2 min / ~300 words)\n- Warm greeting\n- Week number and topic introduction\n- Brief overview of what listeners will learn\n- Connection to previous week (if applicable)\n\n### SECTION 1: FOUNDATIONS (5 min / ~750 words)\n- Key concepts from assigned readings\n- Definitions and frameworks\n- Biblical/theological grounding\n\n### SECTION 2: DEEP DIVE (8 min / ~1200 words)\n- Detailed exploration of main themes\n- Real-world ministry scenarios\n- Case studies or examples\n- Integration with course learning outcomes\n\n### SECTION 3: PRACTICAL APPLICATION (5 min / ~750 words)\n- How to apply these concepts\n- Common challenges and solutions\n- Self-assessment questions\n- Ministry context considerations\n\n### OUTRO (2 min / ~300 words)\n- Key takeaways summary (3-5 points)\n- Reflection questions for the week\n- Preview of next week\n- Encouraging closing words\n\n## SPEAKING NOTES\n- Use [PAUSE] for natural breaks\n- Use [EMPHASIS] for key points\n- Include transitions between sections\n- Write for the EAR, not the eye\n\n## CONTEXT PROVIDED\n{user_input}\n\n## GENERATE THE FULL PODCAST SCRIPT\nWrite the complete 22-minute podcast script following the structure above. Make it engaging, substantive, and appropriate for graduate-level ministry students.",
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "prompt",
+                "display_name": "Prompt",
+                "types": [
+                  "Message"
+                ],
+                "method": "build_prompt"
+              }
+            ]
+          },
+          "type": "Prompt"
+        }
+      },
+      {
+        "id": "PodcastLLM-001",
+        "type": "genericNode",
+        "position": {
+          "x": 400,
+          "y": 400
+        },
+        "data": {
+          "id": "PodcastLLM-001",
+          "description": "LLM for podcast generation",
+          "display_name": "Podcast Generator LLM",
+          "node": {
+            "base_classes": [
+              "Message"
+            ],
+            "description": "Generate podcast script using LLM",
+            "display_name": "OpenAI Model",
+            "icon": "OpenAI",
+            "template": {
+              "model_name": {
+                "display_name": "Model Name",
+                "value": "gpt-4o",
+                "type": "str",
+                "show": true
+              },
+              "temperature": {
+                "display_name": "Temperature",
+                "value": 0.7,
+                "type": "float",
+                "show": true
+              },
+              "max_tokens": {
+                "display_name": "Max Tokens",
+                "value": 8000,
+                "type": "int",
+                "show": true
+              },
+              "api_key": {
+                "display_name": "API Key",
+                "value": "",
+                "type": "str",
+                "show": false,
+                "password": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "response",
+                "display_name": "Response",
+                "types": [
+                  "Message"
+                ],
+                "method": "generate_response"
+              }
+            ]
+          },
+          "type": "OpenAIModel"
+        }
+      },
+      {
+        "id": "PodcastMemory-001",
+        "type": "genericNode",
+        "position": {
+          "x": 400,
+          "y": 200
+        },
+        "data": {
+          "id": "PodcastMemory-001",
+          "description": "RAG memory for course content",
+          "display_name": "Course RAG Memory",
+          "node": {
+            "base_classes": [
+              "Memory"
+            ],
+            "description": "Retrieve relevant course content from ChromaDB",
+            "display_name": "Chroma Memory",
+            "icon": "ChromaDB",
+            "template": {
+              "collection_name": {
+                "display_name": "Collection",
+                "value": "course_hb411",
+                "type": "str",
+                "show": true
+              },
+              "persist_directory": {
+                "display_name": "Persist Directory",
+                "value": "D:/OsMEN/content/courses/HB411_HealthyBoundaries/embeddings/chroma_db",
+                "type": "str",
+                "show": true
+              },
+              "n_results": {
+                "display_name": "Number of Results",
+                "value": 10,
+                "type": "int",
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "memory",
+                "display_name": "Memory",
+                "types": [
+                  "Memory"
+                ],
+                "method": "retrieve"
+              }
+            ]
+          },
+          "type": "ChromaMemory"
+        }
+      },
+      {
+        "id": "PodcastOutput-001",
+        "type": "genericNode",
+        "position": {
+          "x": 700,
+          "y": 400
+        },
+        "data": {
+          "id": "PodcastOutput-001",
+          "description": "Output the generated podcast script",
+          "display_name": "Podcast Script Output",
+          "node": {
+            "base_classes": [
+              "Message"
+            ],
+            "description": "Return generated podcast script",
+            "display_name": "Chat Output",
+            "icon": "MessagesSquare",
+            "template": {
+              "input_value": {
+                "display_name": "Text",
+                "type": "str",
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "message",
+                "display_name": "Message",
+                "types": [
+                  "Message"
+                ],
+                "method": "message_response"
+              }
+            ]
+          },
+          "type": "ChatOutput"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "PodcastInput-001",
+        "target": "PodcastPrompt-001",
+        "sourceHandle": "message",
+        "targetHandle": "user_input"
+      },
+      {
+        "source": "PodcastPrompt-001",
+        "target": "PodcastLLM-001",
+        "sourceHandle": "prompt",
+        "targetHandle": "prompt"
+      },
+      {
+        "source": "PodcastMemory-001",
+        "target": "PodcastLLM-001",
+        "sourceHandle": "memory",
+        "targetHandle": "memory"
+      },
+      {
+        "source": "PodcastLLM-001",
+        "target": "PodcastOutput-001",
+        "sourceHandle": "response",
+        "targetHandle": "input_value"
+      }
+    ]
+  },
+  "id": "hb411-podcast-specialist-v1",
+  "endpoint_name": "hb411-podcast-specialist"
+}

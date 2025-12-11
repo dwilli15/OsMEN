@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<adept:rights xmlns:adept="http://ns.adobe.com/adept">
+<adept:licenseToken xmlns:adept="http://ns.adobe.com/adept">
+    <adept:user>urn:uuid:985c7082-994d-4475-9a87-b0224e71d7aa</adept:user>
+    <adept:resource>urn:uuid:5e6869db-b6c8-4dcb-b135-9fc5d92e97da</adept:resource>
+    <adept:resourceItemType>application/epub+zip</adept:resourceItemType>
+    <adept:deviceType>standalone</adept:deviceType>
+    <adept:device>urn:uuid:de6d24e3-60d1-4b88-952e-22caeffd43f6</adept:device>
+    <adept:voucher>urn:ep:NL$3951416$EPUB</adept:voucher>
+    <adept:licenseURL>https://nasigningservice.adobe.com/licensesign</adept:licenseURL>
+    <adept:operatorURL>https://rps2images.ebscohost.com/fulfillment</adept:operatorURL>
+    <adept:fulfillment>419ec39d-e964-42ef-aec4-8b6d72570b56-000009de</adept:fulfillment>
+    <adept:distributor>urn:uuid:501e16ca-f45c-4a0c-9a9f-8a270a9f2ed6</adept:distributor>
+    <adept:encryptedKey keyInfo="user">rkvdntPkFARjrtjb0Orsoi+PLNc+HdQVHUYv4GIzKInFYB4EVvA0lexV/vUD7X7SX285dPcsAgxwgkrWjnh2Sip5hGvKPm9o6zZexpdQQlkBvmcjWw/UdFp2seD+fGiVUAqdoU5qWfPJTK6HNZsTiKAxrCxk70+H1ok4ti2YVEg=</adept:encryptedKey>
+    <adept:model version="1.0">3073</adept:model>
+    <adept:permissions>
+      <adept:display>
+        <adept:loan>419ec39d-e964-42ef-aec4-8b6d72570b56-000009de</adept:loan>
+        <adept:until>2025-12-09T13:13:02Z</adept:until>
+      </adept:display>
+      <adept:excerpt>
+        <adept:loan>419ec39d-e964-42ef-aec4-8b6d72570b56-000009de</adept:loan>
+        <adept:until>2025-12-09T13:13:02Z</adept:until>
+      </adept:excerpt>
+      <adept:print>
+        <adept:loan>419ec39d-e964-42ef-aec4-8b6d72570b56-000009de</adept:loan>
+        <adept:until>2025-12-09T13:13:02Z</adept:until>
+        <adept:count initial="60" />
+      </adept:print>
+    </adept:permissions>
+    <adept:signature>VGIq6v4zbhtW2temI+RPzWEPIc5aHG9eF1MuAKHMh9P/LIsWmI5mY+hBu7kmKyymKLahqFgKWt5LrSAgmGztEmE2to5rOH9JM69t0vuWu+GjCKp4BShT9C4w6mljrU6gSISQXzZwnpVm6ksCXuNyiFrv+R3LStdQRBkzwpIo/l8=</adept:signature>
+  </adept:licenseToken>    
+</adept:rights>

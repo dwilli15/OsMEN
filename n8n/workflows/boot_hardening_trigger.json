@@ -2,6 +2,7 @@
   "name": "Boot Hardening Trigger",
   "nodes": [
     {
+      "id": "c3d4e5f6-3333-4ccc-dddd-000000000001",
       "parameters": {
         "rule": {
           "interval": [
@@ -14,55 +15,108 @@
       },
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1,
-      "position": [250, 300]
+      "typeVersion": 1.2,
+      "position": [
+        250,
+        300
+      ]
     },
     {
+      "id": "c3d4e5f6-3333-4ccc-dddd-000000000002",
       "parameters": {
-        "functionCode": "// Check if boot hardening is enabled\nconst enabled = $env('BOOT_HARDENING_ENABLED') === 'true';\nreturn [{ json: { enabled } }];"
+        "jsCode": "// Check if boot hardening is enabled\nconst enabled = $env.BOOT_HARDENING_ENABLED === 'true' || true;\nreturn [{ json: { \n  enabled, \n  check_started: new Date().toISOString(),\n  hostname: require('os').hostname()\n} }];"
       },
       "name": "Check If Enabled",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
-      "position": [450, 300]
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ]
     },
     {
+      "id": "c3d4e5f6-3333-4ccc-dddd-000000000003",
       "parameters": {
         "conditions": {
-          "boolean": [
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
             {
-              "value1": "={{$json.enabled}}",
-              "value2": true
+              "id": "condition-boot-1",
+              "leftValue": "={{ $json.enabled }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         }
       },
       "name": "If Enabled",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
-      "position": [650, 300]
+      "typeVersion": 2,
+      "position": [
+        650,
+        300
+      ]
     },
     {
+      "id": "c3d4e5f6-3333-4ccc-dddd-000000000004",
       "parameters": {
-        "url": "http://langflow:7860/api/v1/run/boot_hardening_specialist",
+        "url": "http://localhost:7860/api/v1/run/osmen-coordinator-v1",
         "method": "POST",
-        "jsonParameters": true,
-        "options": {},
-        "bodyParametersJson": "={\n  \"input\": \"Perform daily boot hardening check\",\n  \"tweaks\": {}\n}"
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"input_value\": \"Perform daily boot hardening security check on {{ $json.hostname }}. Check secure boot status, system integrity, firewall rules, and startup services.\",\n  \"input_type\": \"chat\",\n  \"output_type\": \"chat\",\n  \"session_id\": \"boot-hardening-{{ $now.format('yyyy-MM-dd') }}\"\n}",
+        "options": {
+          "timeout": 120000
+        }
       },
       "name": "Call Boot Hardening Agent",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
-      "position": [850, 300]
+      "typeVersion": 4.2,
+      "position": [
+        850,
+        300
+      ]
     },
     {
+      "id": "c3d4e5f6-3333-4ccc-dddd-000000000005",
       "parameters": {
-        "functionCode": "// Log the result\nconst result = $input.first().json;\nconsole.log('Boot hardening check completed:', result);\nreturn [{ json: { status: 'completed', result } }];"
+        "jsCode": "// Log the result\nconst result = $input.first().json;\nlet analysis = 'No analysis available';\n\n// Handle Langflow response structure\nif (result && result.outputs && result.outputs[0]) {\n  const output = result.outputs[0];\n  if (output.outputs && output.outputs[0] && output.outputs[0].results) {\n    const message = output.outputs[0].results.message;\n    analysis = message?.text || message || analysis;\n  }\n}\n\nconsole.log('Boot hardening check completed at:', new Date().toISOString());\nconsole.log('Analysis summary:', analysis.substring(0, 300) + '...');\n\nreturn [{ json: { \n  status: 'completed', \n  analysis,\n  completed_at: new Date().toISOString()\n} }];"
       },
       "name": "Log Result",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
-      "position": [1050, 300]
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1050,
+        300
+      ]
+    },
+    {
+      "id": "c3d4e5f6-3333-4ccc-dddd-000000000006",
+      "parameters": {
+        "url": "http://localhost:8000/api/v1/collections/osmen_security_logs/add",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ids\": [\"boot-check-{{ $now.toMillis() }}\"],\n  \"documents\": [\"{{ $json.analysis.substring(0, 5000) }}\"],\n  \"metadatas\": [{\n    \"type\": \"boot_hardening_check\",\n    \"status\": \"{{ $json.status }}\",\n    \"completed_at\": \"{{ $json.completed_at }}\"\n  }]\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Store in ChromaDB",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1250,
+        300
+      ]
     }
   ],
   "connections": {
@@ -109,9 +163,29 @@
           }
         ]
       ]
+    },
+    "Log Result": {
+      "main": [
+        [
+          {
+            "node": "Store in ChromaDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
-  "settings": {},
-  "id": "boot_hardening_trigger"
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "c3d4e5f6-0000-4ccc-dddd-333333333333",
+  "meta": {
+    "instanceId": "osmen-boot-hardening"
+  },
+  "tags": [
+    "security",
+    "hardening"
+  ]
 }

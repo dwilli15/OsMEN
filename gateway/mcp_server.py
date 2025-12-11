@@ -1,293 +1,35 @@
 #!/usr/bin/env python3
 """
-Model Context Protocol (MCP) Server
-Provides standardized context protocol for LLM agents
+DEPRECATED: This file is replaced by gateway/mcp/server.py
+
+Use the new unified MCP server:
+    python -m gateway.mcp.server
+
+Or import:
+    from gateway.mcp import create_app, MCPServer
+
+This file is kept for backward compatibility during migration.
 """
 
-import json
-import logging
-from typing import Dict, List, Any, Optional
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import sys
-import os
-import httpx
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+import warnings
 
-from tools.obsidian.obsidian_integration import ObsidianIntegration
-from tools.simplewall.simplewall_integration import SimplewallIntegration
-from tools.sysinternals.sysinternals_integration import SysinternalsIntegration
-from tools.ffmpeg.ffmpeg_integration import FFmpegIntegration
-
-logger = logging.getLogger(__name__)
-
-
-class ToolDefinition(BaseModel):
-    """MCP Tool Definition"""
-    name: str
-    description: str
-    parameters: Dict[str, Any]
-
-
-class ToolCallRequest(BaseModel):
-    """MCP Tool Call Request"""
-    tool: str
-    parameters: Dict[str, Any]
-
-
-class ToolCallResponse(BaseModel):
-    """MCP Tool Call Response"""
-    tool: str
-    result: Any
-    success: bool
-    error: Optional[str] = None
-
-
-class MCPServer:
-    """Model Context Protocol Server for tool integration"""
-    
-    def __init__(self):
-        self.obsidian = ObsidianIntegration()
-        self.simplewall = SimplewallIntegration()
-        self.sysinternals = SysinternalsIntegration()
-        self.ffmpeg = FFmpegIntegration()
-        
-        # Register available tools
-        self.tools = self._register_tools()
-    
-    def _register_tools(self) -> Dict[str, ToolDefinition]:
-        """Register all available tools"""
-        tools = {}
-        
-        # Obsidian tools
-        tools['obsidian_create_note'] = ToolDefinition(
-            name='obsidian_create_note',
-            description='Create a new note in Obsidian vault',
-            parameters={
-                'title': {'type': 'string', 'required': True},
-                'content': {'type': 'string', 'required': True},
-                'tags': {'type': 'array', 'items': {'type': 'string'}},
-                'folder': {'type': 'string'}
-            }
-        )
-        
-        tools['obsidian_read_note'] = ToolDefinition(
-            name='obsidian_read_note',
-            description='Read a note from Obsidian vault',
-            parameters={
-                'note_path': {'type': 'string', 'required': True}
-            }
-        )
-        
-        tools['obsidian_search'] = ToolDefinition(
-            name='obsidian_search',
-            description='Search notes in Obsidian vault',
-            parameters={
-                'query': {'type': 'string', 'required': True}
-            }
-        )
-        
-        tools['obsidian_list_notes'] = ToolDefinition(
-            name='obsidian_list_notes',
-            description='List all notes in Obsidian vault',
-            parameters={
-                'folder': {'type': 'string'}
-            }
-        )
-        
-        # Simplewall tools
-        tools['simplewall_block_domain'] = ToolDefinition(
-            name='simplewall_block_domain',
-            description='Block a domain using Simplewall',
-            parameters={
-                'domain': {'type': 'string', 'required': True}
-            }
-        )
-        
-        tools['simplewall_get_rules'] = ToolDefinition(
-            name='simplewall_get_rules',
-            description='Get current firewall rules',
-            parameters={}
-        )
-        
-        # Sysinternals tools
-        tools['sysinternals_run_autoruns'] = ToolDefinition(
-            name='sysinternals_run_autoruns',
-            description='Run Autoruns to analyze startup programs',
-            parameters={
-                'output_file': {'type': 'string'}
-            }
-        )
-        
-        tools['sysinternals_analyze_health'] = ToolDefinition(
-            name='sysinternals_analyze_health',
-            description='Analyze system health using Sysinternals',
-            parameters={}
-        )
-        
-        # FFmpeg tools
-        tools['ffmpeg_get_media_info'] = ToolDefinition(
-            name='ffmpeg_get_media_info',
-            description='Get information about a media file',
-            parameters={
-                'file_path': {'type': 'string', 'required': True}
-            }
-        )
-        
-        tools['ffmpeg_convert_video'] = ToolDefinition(
-            name='ffmpeg_convert_video',
-            description='Convert video to different format',
-            parameters={
-                'input_file': {'type': 'string', 'required': True},
-                'output_file': {'type': 'string', 'required': True},
-                'codec': {'type': 'string'}
-            }
-        )
-        
-        return tools
-    
-    def list_tools(self) -> List[ToolDefinition]:
-        """List all available tools"""
-        return list(self.tools.values())
-    
-    def call_tool(self, request: ToolCallRequest) -> ToolCallResponse:
-        """Execute a tool call"""
-        tool_name = request.tool
-        params = request.parameters
-        
-        try:
-            # Obsidian tools
-            if tool_name == 'obsidian_create_note':
-                result = self.obsidian.create_note(**params)
-            elif tool_name == 'obsidian_read_note':
-                result = self.obsidian.read_note(**params)
-            elif tool_name == 'obsidian_search':
-                result = self.obsidian.search_notes(**params)
-            elif tool_name == 'obsidian_list_notes':
-                result = self.obsidian.list_notes(**params)
-            
-            # Simplewall tools
-            elif tool_name == 'simplewall_block_domain':
-                result = self.simplewall.block_domain(**params)
-            elif tool_name == 'simplewall_get_rules':
-                result = self.simplewall.get_rules()
-            
-            # Sysinternals tools
-            elif tool_name == 'sysinternals_run_autoruns':
-                result = self.sysinternals.run_autoruns(**params)
-            elif tool_name == 'sysinternals_analyze_health':
-                result = self.sysinternals.analyze_system_health()
-            
-            # FFmpeg tools
-            elif tool_name == 'ffmpeg_get_media_info':
-                result = self.ffmpeg.get_media_info(**params)
-            elif tool_name == 'ffmpeg_convert_video':
-                result = self.ffmpeg.convert_video(**params)
-            
-            else:
-                raise ValueError(f"Unknown tool: {tool_name}")
-            
-            return ToolCallResponse(
-                tool=tool_name,
-                result=result,
-                success=True
-            )
-        
-        except Exception as e:
-            logger.error(f"Tool call failed: {tool_name}, error: {str(e)}")
-            return ToolCallResponse(
-                tool=tool_name,
-                result=None,
-                success=False,
-                error=str(e)
-            )
-    
-    def get_context(self, query: str) -> Dict[str, Any]:
-        """Get relevant context for a query (MCP context retrieval)"""
-        context = {
-            'query': query,
-            'tools_available': len(self.tools),
-            'integrations': {
-                'obsidian': bool(self.obsidian.vault_path),
-                'simplewall': True,
-                'sysinternals': True,
-                'ffmpeg': True
-            }
-        }
-        
-        # Search Obsidian for relevant notes if available
-        if self.obsidian.vault_path:
-            relevant_notes = self.obsidian.search_notes(query)
-            context['relevant_knowledge'] = relevant_notes[:5]
-        
-        return context
-
-
-# FastAPI app for MCP
-app = FastAPI(
-    title="OsMEN MCP Server",
-    description="Model Context Protocol Server for tool integration",
-    version="1.0.0"
+warnings.warn(
+    "gateway/mcp_server.py is deprecated. Use gateway.mcp.server instead.",
+    DeprecationWarning,
+    stacklevel=2,
 )
 
-mcp_server = MCPServer()
+# Re-export from new location for compatibility
+from gateway.mcp.server import MCPServer, app, create_app
+from gateway.mcp.tools import ToolDefinition, ToolRegistry
 
-
-@app.get("/")
-async def root():
-    """Root endpoint"""
-    return {
-        "service": "OsMEN MCP Server",
-        "version": "1.0.0",
-        "protocol": "MCP",
-        "tools_available": len(mcp_server.tools)
-    }
-
-
-@app.get("/tools", response_model=List[ToolDefinition])
-async def list_tools():
-    """List all available tools"""
-    return mcp_server.list_tools()
-
-
-@app.post("/tools/call", response_model=ToolCallResponse)
-async def call_tool(request: ToolCallRequest):
-    """Execute a tool call"""
-    return mcp_server.call_tool(request)
-
-
-@app.post("/context")
-async def get_context(query: str):
-    """Get relevant context for a query"""
-    return mcp_server.get_context(query)
-
-
-@app.get("/health")
-async def health():
-    """Health check"""
-    gateway_endpoint = os.getenv("GATEWAY_HEALTH_ENDPOINT")
-    if not gateway_endpoint:
-        gateway_base = os.getenv("GATEWAY_HEALTH_URL", "http://agent-gateway:8080")
-        gateway_endpoint = f"{gateway_base.rstrip('/')}/healthz"
-    
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            response = await client.get(gateway_endpoint)
-        response.raise_for_status()
-        payload = response.json()
-        status = payload.get("status", "unknown")
-        overall = "healthy" if status == "healthy" else "degraded"
-        return {
-            "status": overall,
-            "agent_gateway": payload
-        }
-    except Exception as exc:
-        return {
-            "status": "degraded",
-            "agent_gateway": {"status": "unreachable", "detail": str(exc)}
-        }
-
+__all__ = ["app", "create_app", "MCPServer", "ToolRegistry", "ToolDefinition"]
 
 if __name__ == "__main__":
+    print("⚠️  DEPRECATED: Use 'python -m gateway.mcp.server' instead")
     import uvicorn
+
+    from gateway.mcp.server import app
+
+    uvicorn.run(app, host="0.0.0.0", port=8081)
     uvicorn.run(app, host="0.0.0.0", port=8081)

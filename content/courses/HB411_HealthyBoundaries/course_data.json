@@ -1,0 +1,401 @@
+{
+  "course": {
+    "code": "HB411",
+    "name": "Healthy Boundaries for Leaders",
+    "semester": "Fall 2025",
+    "institution": "Meadville Lombard Theological School",
+    "credits": null,
+    "schedule": {
+      "day": "Thursday",
+      "time": "10:00 AM - 12:00 PM CT",
+      "format": "Synchronous Zoom",
+      "zoom_link": "https://meadville-edu.zoom.us/j/88914517875"
+    }
+  },
+  "instructor": {
+    "name": "Dr. Kathryn House",
+    "pronouns": "she/her/hers",
+    "title": "Assistant Professor of Leadership Studies and Practical Theology",
+    "email": "khouse@meadville.edu",
+    "office_hours": "Mondays, 1-3 PM CT"
+  },
+  "required_books": [
+    {
+      "title": "Shared Wisdom: Use of the Self in Pastoral Care and Counseling",
+      "author": "Cooper-White, Pamela",
+      "edition": "Revised and Expanded 20th anniversary edition",
+      "publisher": "Fortress Press",
+      "year": 2024,
+      "short_name": "Shared Wisdom",
+      "pdf_available": true
+    },
+    {
+      "title": "Healthy Boundaries 201 – Beyond Basics: Course Workbook",
+      "author": "Fortune, Marie",
+      "publisher": "FaithTrust Institute",
+      "year": 2012,
+      "short_name": "HB201",
+      "pdf_available": true,
+      "free_online": true
+    },
+    {
+      "title": "What It Takes to Heal: How Transforming Ourselves Can Change the World",
+      "author": "Hemphill, Prentis",
+      "publisher": "Penguin Press",
+      "year": 2024,
+      "short_name": "What It Takes to Heal",
+      "epub_available": true
+    },
+    {
+      "title": "Saying No to Say Yes: Everyday Boundaries and Pastoral Excellence",
+      "author": "Olsen, David C., and Nancy G. Devor",
+      "publisher": "Rowman and Littlefield",
+      "year": 2015,
+      "short_name": "Saying No to Say Yes",
+      "epub_available": true
+    },
+    {
+      "title": "Sacred Wounds: A Path to Healing from Spiritual Trauma",
+      "author": "Pasquale, Teresa",
+      "publisher": "Chalice Press",
+      "year": 2015,
+      "short_name": "Sacred Wounds",
+      "epub_available": true
+    },
+    {
+      "title": "Responding to Spiritual Leader Misconduct: A Handbook",
+      "author": "Sawyer, Lauren D., Emily Cohen, and Annie Mesaros, eds.",
+      "publisher": "FaithTrust Institute",
+      "year": 2022,
+      "short_name": "Leader Misconduct Handbook",
+      "pdf_available": true,
+      "free_online": true
+    },
+    {
+      "title": "Set Boundaries, Find Peace: A Guide to Reclaiming Yourself",
+      "author": "Tawwab, Nedra Glover",
+      "publisher": "TarcherPerigee",
+      "year": 2021,
+      "short_name": "Set Boundaries Find Peace",
+      "pdf_available": true
+    }
+  ],
+  "presentation_books": [
+    {
+      "title": "The Anxious Generation: How the Great Rewiring of Childhood Is Causing an Epidemic of Mental Illness",
+      "author": "Haidt, Jonathan",
+      "publisher": "Penguin Press",
+      "year": 2024,
+      "presentation_date": "2025-10-23",
+      "theme": "Technology",
+      "epub_available": true
+    },
+    {
+      "title": "Together: The Healing Power of Human Connection in a Sometimes Lonely World",
+      "author": "Murthy, Vivek Hallegere",
+      "publisher": "Harper Wave",
+      "year": 2020,
+      "presentation_date": "2025-11-06",
+      "theme": "Connection"
+    },
+    {
+      "title": "Calling In: How to Start Making Change with Those You'd Rather Cancel",
+      "author": "Ross, Loretta J.",
+      "publisher": "Simon & Schuster",
+      "year": 2025,
+      "presentation_date": "2025-10-30",
+      "theme": "Conflict"
+    }
+  ],
+  "assignments": [
+    {
+      "name": "Journal",
+      "weight": "10%",
+      "due_date": "2025-11-20",
+      "due_time": "11:59 PM",
+      "description": "5 entries (250-300 words each). Aug 21 required + 4 of choice.",
+      "type": "ongoing"
+    },
+    {
+      "name": "Guiding Document Paper",
+      "weight": "20%",
+      "due_date": "2025-09-25",
+      "due_time": "11:59 PM",
+      "working_draft": "2025-09-25 in class",
+      "description": "1250-1500 words analyzing boundaries approach in a community document.",
+      "type": "paper"
+    },
+    {
+      "name": "Reading Responses",
+      "weight": "20%",
+      "due_time": "6:00 AM Thursday",
+      "description": "Complete 5 of 9 options. 250-350 words each.",
+      "type": "ongoing"
+    },
+    {
+      "name": "Navigating Boundaries Presentation",
+      "weight": "15%",
+      "presentation_dates": [
+        "2025-10-23",
+        "2025-10-30",
+        "2025-11-06"
+      ],
+      "description": "Small group presentation + Reading Response on presentation day.",
+      "type": "presentation"
+    },
+    {
+      "name": "Project Synopsis",
+      "weight": "5%",
+      "due_date": "2025-10-02",
+      "due_time": "11:59 PM",
+      "grading": "Pass/Fail",
+      "type": "milestone"
+    },
+    {
+      "name": "Final Project Presentation",
+      "weight": "5%",
+      "presentation_dates": [
+        "2025-11-13",
+        "2025-11-20"
+      ],
+      "description": "3 slides, 12 min max. Upload by 11:59 PM presentation day.",
+      "type": "presentation"
+    },
+    {
+      "name": "Final Integrative Project/Paper",
+      "weight": "25%",
+      "due_date": "2025-11-24",
+      "due_time": "11:59 PM",
+      "description": "2500-3000 words. Research paper or reflective project with original creation.",
+      "type": "paper"
+    }
+  ],
+  "schedule": [
+    {
+      "week": 1,
+      "date": "2025-08-14",
+      "topic": "Introductions to the Course and One Another",
+      "readings": [
+        "Syllabus and Populi course"
+      ],
+      "assignments_due": [],
+      "class_type": "synchronous"
+    },
+    {
+      "week": 2,
+      "date": "2025-08-21",
+      "topic": "Frameworks for Healthy Boundaries",
+      "readings": [
+        "Fortune, Healthy Boundaries 201: 'Joy of Boundaries' p.5, 'Boundary Basics' p.77-82",
+        "Olsen and Devor, Saying No to Say Yes: Ch. 1",
+        "Stephens, 'Fiduciary Duty and Sacred Trust' (PDF)",
+        "Rogers, 'What Color Is Your Ministry Traffic Light?'",
+        "Tawwab, Set Boundaries Find Peace: Ch. 1-4"
+      ],
+      "supplementary": [
+        "Safe Congregation Handbook"
+      ],
+      "assignments_due": [
+        "Journal Prompt - Boundary Image (required)",
+        "Reading Response 1 (optional)"
+      ],
+      "class_type": "synchronous"
+    },
+    {
+      "week": 3,
+      "date": "2025-08-28",
+      "topic": "Grounding Values, Ethical Commitments, and Flourishing",
+      "time": "9:30 AM - 4:30 PM CT",
+      "readings": [
+        "Common Code of Ethics for Chaplains",
+        "Captari and Sandage, 'I Love This Work, but It's Killing Me'",
+        "Pope-Lance, 'Whence We Come and How, and Whither'",
+        "UUMA Guidelines for the Conduct of Ministry",
+        "Sawyer et al., Responding to Spiritual Leader Misconduct: Parts 1-2"
+      ],
+      "watch": [
+        "Brown, 'We Do This Until We Heal Us' (Dec 2024)",
+        "Sandage, 'Clergy Well-being' (Apr 2025)"
+      ],
+      "assignments_due": [
+        "Reading Response 2 (optional)"
+      ],
+      "class_type": "intensive"
+    },
+    {
+      "week": 4,
+      "date": "2025-09-04",
+      "topic": "Integrating Boundaries",
+      "readings": [
+        "Hemphill, What It Takes to Heal (full book)"
+      ],
+      "watch": [
+        "Hemphill interview by Oluo (Jul 2024), min 36-46 especially"
+      ],
+      "assignments_due": [
+        "Reading Response 3 (optional)"
+      ],
+      "class_type": "synchronous"
+    },
+    {
+      "week": 5,
+      "date": "2025-09-11",
+      "topic": "Boundaries, Self, and Systems I",
+      "readings": [
+        "Buhuro and Hawley, 'If They're Black, Call 911 First: Self Care for Black Trauma'",
+        "Coble and Springer, 'Interpersonal Competence in Contextualizing Power Dynamics'",
+        "Sharp, 'Crossing Borders with Healthy Boundaries'"
+      ],
+      "assignments_due": [
+        "Reading Response 4 (optional)"
+      ],
+      "class_type": "synchronous"
+    },
+    {
+      "week": 6,
+      "date": "2025-09-18",
+      "topic": "Boundaries, Self, and Systems II",
+      "readings": [
+        "Cooper-White, Shared Wisdom (full book)"
+      ],
+      "assignments_due": [
+        "Reading Response 5 (optional)"
+      ],
+      "class_type": "synchronous"
+    },
+    {
+      "week": 7,
+      "date": "2025-09-25",
+      "topic": "Sharing Guiding Documents Papers",
+      "readings": [],
+      "assignments_due": [
+        "Guiding Document Paper (required)"
+      ],
+      "class_type": "synchronous",
+      "note": "Be prepared to share about your paper with colleagues"
+    },
+    {
+      "week": 8,
+      "date": "2025-10-02",
+      "topic": "Trauma-Informed Perspectives I: Religious and Spiritual Trauma",
+      "readings": [
+        "Pasquale, Sacred Wounds (full book)"
+      ],
+      "supplementary": [
+        "Tawwab, Set Boundaries: Ch. 8 'Trauma and Boundaries'"
+      ],
+      "assignments_due": [
+        "Project Synopsis (required)",
+        "Reading Response 6 (optional)"
+      ],
+      "class_type": "synchronous"
+    },
+    {
+      "week": 9,
+      "date": "2025-10-09",
+      "topic": "Asynchronous Work Week",
+      "readings": [],
+      "assignments_due": [],
+      "class_type": "asynchronous",
+      "note": "Use for group presentation planning and final project preparation"
+    },
+    {
+      "week": 10,
+      "date": "2025-10-16",
+      "topic": "Fall Break - No Class",
+      "readings": [],
+      "assignments_due": [],
+      "class_type": "break"
+    },
+    {
+      "week": 11,
+      "date": "2025-10-23",
+      "topic": "Navigating Boundaries I: Technology",
+      "readings": [
+        "Haidt, The Anxious Generation (presenters)",
+        "Haidt interview by Michelle Obama (non-presenters option)"
+      ],
+      "supplementary": [
+        "Tawwab, Set Boundaries: Part 2"
+      ],
+      "assignments_due": [
+        "Navigating Boundaries Presentation (presenters)",
+        "Reading Response 7 (optional)"
+      ],
+      "class_type": "synchronous"
+    },
+    {
+      "week": 12,
+      "date": "2025-10-30",
+      "topic": "Navigating Boundaries II: Conflict",
+      "readings": [
+        "Ross, Calling In (presenters)",
+        "Ross interview at Roosevelt House (non-presenters option)"
+      ],
+      "supplementary": [
+        "Tawwab, Set Boundaries: Part 2"
+      ],
+      "assignments_due": [
+        "Navigating Boundaries Presentation (presenters)",
+        "Reading Response 8 (optional)"
+      ],
+      "class_type": "synchronous"
+    },
+    {
+      "week": 13,
+      "date": "2025-11-06",
+      "topic": "Navigating Boundaries III: Connection",
+      "readings": [
+        "Murthy, Together (presenters)",
+        "Murthy interview by Simon Sinek (non-presenters option)"
+      ],
+      "supplementary": [
+        "Tawwab, Set Boundaries: Part 2"
+      ],
+      "assignments_due": [
+        "Navigating Boundaries Presentation (presenters)",
+        "Reading Response 9 (optional)"
+      ],
+      "class_type": "synchronous"
+    },
+    {
+      "week": 14,
+      "date": "2025-11-13",
+      "topic": "Celebrating and Sharing Learning: Presentations I",
+      "readings": [],
+      "assignments_due": [
+        "Final Project Presentation (optional date)"
+      ],
+      "class_type": "synchronous"
+    },
+    {
+      "week": 15,
+      "date": "2025-11-20",
+      "topic": "Celebrating and Sharing Learning: Presentations II",
+      "readings": [],
+      "assignments_due": [
+        "Journal (required)",
+        "Final Project Presentation (optional date)"
+      ],
+      "class_type": "synchronous"
+    },
+    {
+      "week": 16,
+      "date": "2025-11-24",
+      "topic": "Final Paper Due (No Class)",
+      "readings": [],
+      "assignments_due": [
+        "Final Integrative Project/Paper (required)"
+      ],
+      "class_type": "none"
+    }
+  ],
+  "learning_outcomes": [
+    "Deepen understanding of key definitions, principles, and practices for integrating healthy boundaries in diverse vocational contexts",
+    "Evaluate and leverage reflection on ways that context, social location and power dynamics operate when setting and maintaining healthy boundaries",
+    "Surface and analyze the stakes, theoethical commitments, and guiding norms of individual and communal efforts to set and maintain healthy boundaries",
+    "Consider and cultivate practices that center healthy boundaries as integral to spiritual and personal readiness for leadership",
+    "Demonstrate a robust understanding of healthy boundaries in a context of vocational significance through an integrative research paper or project",
+    "Cultivate skills to support healthy boundaries such as self-awareness, theological reflection, attending to trauma, ethical behavior, and self-care"
+  ]
+}

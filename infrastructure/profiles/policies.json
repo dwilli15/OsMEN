@@ -1,0 +1,203 @@
+{
+  "$schema": "./policies.schema.json",
+  "version": "1.0.0",
+  "updated_at": null,
+  "workspace_policies": {
+    "knowledge_write": {
+      "description": "Policies for writing to the knowledge database",
+      "rules": [
+        {
+          "id": "daily_summaries",
+          "pattern": "daily_brief.* -> memories",
+          "approval": "auto",
+          "description": "Daily summaries auto-approved to memories"
+        },
+        {
+          "id": "research_notes",
+          "pattern": "research_intel.* -> memories",
+          "approval": "queue",
+          "description": "Research notes queued for batch approval"
+        },
+        {
+          "id": "rag_corpus",
+          "pattern": "*.* -> rag",
+          "approval": "interactive",
+          "description": "RAG corpus additions require interactive approval"
+        },
+        {
+          "id": "obsidian_export",
+          "pattern": "*.* -> obsidian/exports",
+          "approval": "queue",
+          "description": "Obsidian exports queued for review"
+        }
+      ]
+    },
+    "workspace_lifecycle": {
+      "incoming": {
+        "max_age_days": 30,
+        "action_on_expiry": "move_to_pending_review"
+      },
+      "staging": {
+        "max_age_days": 14,
+        "action_on_expiry": "move_to_pending_review"
+      },
+      "pending_review": {
+        "review_frequency": "weekly",
+        "surface_inactive_days": 10,
+        "archive_prompt_days": 90,
+        "default_action": "archive"
+      }
+    },
+    "health_monitoring": {
+      "heartbeat_interval_seconds": 30,
+      "latency_threshold_ms": 5000,
+      "error_rate_threshold_percent": 10,
+      "auto_restart_enabled": true,
+      "max_auto_restart_attempts": 3,
+      "checkpoint_before_destructive": true
+    },
+    "context_injection": {
+      "max_context_tokens": 2000,
+      "include_capabilities": true,
+      "include_constraints": true,
+      "include_recent_memories": true,
+      "memory_recency_hours": 24,
+      "log_injections": true
+    }
+  },
+  "agent_roles": {
+    "infrastructure": {
+      "permissions": [
+        "read_all",
+        "write_infrastructure",
+        "execute_health_checks"
+      ],
+      "restricted": [
+        "write_knowledge",
+        "delete_user_data"
+      ]
+    },
+    "health_monitor": {
+      "permissions": [
+        "read_all",
+        "execute_fixes",
+        "create_checkpoints",
+        "restart_services"
+      ],
+      "restricted": [
+        "delete_without_checkpoint",
+        "modify_policies"
+      ]
+    },
+    "librarian": {
+      "permissions": [
+        "read_knowledge",
+        "write_rag",
+        "read_obsidian"
+      ],
+      "restricted": [
+        "write_obsidian_raw",
+        "delete_embeddings"
+      ]
+    },
+    "research_intel": {
+      "permissions": [
+        "read_knowledge",
+        "write_memories",
+        "read_workspace"
+      ],
+      "restricted": [
+        "write_obsidian_raw",
+        "modify_infrastructure"
+      ]
+    },
+    "daily_brief": {
+      "permissions": [
+        "read_calendar",
+        "read_tasks",
+        "write_memories"
+      ],
+      "restricted": [
+        "modify_calendar",
+        "delete_tasks"
+      ]
+    },
+    "personal_assistant": {
+      "permissions": [
+        "read_tasks",
+        "write_tasks",
+        "read_calendar"
+      ],
+      "restricted": [
+        "modify_policies",
+        "access_security"
+      ]
+    },
+    "content_creator": {
+      "permissions": [
+        "read_workspace",
+        "write_workspace",
+        "execute_conversion"
+      ],
+      "restricted": [
+        "write_knowledge",
+        "modify_infrastructure"
+      ]
+    },
+    "security_ops": {
+      "permissions": [
+        "read_system",
+        "execute_security_tools",
+        "write_logs"
+      ],
+      "restricted": [
+        "modify_firewall_without_approval"
+      ]
+    }
+  },
+  "approval_queues": {
+    "knowledge_writes": {
+      "description": "Pending writes to knowledge database",
+      "storage": "infrastructure/queues/knowledge_writes.json",
+      "review_in_dashboard": true
+    },
+    "destructive_fixes": {
+      "description": "Pending destructive repairs requiring user approval",
+      "storage": "infrastructure/queues/destructive_fixes.json",
+      "requires_checkpoint": true,
+      "review_in_dashboard": true
+    },
+    "obsidian_exports": {
+      "description": "Pending exports to Obsidian vault",
+      "storage": "infrastructure/queues/obsidian_exports.json",
+      "batch_review": true
+    }
+  },
+  "obsidian_sync": {
+    "vault_path": "obsidian-vault",
+    "knowledge_path": "knowledge/obsidian",
+    "link_type": "watcher",
+    "sync_direction": "bidirectional_filtered",
+    "read_filters": {
+      "folders": [],
+      "tags": [
+        "osmen",
+        "research",
+        "knowledge",
+        "notes",
+        "public"
+      ],
+      "exclude_folders": [
+        ".obsidian",
+        ".trash",
+        "Templates",
+        "Archive"
+      ]
+    },
+    "write_policy": "export_only",
+    "export_folder": "OsMEN-Exports",
+    "poll_interval": 30,
+    "state_file": ".osmen_sync_state.json",
+    "enabled": true
+  }
+}

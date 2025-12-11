@@ -1,9 +1,12 @@
 {
+  "_DEPRECATED": "This file is replaced by gateway/mcp/mcp_config.json",
+  "_MIGRATION": "Use the new unified MCP configuration at gateway/mcp/mcp_config.json",
   "mcpServers": {
-    "yolo-ops": {
+    "osmen": {
+      "_note": "Use gateway/mcp/mcp_config.json for the new unified server",
       "command": "python",
-      "args": ["-m", "integrations.mcp_yolo_server"],
-      "cwd": "d:\\omen",
+      "args": ["-m", "gateway.mcp.server"],
+      "cwd": "d:\\OsMEN",
       "env": {
         "N8N_URL": "http://localhost:5678",
         "LANGFLOW_URL": "http://localhost:7860",

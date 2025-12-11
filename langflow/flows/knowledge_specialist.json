@@ -1,6 +1,419 @@
 {
   "name": "Knowledge Management Specialist",
-  "description": "Obsidian integration and knowledge base",
-  "nodes": [],
-  "edges": []
+  "description": "RAG-based knowledge retrieval using ChromaDB for document search and question answering",
+  "data": {
+    "nodes": [
+      {
+        "id": "ChatInput-KM001",
+        "type": "genericNode",
+        "position": {
+          "x": 100,
+          "y": 300
+        },
+        "data": {
+          "id": "ChatInput-KM001",
+          "description": "User query for knowledge retrieval",
+          "display_name": "Knowledge Query",
+          "node": {
+            "base_classes": [
+              "Message"
+            ],
+            "description": "Get chat inputs from the Playground.",
+            "display_name": "Chat Input",
+            "icon": "MessagesSquare",
+            "template": {
+              "input_value": {
+                "display_name": "Query",
+                "info": "Enter your question or topic to search",
+                "value": "",
+                "type": "str",
+                "show": true
+              },
+              "sender": {
+                "value": "User",
+                "options": [
+                  "Machine",
+                  "User"
+                ],
+                "type": "str",
+                "show": true
+              },
+              "sender_name": {
+                "value": "User",
+                "type": "str",
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "message",
+                "display_name": "Message",
+                "types": [
+                  "Message"
+                ],
+                "method": "message_response"
+              }
+            ]
+          },
+          "type": "ChatInput"
+        }
+      },
+      {
+        "id": "Chroma-KM002",
+        "type": "genericNode",
+        "position": {
+          "x": 100,
+          "y": 550
+        },
+        "data": {
+          "id": "Chroma-KM002",
+          "description": "Vector store retrieval from ChromaDB",
+          "display_name": "ChromaDB Retriever",
+          "node": {
+            "base_classes": [
+              "Retriever",
+              "Data"
+            ],
+            "description": "Search for relevant documents in ChromaDB vector store.",
+            "display_name": "Chroma DB Search",
+            "icon": "chromadb",
+            "template": {
+              "collection_name": {
+                "display_name": "Collection Name",
+                "type": "str",
+                "value": "osmen_knowledge",
+                "info": "Name of the ChromaDB collection",
+                "show": true
+              },
+              "host": {
+                "display_name": "Host",
+                "type": "str",
+                "value": "localhost",
+                "info": "ChromaDB server host",
+                "show": true
+              },
+              "port": {
+                "display_name": "Port",
+                "type": "int",
+                "value": 8000,
+                "info": "ChromaDB server port",
+                "show": true
+              },
+              "search_query": {
+                "display_name": "Search Query",
+                "type": "str",
+                "input_types": [
+                  "Message"
+                ],
+                "info": "Query to search for",
+                "show": true
+              },
+              "number_of_results": {
+                "display_name": "Number of Results",
+                "type": "int",
+                "value": 5,
+                "info": "Number of documents to retrieve",
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "documents",
+                "display_name": "Retrieved Documents",
+                "types": [
+                  "Data"
+                ],
+                "method": "search"
+              }
+            ]
+          },
+          "type": "ChromaDB"
+        }
+      },
+      {
+        "id": "Prompt-KM003",
+        "type": "genericNode",
+        "position": {
+          "x": 500,
+          "y": 200
+        },
+        "data": {
+          "id": "Prompt-KM003",
+          "description": "RAG prompt combining context and query",
+          "display_name": "RAG Prompt",
+          "node": {
+            "base_classes": [
+              "Message"
+            ],
+            "description": "Create a RAG prompt with retrieved context.",
+            "display_name": "Prompt",
+            "icon": "braces",
+            "template": {
+              "template": {
+                "display_name": "Template",
+                "type": "prompt",
+                "value": "You are the OsMEN Knowledge Assistant. Use the provided context to answer the user's question accurately.\n\n## Retrieved Context:\n{context}\n\n## User Question:\n{user_query}\n\n## Instructions:\n1. Base your answer primarily on the retrieved context\n2. If the context doesn't contain relevant information, say so\n3. Cite specific documents when referencing information\n4. Provide actionable and clear answers\n\nAnswer:",
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "prompt",
+                "display_name": "Prompt",
+                "types": [
+                  "Message"
+                ],
+                "method": "build_prompt"
+              }
+            ]
+          },
+          "type": "Prompt"
+        }
+      },
+      {
+        "id": "ChatOllama-KM004",
+        "type": "genericNode",
+        "position": {
+          "x": 500,
+          "y": 450
+        },
+        "data": {
+          "id": "ChatOllama-KM004",
+          "description": "Generate answer with Ollama",
+          "display_name": "Knowledge Generator",
+          "node": {
+            "base_classes": [
+              "LanguageModel",
+              "Message"
+            ],
+            "description": "Generate text using Ollama local models.",
+            "display_name": "Ollama",
+            "icon": "Ollama",
+            "template": {
+              "model_name": {
+                "display_name": "Model Name",
+                "type": "str",
+                "value": "llama3.2",
+                "show": true
+              },
+              "base_url": {
+                "display_name": "Base URL",
+                "type": "str",
+                "value": "http://localhost:11434",
+                "show": true
+              },
+              "temperature": {
+                "display_name": "Temperature",
+                "type": "float",
+                "value": 0.3,
+                "show": true
+              },
+              "input_value": {
+                "display_name": "Input",
+                "type": "str",
+                "input_types": [
+                  "Message"
+                ],
+                "show": true
+              },
+              "system_message": {
+                "display_name": "System Message",
+                "type": "str",
+                "input_types": [
+                  "Message"
+                ],
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "text_output",
+                "display_name": "Text Response",
+                "types": [
+                  "Message"
+                ],
+                "method": "text_response"
+              }
+            ]
+          },
+          "type": "ChatOllama"
+        }
+      },
+      {
+        "id": "ChatOutput-KM005",
+        "type": "genericNode",
+        "position": {
+          "x": 900,
+          "y": 400
+        },
+        "data": {
+          "id": "ChatOutput-KM005",
+          "description": "Display the knowledge response",
+          "display_name": "Knowledge Output",
+          "node": {
+            "base_classes": [
+              "Message"
+            ],
+            "description": "Display a chat message in the Playground.",
+            "display_name": "Chat Output",
+            "icon": "MessagesSquare",
+            "template": {
+              "input_value": {
+                "display_name": "Text",
+                "info": "Knowledge response output.",
+                "type": "str",
+                "input_types": [
+                  "Message",
+                  "Data"
+                ],
+                "show": true
+              },
+              "sender": {
+                "value": "Machine",
+                "options": [
+                  "Machine",
+                  "User"
+                ],
+                "type": "str",
+                "show": true
+              },
+              "sender_name": {
+                "value": "Knowledge Agent",
+                "type": "str",
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "message",
+                "display_name": "Message",
+                "types": [
+                  "Message"
+                ],
+                "method": "message_response"
+              }
+            ]
+          },
+          "type": "ChatOutput"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge-km-1",
+        "source": "ChatInput-KM001",
+        "target": "Chroma-KM002",
+        "sourceHandle": "{\"dataType\": \"ChatInput\", \"id\": \"ChatInput-KM001\", \"name\": \"message\", \"output_types\": [\"Message\"]}",
+        "targetHandle": "{\"fieldName\": \"search_query\", \"id\": \"Chroma-KM002\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}",
+        "data": {
+          "sourceHandle": {
+            "dataType": "ChatInput",
+            "id": "ChatInput-KM001",
+            "name": "message",
+            "output_types": [
+              "Message"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "search_query",
+            "id": "Chroma-KM002",
+            "inputTypes": [
+              "Message"
+            ],
+            "type": "str"
+          }
+        }
+      },
+      {
+        "id": "edge-km-2",
+        "source": "ChatInput-KM001",
+        "target": "ChatOllama-KM004",
+        "sourceHandle": "{\"dataType\": \"ChatInput\", \"id\": \"ChatInput-KM001\", \"name\": \"message\", \"output_types\": [\"Message\"]}",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"ChatOllama-KM004\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}",
+        "data": {
+          "sourceHandle": {
+            "dataType": "ChatInput",
+            "id": "ChatInput-KM001",
+            "name": "message",
+            "output_types": [
+              "Message"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "input_value",
+            "id": "ChatOllama-KM004",
+            "inputTypes": [
+              "Message"
+            ],
+            "type": "str"
+          }
+        }
+      },
+      {
+        "id": "edge-km-3",
+        "source": "Prompt-KM003",
+        "target": "ChatOllama-KM004",
+        "sourceHandle": "{\"dataType\": \"Prompt\", \"id\": \"Prompt-KM003\", \"name\": \"prompt\", \"output_types\": [\"Message\"]}",
+        "targetHandle": "{\"fieldName\": \"system_message\", \"id\": \"ChatOllama-KM004\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}",
+        "data": {
+          "sourceHandle": {
+            "dataType": "Prompt",
+            "id": "Prompt-KM003",
+            "name": "prompt",
+            "output_types": [
+              "Message"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "system_message",
+            "id": "ChatOllama-KM004",
+            "inputTypes": [
+              "Message"
+            ],
+            "type": "str"
+          }
+        }
+      },
+      {
+        "id": "edge-km-4",
+        "source": "ChatOllama-KM004",
+        "target": "ChatOutput-KM005",
+        "sourceHandle": "{\"dataType\": \"ChatOllama\", \"id\": \"ChatOllama-KM004\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"ChatOutput-KM005\", \"inputTypes\": [\"Message\", \"Data\"], \"type\": \"str\"}",
+        "data": {
+          "sourceHandle": {
+            "dataType": "ChatOllama",
+            "id": "ChatOllama-KM004",
+            "name": "text_output",
+            "output_types": [
+              "Message"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "input_value",
+            "id": "ChatOutput-KM005",
+            "inputTypes": [
+              "Message",
+              "Data"
+            ],
+            "type": "str"
+          }
+        }
+      }
+    ],
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 0.8
+    }
+  },
+  "id": "knowledge-management-specialist-v1",
+  "is_component": false,
+  "last_tested_version": "1.5.0",
+  "tags": [
+    "osmen",
+    "knowledge",
+    "rag",
+    "chromadb"
+  ]
 }

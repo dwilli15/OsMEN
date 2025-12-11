@@ -1,0 +1,308 @@
+{
+  "name": "90-Second Daily Briefing",
+  "description": "Adaptive 90-second audio briefing for productivity, time management, and reminders. Structure adapts based on daily check-in responses.",
+  "nodes": [
+    {
+      "id": "briefing-morning-001",
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 6 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Morning Trigger (6:30 AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        100,
+        200
+      ],
+      "notes": "Triggers daily check-in prompt at 6:30 AM"
+    },
+    {
+      "id": "briefing-checkin-webhook-001",
+      "parameters": {
+        "path": "daily-checkin",
+        "httpMethod": "POST",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Daily Check-In Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        100,
+        400
+      ],
+      "webhookId": "daily-checkin-endpoint",
+      "notes": "Receives user check-in data: energy_level, top_priority, blockers, mood"
+    },
+    {
+      "id": "briefing-send-checkin-001",
+      "parameters": {
+        "jsCode": "// Send check-in prompt notification\nconst now = new Date();\nconst dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][now.getDay()];\n\nreturn [{ json: {\n  action: 'send_checkin_prompt',\n  message: `Good morning! Quick check-in for ${dayName}:\\n1. Energy level (1-10)?\\n2. Top priority today?\\n3. Any blockers?\\n4. Mood (emoji)?`,\n  timestamp: now.toISOString(),\n  day_of_week: dayName,\n  awaiting_response: true\n}}];"
+      },
+      "name": "Send Check-In Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        200
+      ]
+    },
+    {
+      "id": "briefing-process-checkin-001",
+      "parameters": {
+        "jsCode": "// Process check-in response and determine briefing focus\nconst checkin = $input.first().json.body || $input.first().json;\nconst now = new Date();\n\n// Defaults if no check-in received\nlet energyLevel = checkin.energy_level || 7;\nlet topPriority = checkin.top_priority || 'Complete daily tasks';\nlet blockers = checkin.blockers || [];\nlet mood = checkin.mood || '😊';\n\n// Determine briefing segments based on check-in\nconst segments = {\n  greeting: true,  // Always include\n  energy_tip: energyLevel < 6,  // Include if low energy\n  priority_focus: true,  // Always include\n  blocker_strategy: blockers.length > 0,\n  schedule_overview: true,  // Always include\n  motivation: energyLevel < 5 || mood.includes('😔') || mood.includes('😞'),\n  boundary_reminder: now.getDay() >= 1 && now.getDay() <= 5  // Weekdays only\n};\n\n// Calculate segment durations (90 seconds total = ~225 words)\nconst baseDurations = {\n  greeting: 10,  // 10 seconds\n  energy_tip: 15,\n  priority_focus: 20,\n  blocker_strategy: 15,\n  schedule_overview: 20,\n  motivation: 10,\n  boundary_reminder: 10\n};\n\nlet totalTime = 0;\nconst activeSegments = [];\nfor (const [seg, active] of Object.entries(segments)) {\n  if (active) {\n    activeSegments.push(seg);\n    totalTime += baseDurations[seg];\n  }\n}\n\n// Adjust to fit 90 seconds\nconst scaleFactor = 90 / totalTime;\nconst adjustedDurations = {};\nfor (const seg of activeSegments) {\n  adjustedDurations[seg] = Math.round(baseDurations[seg] * scaleFactor);\n}\n\nreturn [{ json: {\n  checkin_data: { energyLevel, topPriority, blockers, mood },\n  active_segments: activeSegments,\n  segment_durations: adjustedDurations,\n  total_duration_sec: 90,\n  word_count_target: 225,\n  generated_at: now.toISOString(),\n  day_of_week: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][now.getDay()]\n}}];"
+      },
+      "name": "Process Check-In",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        400
+      ]
+    },
+    {
+      "id": "briefing-get-schedule-001",
+      "parameters": {
+        "url": "http://localhost:8080/api/calendar/today",
+        "method": "GET",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Get Today's Schedule",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "id": "briefing-get-tasks-001",
+      "parameters": {
+        "url": "http://localhost:8080/api/tasks/today",
+        "method": "GET",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Get Today's Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        500
+      ]
+    },
+    {
+      "id": "briefing-merge-data-001",
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition"
+      },
+      "name": "Merge Context Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        700,
+        400
+      ]
+    },
+    {
+      "id": "briefing-generate-script-001",
+      "parameters": {
+        "jsCode": "// Generate 90-second briefing script based on check-in and context\nconst checkinData = $('Process Check-In').item.json;\nconst scheduleData = $('Get Today\\'s Schedule').item.json || { events: [] };\nconst tasksData = $('Get Today\\'s Tasks').item.json || { tasks: [] };\n\nconst { energyLevel, topPriority, blockers, mood } = checkinData.checkin_data;\nconst segments = checkinData.active_segments;\nconst durations = checkinData.segment_durations;\nconst dayName = checkinData.day_of_week;\n\n// Build script segments\nlet script = '';\n\n// GREETING (always)\nif (segments.includes('greeting')) {\n  const greetings = [\n    `Good morning! It's ${dayName}, and you've got this.`,\n    `Rise and shine! Happy ${dayName}.`,\n    `Good morning! Let's make ${dayName} count.`\n  ];\n  script += greetings[Math.floor(Math.random() * greetings.length)] + '\\n\\n';\n}\n\n// ENERGY TIP (if low energy)\nif (segments.includes('energy_tip')) {\n  const tips = [\n    'Your energy is a bit low today. Consider starting with something energizing - a quick walk, some stretching, or your favorite music.',\n    'Running on lower energy? That\\'s okay. Focus on your most important task first while you have the most mental clarity.',\n    'Energy check shows you might need an extra boost. Stay hydrated and consider a power break mid-morning.'\n  ];\n  script += tips[Math.floor(Math.random() * tips.length)] + '\\n\\n';\n}\n\n// PRIORITY FOCUS (always)\nif (segments.includes('priority_focus')) {\n  script += `Your top priority today: ${topPriority}. Block time for this first. Everything else can wait.\\n\\n`;\n}\n\n// BLOCKER STRATEGY (if blockers present)\nif (segments.includes('blocker_strategy') && blockers.length > 0) {\n  const blockerList = Array.isArray(blockers) ? blockers.join(', ') : blockers;\n  script += `You mentioned some blockers: ${blockerList}. Consider who can help remove these, or if they can wait until tomorrow.\\n\\n`;\n}\n\n// SCHEDULE OVERVIEW (always)\nif (segments.includes('schedule_overview')) {\n  const eventCount = scheduleData.events?.length || 0;\n  const taskCount = tasksData.tasks?.length || 0;\n  \n  if (eventCount > 0) {\n    const firstEvent = scheduleData.events[0];\n    script += `You have ${eventCount} event${eventCount > 1 ? 's' : ''} today. First up: ${firstEvent.title || 'meeting'} at ${firstEvent.time || 'scheduled time'}.\\n\\n`;\n  } else {\n    script += `Your calendar is clear today. Use this space wisely for deep work.\\n\\n`;\n  }\n  \n  if (taskCount > 0) {\n    script += `${taskCount} task${taskCount > 1 ? 's' : ''} on your list. \\n\\n`;\n  }\n}\n\n// MOTIVATION (if needed)\nif (segments.includes('motivation')) {\n  const motivations = [\n    'Remember: progress over perfection. One step forward is still forward.',\n    'You don\\'t have to feel motivated to take action. Action often creates motivation.',\n    'Be kind to yourself today. You\\'re doing better than you think.'\n  ];\n  script += motivations[Math.floor(Math.random() * motivations.length)] + '\\n\\n';\n}\n\n// BOUNDARY REMINDER (weekdays)\nif (segments.includes('boundary_reminder')) {\n  const reminders = [\n    'Boundary reminder: It\\'s okay to say no to protect your yes.',\n    'Today\\'s boundary check: Are you serving from overflow or running on empty?',\n    'Protect your focus time. Close unnecessary tabs and silence notifications when you need to concentrate.'\n  ];\n  script += reminders[Math.floor(Math.random() * reminders.length)] + '\\n\\n';\n}\n\n// CLOSING\nscript += `Have a great ${dayName}. You've got this.`;\n\nconst wordCount = script.split(/\\s+/).length;\nconst estimatedSeconds = Math.round(wordCount / 2.5);  // ~150 words per minute\n\nreturn [{ json: {\n  script,\n  word_count: wordCount,\n  estimated_duration_sec: estimatedSeconds,\n  active_segments: segments,\n  checkin_energy: energyLevel,\n  checkin_mood: mood,\n  generated_at: new Date().toISOString()\n}}];"
+      },
+      "name": "Generate Briefing Script",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "id": "briefing-tts-001",
+      "parameters": {
+        "url": "http://localhost:8080/api/tts/generate",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $json.script, voice: 'af_nicole', output_format: 'mp3', output_path: 'D:/OsMEN/content/daily_briefings/briefing_' + new Date().toISOString().split('T')[0] + '.mp3', speed: 1.1 }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Generate Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "id": "briefing-save-log-001",
+      "parameters": {
+        "jsCode": "// Log briefing for analytics\nconst briefingData = $('Generate Briefing Script').item.json;\nconst now = new Date();\n\nconst logEntry = {\n  date: now.toISOString().split('T')[0],\n  timestamp: now.toISOString(),\n  word_count: briefingData.word_count,\n  duration_sec: briefingData.estimated_duration_sec,\n  energy_level: briefingData.checkin_energy,\n  mood: briefingData.checkin_mood,\n  segments_used: briefingData.active_segments,\n  script_preview: briefingData.script.substring(0, 200) + '...'\n};\n\nconsole.log('\\n⏱️ 90-Second Briefing Generated');\nconsole.log(`   Date: ${logEntry.date}`);\nconsole.log(`   Words: ${logEntry.word_count}`);\nconsole.log(`   Duration: ~${logEntry.duration_sec} seconds`);\nconsole.log(`   Energy: ${logEntry.energy_level}/10`);\nconsole.log(`   Segments: ${logEntry.segments_used.join(', ')}`);\n\nreturn [{ json: logEntry }];"
+      },
+      "name": "Log Briefing",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        500
+      ]
+    },
+    {
+      "id": "briefing-respond-001",
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'completed', message: '90-second briefing generated', duration: $('Generate Briefing Script').item.json.estimated_duration_sec + ' seconds', audio_path: 'D:/OsMEN/content/daily_briefings/briefing_' + new Date().toISOString().split('T')[0] + '.mp3' }) }}"
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Morning Trigger (6:30 AM)": {
+      "main": [
+        [
+          {
+            "node": "Send Check-In Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Check-In Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Check-In",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Check-In": {
+      "main": [
+        [
+          {
+            "node": "Get Today's Schedule",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Today's Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Today's Schedule": {
+      "main": [
+        [
+          {
+            "node": "Merge Context Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Today's Tasks": {
+      "main": [
+        [
+          {
+            "node": "Merge Context Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Context Data": {
+      "main": [
+        [
+          {
+            "node": "Generate Briefing Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Briefing Script": {
+      "main": [
+        [
+          {
+            "node": "Generate Audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Audio": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Briefing": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "daily-90sec-briefing-001",
+  "meta": {
+    "instanceId": "osmen-daily-briefing"
+  },
+  "tags": [
+    "productivity",
+    "briefing",
+    "daily",
+    "tts"
+  ]
+}

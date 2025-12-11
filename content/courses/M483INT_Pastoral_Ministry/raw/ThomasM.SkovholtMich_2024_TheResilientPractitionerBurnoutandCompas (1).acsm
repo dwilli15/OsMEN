@@ -1,0 +1,38 @@
+<fulfillmentToken fulfillmentType="loan" auth="user" xmlns="http://ns.adobe.com/adept">
+  <distributor>urn:uuid:501e16ca-f45c-4a0c-9a9f-8a270a9f2ed6</distributor>
+  <operatorURL>https://rps2images.ebscohost.com/fulfillment</operatorURL>
+  <transaction>s6497946:56302866:3951416:1764681207794:1928093671</transaction>
+  <purchase>2025-12-02T13:13:27+00:00</purchase>
+  <expiration>2025-12-02T19:13:27+00:00</expiration>
+  <resourceItemInfo>
+    <resource>urn:uuid:5e6869db-b6c8-4dcb-b135-9fc5d92e97da</resource>
+    <resourceItem>0</resourceItem>
+    <metadata>
+      <dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">The Resilient Practitioner</dc:title>
+      <dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Thomas M. Skovholt;Michelle Trotter-Mathison;</dc:creator>
+      <dc:publisher xmlns:dc="http://purl.org/dc/elements/1.1/">Taylor &amp; Francis (Unlimited)</dc:publisher>
+      <dc:identifier xmlns:dc="http://purl.org/dc/elements/1.1/">9781040150825</dc:identifier>
+      <dc:format xmlns:dc="http://purl.org/dc/elements/1.1/">application/epub+zip</dc:format>
+      <dc:language xmlns:dc="http://purl.org/dc/elements/1.1/">eng</dc:language>
+    </metadata>
+    <licenseToken>
+      <resource>urn:uuid:5e6869db-b6c8-4dcb-b135-9fc5d92e97da</resource>
+      <permissions>
+        <display>
+          <until>2025-12-09T13:13:27+00:00</until>
+        </display>
+        <excerpt>
+          <until>2025-12-09T13:13:27+00:00</until>
+        </excerpt>
+        <print>
+          <until>2025-12-09T13:13:27+00:00</until>
+          <count initial="60"/>
+        </print>
+        <play>
+          <until>2025-12-09T13:13:27+00:00</until>
+        </play>
+      </permissions>
+    </licenseToken>
+  </resourceItemInfo>
+  <hmac>vQbBroZcCgWp6Ib+Cr9QiGXAEeI=</hmac>
+</fulfillmentToken>

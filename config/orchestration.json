@@ -1,0 +1,166 @@
+{
+    "version": "2.0.0",
+    "name": "OsMEN Full Stack Configuration",
+    "description": "Complete orchestration configuration for OsMEN agent ecosystem",
+    "created": "2025-12-04T14:00:00Z",
+    
+    "services": {
+        "langflow": {
+            "url": "http://localhost:7860",
+            "description": "Visual LLM flow builder",
+            "flows": {
+                "coordinator": "OsMEN Coordinator Agent",
+                "yolo_ops": "YOLO-OPS Coordinator",
+                "knowledge": "Knowledge Management Specialist Agent",
+                "security": "Boot Hardening Specialist Agent",
+                "daily_brief": "Daily Brief Specialist Agent",
+                "focus": "Focus Guardrails Specialist Agent"
+            }
+        },
+        "n8n": {
+            "url": "http://localhost:5678",
+            "description": "Workflow automation",
+            "webhooks": {
+                "coordinator": "/webhook/coordinator",
+                "daily_brief": "/webhook/daily-brief",
+                "knowledge": "/webhook/knowledge-query",
+                "security": "/webhook/security-alert",
+                "task": "/webhook/task-create",
+                "voice": "/webhook/voice-input",
+                "librarian_ingest": "/webhook/librarian-ingest",
+                "librarian_query": "/webhook/librarian-query"
+            }
+        },
+        "mcp": {
+            "url": "http://localhost:8081",
+            "description": "Model Context Protocol server for VS Code",
+            "tools_endpoint": "/tools",
+            "call_endpoint": "/tools/call"
+        },
+        "librarian": {
+            "url": "http://localhost:8200",
+            "description": "Semantic Memory & Lateral Thinking RAG Engine",
+            "modes": ["foundation", "lateral", "factcheck"],
+            "embedding_model": "dunzhang/stella_en_1.5B_v5"
+        },
+        "chromadb": {
+            "url": "http://localhost:8000",
+            "description": "Local vector database",
+            "collections": {
+                "osmen_knowledge": "Main knowledge base",
+                "agent_memory": "Agent conversation memory",
+                "obsidian_sync": "Obsidian vault embeddings"
+            }
+        },
+        "gateway": {
+            "url": "http://localhost:8080",
+            "description": "Unified LLM gateway",
+            "providers": ["openai", "lmstudio", "ollama", "claude"]
+        },
+        "convertx": {
+            "url": "http://localhost:3000",
+            "description": "Universal file converter (1000+ formats)"
+        }
+    },
+    
+    "orchestration": {
+        "primary_driver": "vscode-copilot-mcp",
+        "coordinator_flow": "OsMEN Coordinator Agent",
+        "routing": {
+            "knowledge_query": ["librarian", "knowledge_specialist"],
+            "security_task": ["boot_hardening", "security_specialist"],
+            "productivity": ["daily_brief", "focus_guardrails"],
+            "automation": ["n8n_workflow"],
+            "file_conversion": ["convertx"],
+            "code_task": ["yolo_ops"]
+        }
+    },
+    
+    "agents": {
+        "coordinator": {
+            "type": "langflow",
+            "flow": "OsMEN Coordinator Agent",
+            "description": "Central routing and orchestration",
+            "capabilities": ["routing", "delegation", "context_management"]
+        },
+        "yolo_ops": {
+            "type": "langflow",
+            "flow": "YOLO-OPS Coordinator",
+            "description": "Autonomous execution agent",
+            "capabilities": ["file_ops", "code_gen", "system_admin"]
+        },
+        "librarian": {
+            "type": "api",
+            "url": "http://localhost:8200",
+            "description": "RAG with lateral thinking",
+            "capabilities": ["semantic_search", "fact_verification", "document_ingestion"]
+        },
+        "knowledge_specialist": {
+            "type": "langflow",
+            "flow": "Knowledge Management Specialist Agent",
+            "description": "Obsidian and knowledge base management",
+            "capabilities": ["note_creation", "search", "linking"]
+        },
+        "security_specialist": {
+            "type": "langflow",
+            "flow": "Boot Hardening Specialist Agent",
+            "description": "System security and hardening",
+            "capabilities": ["firewall", "startup_analysis", "hardening"]
+        },
+        "daily_brief": {
+            "type": "langflow",
+            "flow": "Daily Brief Specialist Agent",
+            "description": "Daily summary and planning",
+            "capabilities": ["task_summary", "calendar_overview", "priorities"]
+        }
+    },
+    
+    "local_llm": {
+        "primary": {
+            "provider": "lm_studio",
+            "url": "http://localhost:1234/v1",
+            "use_for": ["complex_reasoning", "code_generation", "analysis"]
+        },
+        "secondary": {
+            "provider": "ollama",
+            "url": "http://localhost:11434",
+            "use_for": ["quick_responses", "embeddings", "classification"]
+        },
+        "agent_routing": {
+            "coordinator": "lm_studio",
+            "knowledge_specialist": "ollama",
+            "security_specialist": "lm_studio",
+            "daily_brief": "ollama"
+        }
+    },
+    
+    "voice": {
+        "enabled": true,
+        "whisper_model": "small",
+        "device": "cpu",
+        "wake_words": ["hey osmen", "osmen", "computer"],
+        "input_webhook": "http://localhost:5678/webhook/voice-input"
+    },
+    
+    "integrations": {
+        "obsidian": {
+            "vault_path": "./obsidian-vault",
+            "sync_enabled": true,
+            "auto_index": true
+        },
+        "calendar": {
+            "provider": "google",
+            "sync_enabled": true
+        }
+    },
+    
+    "vscode": {
+        "mcp_enabled": true,
+        "primary_extension": "github.copilot-chat",
+        "mcp_server": {
+            "command": "python",
+            "args": ["-m", "gateway.mcp.server"],
+            "cwd": "."
+        }
+    }
+}

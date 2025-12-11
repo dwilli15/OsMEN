@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - OsMEN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        .status-operational { color: #22c55e; }
+        .status-degraded { color: #f59e0b; }
+        .status-offline { color: #ef4444; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen">
+    <!-- Navigation -->
+    <nav class="gradient-bg border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-3">
+                        <i class="fas fa-brain text-2xl text-blue-400"></i>
+                        <span class="text-xl font-bold">OsMEN</span>
+                    </a>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="/" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700 {% if request.url.path == '/' %}bg-slate-700{% endif %}">
+                                <i class="fas fa-home mr-2"></i>Dashboard
+                            </a>
+                            <a href="/syllabus" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700 {% if request.url.path == '/syllabus' %}bg-slate-700{% endif %}">
+                                <i class="fas fa-file-alt mr-2"></i>Syllabus
+                            </a>
+                            <a href="/calendar" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700 {% if request.url.path == '/calendar' %}bg-slate-700{% endif %}">
+                                <i class="fas fa-calendar mr-2"></i>Calendar
+                            </a>
+                            <a href="/tasks" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700 {% if request.url.path == '/tasks' %}bg-slate-700{% endif %}">
+                                <i class="fas fa-tasks mr-2"></i>Tasks
+                            </a>
+                            <a href="/agents" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700 {% if request.url.path == '/agents' %}bg-slate-700{% endif %}">
+                                <i class="fas fa-robot mr-2"></i>Agents
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-slate-400">v{{ version }}</span>
+                    <div id="health-indicator" class="flex items-center space-x-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <span class="text-sm text-slate-400">Healthy</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}
+        <!-- Dashboard Overview -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2">Welcome to OsMEN</h1>
+            <p class="text-slate-400">Local-first agent orchestration for graduate school workflow automation</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-slate-800 rounded-xl p-6 card-hover transition-all duration-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-400 text-sm">Active Agents</p>
+                        <p class="text-3xl font-bold text-blue-400" id="active-agents">-</p>
+                    </div>
+                    <i class="fas fa-robot text-4xl text-slate-600"></i>
+                </div>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6 card-hover transition-all duration-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-400 text-sm">Pending Tasks</p>
+                        <p class="text-3xl font-bold text-amber-400" id="pending-tasks">-</p>
+                    </div>
+                    <i class="fas fa-tasks text-4xl text-slate-600"></i>
+                </div>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6 card-hover transition-all duration-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-400 text-sm">Today's Events</p>
+                        <p class="text-3xl font-bold text-green-400" id="today-events">-</p>
+                    </div>
+                    <i class="fas fa-calendar-day text-4xl text-slate-600"></i>
+                </div>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6 card-hover transition-all duration-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-400 text-sm">Overdue</p>
+                        <p class="text-3xl font-bold text-red-400" id="overdue-count">-</p>
+                    </div>
+                    <i class="fas fa-exclamation-triangle text-4xl text-slate-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <a href="/syllabus" class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-6 card-hover transition-all duration-200 block">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-white/20 rounded-lg p-3">
+                        <i class="fas fa-upload text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold">Upload Syllabus</h3>
+                        <p class="text-blue-200 text-sm">Parse PDF/DOCX and extract deadlines</p>
+                    </div>
+                </div>
+            </a>
+            <a href="/calendar" class="bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-6 card-hover transition-all duration-200 block">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-white/20 rounded-lg p-3">
+                        <i class="fas fa-calendar-plus text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold">Sync Calendar</h3>
+                        <p class="text-green-200 text-sm">Connect Google or Outlook calendar</p>
+                    </div>
+                </div>
+            </a>
+            <a href="/agents" class="bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl p-6 card-hover transition-all duration-200 block">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-white/20 rounded-lg p-3">
+                        <i class="fas fa-cogs text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold">Agent Status</h3>
+                        <p class="text-purple-200 text-sm">Monitor your AI agents</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-slate-800 rounded-xl p-6">
+            <h2 class="text-xl font-semibold mb-4">
+                <i class="fas fa-clock mr-2 text-slate-400"></i>
+                Today's Priority Tasks
+            </h2>
+            <div id="priority-tasks" class="space-y-3">
+                <div class="text-slate-400 text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                    <p>Loading tasks...</p>
+                </div>
+            </div>
+        </div>
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-700 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex justify-between items-center text-sm text-slate-400">
+                <span>OsMEN v{{ version }} - Local-First Agent Orchestration</span>
+                <span>Privacy-Focused • No Cloud Required</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Load dashboard data on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Load daily summary
+                const summaryRes = await fetch('/api/daily-summary');
+                const summary = await summaryRes.json();
+                
+                if (summary.tasks) {
+                    document.getElementById('pending-tasks').textContent = summary.tasks.pending || 0;
+                    document.getElementById('overdue-count').textContent = summary.tasks.overdue || 0;
+                    document.getElementById('today-events').textContent = summary.events || 0;
+                }
+                
+                // Load priority tasks
+                const tasksContainer = document.getElementById('priority-tasks');
+                if (summary.priority_tasks && summary.priority_tasks.length > 0) {
+                    tasksContainer.innerHTML = summary.priority_tasks.map(task => `
+                        <div class="flex items-center justify-between bg-slate-700/50 rounded-lg p-4">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-2 h-2 rounded-full ${task.priority === 'high' || task.priority === 'urgent' ? 'bg-red-500' : 'bg-amber-500'}"></span>
+                                <span>${task.title}</span>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded-full ${task.priority === 'high' || task.priority === 'urgent' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}">${task.priority}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    tasksContainer.innerHTML = `
+                        <div class="text-center py-8 text-slate-400">
+                            <i class="fas fa-check-circle text-4xl mb-2 text-green-500"></i>
+                            <p>No high-priority tasks for today!</p>
+                        </div>
+                    `;
+                }
+                
+                // Load agent status
+                const agentsRes = await fetch('/api/agents/status');
+                const agentsData = await agentsRes.json();
+                const activeAgents = agentsData.agents?.filter(a => a.status === 'operational').length || 0;
+                document.getElementById('active-agents').textContent = activeAgents;
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        });
+    </script>
+</body>
+</html>

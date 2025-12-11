@@ -1,0 +1,16 @@
+{
+  "name": "narrator_male",
+  "description": "Professional male narrator voice. Clear, authoritative.",
+  "backends": {
+    "kokoro": {
+      "voice_id": "am_michael"
+    },
+    "parler": {
+      "prompt": "A professional male narrator voice. Clear enunciation, authoritative tone, moderate pace."
+    },
+    "openvoice": {
+      "style": "default"
+    }
+  },
+  "notes": "Great for audiobooks and documentaries"
+}

@@ -1,0 +1,54 @@
+{
+  "id": "m483int-spring-2026",
+  "code": "M483INT",
+  "name": "Introduction to Pastoral Ministry",
+  "instructor": "TBD",
+  "semester": "Spring",
+  "year": 2026,
+  "credits": 3,
+  "schedule": {
+    "day": "Wednesday",
+    "time": "19:00-21:00",
+    "timezone": "America/Chicago",
+    "format": "hybrid",
+    "start_date": "2026-01-28",
+    "end_date": "2026-05-08"
+  },
+  "sessions": [
+    {"date": "2026-01-28", "week": 1, "topic": "Intro to Course", "mode": "ASYNC"},
+    {"date": "2026-02-03", "week": 2, "topic": "In Chicago/hybrid", "mode": "hybrid"},
+    {"date": "2026-02-21", "week": 4, "topic": "Power and Community", "mode": "sync"},
+    {"date": "2026-02-28", "week": 5, "topic": "Care Across Difference 1", "mode": "sync"},
+    {"date": "2026-03-06", "week": 6, "topic": "Care Across Difference 2", "mode": "sync"},
+    {"date": "2026-03-13", "week": 7, "topic": "Families", "mode": "sync"},
+    {"date": "2026-03-27", "week": 9, "topic": "Professional Ethics & Referrals", "mode": "sync"},
+    {"date": "2026-04-10", "week": 11, "topic": "Community Care, Self Care", "mode": "sync"},
+    {"date": "2026-04-17", "week": 12, "topic": "People in Crisis", "mode": "sync"},
+    {"date": "2026-04-24", "week": 13, "topic": "Grief, Loss, Virtual Pastoral Care", "mode": "ASYNC"},
+    {"date": "2026-04-29", "week": 14, "topic": "CPE, MFC, Listening", "mode": "sync"},
+    {"date": "2026-05-01", "week": 14, "topic": "Pastoral Ministry is Prophetic", "mode": "sync"},
+    {"date": "2026-05-08", "week": 15, "topic": "Finalizing the Course", "mode": "sync"}
+  ],
+  "readings": {
+    "extracted": [
+      {"title": "The Wounded Healer", "author": "Henri Nouwen", "file": "Nouwen_Wounded_Healer.txt"},
+      {"title": "Black Families in Therapy", "author": "Boyd-Franklin", "file": "Boyd_Franklin_Black Families in Therapy.txt"},
+      {"title": "Cultural Competence in Trauma Therapy - Intro", "author": "Brown", "file": "Brown Cultural Competence in Trauma Therapy An Intro.txt"},
+      {"title": "Cultural Competence in Trauma Therapy - Ch 1", "author": "Brown", "file": "Brown Cultural Competence in Trauma Therapy Ch 1.txt"},
+      {"title": "Companions in Healing", "author": "Cooper-White", "file": "CooperWhite Companions in Healing Practices of Pastoral Care.txt"},
+      {"title": "Latino Families in Therapy", "author": "Falicov", "file": "Falicov_LatinoFamiliesInTherapy.txt"},
+      {"title": "Spiritual First Aid", "author": "Taylor", "file": "Taylor - Spiritual First Aid.txt"},
+      {"title": "Praying with Every Heart", "author": "Carvalhaes", "file": "CláudioCarvalhaes_2021_PrayingwithEveryHeartOrientingOurLivesto.txt"},
+      {"title": "Misunderstanding Stories - Postcolonial Pastoral", "author": "Various", "file": "Misunderstanding_Stories_Toward_a_Postcolonial_Pas....txt"},
+      {"title": "Discover Your Conflict Management Style", "author": "Speed B. Leas", "file": "Speed B. Leas - Discover Your Conflict Management Style (1998, Rowman & Littlefield Publishers) - libgen.li.txt"},
+      {"title": "Blessing It All", "author": "Concannon & Palm", "file": "Blessing It All - Concannon, Heather;Palm, Allison; & Heather Concannon.txt"},
+      {"title": "The Wolf Shall Dwell with the Lamb", "author": "Eric Law", "file": "Wolf Shall Dwell with the Lamb, The - Law, Eric;.txt"}
+    ],
+    "pending_drm": [
+      {"title": "The Garden of Reality", "author": "Roland Faber", "status": "ACSM expired - need fresh download"},
+      {"title": "The Resilient Practitioner", "author": "Skovholt & Trotter-Mathison", "status": "ACSM expired - need fresh download"}
+    ]
+  },
+  "content_path": "D:/OsMEN/content/courses/M483INT_Pastoral_Ministry",
+  "created_at": "2025-12-04T07:45:00Z"
+}

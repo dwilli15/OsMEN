@@ -11,13 +11,14 @@ Unified interface connecting YOLO-OPS to:
 - Copilot CLI/Chat (via MCP)
 """
 
-import os
-import json
-import httpx
 import asyncio
-from typing import Any, Dict, List, Optional
+import json
+import os
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import httpx
 
 # Service endpoints
 ENDPOINTS = {
@@ -28,6 +29,7 @@ ENDPOINTS = {
     "librarian": os.getenv("LIBRARIAN_URL", "http://localhost:8200"),
     "mcp": os.getenv("MCP_URL", "http://localhost:8081"),
     "gateway": os.getenv("GATEWAY_URL", "http://localhost:8080"),
+    "convertx": os.getenv("CONVERTX_URL", "http://localhost:3000"),
 }
 
 TIMEOUT = 30.0
@@ -253,6 +255,169 @@ class YoloTools:
         return response.json() if response.is_success else {"status": "unavailable"}
 
     # =========================================================================
+    # CONVERTX - Universal File Converter (1000+ formats)
+    # =========================================================================
+
+    async def convertx_health(self) -> Dict:
+        """Check ConvertX service health."""
+        url = f"{ENDPOINTS['convertx']}/"
+        try:
+            response = await self.client.get(url, timeout=5.0)
+            return {"status": "healthy" if response.is_success else "unhealthy"}
+        except Exception as e:
+            return {"status": "unavailable", "error": str(e)}
+
+    async def convertx_convert(
+        self,
+        input_file: str,
+        target_format: str,
+        output_file: str = None,
+    ) -> Dict:
+        """
+        Convert ANY file to ANY format. Supports 1000+ formats:
+        - Video: mp4, mkv, webm, avi, mov, gif
+        - Audio: mp3, wav, flac, ogg, m4a, aac
+        - Images: jpg, png, webp, heic, avif, svg, gif
+        - Documents: pdf, docx, md, html, txt, epub
+        - Ebooks: epub, mobi, azw3
+        - 3D: obj, stl, fbx, gltf, glb
+        """
+        from pathlib import Path
+
+        input_path = Path(input_file)
+        if not input_path.exists():
+            return {"success": False, "error": f"Input file not found: {input_file}"}
+
+        if output_file is None:
+            output_file = str(input_path.with_suffix(f".{target_format.lstrip('.')}"))
+
+        try:
+            # Step 1: Upload file
+            with open(input_path, "rb") as f:
+                files = {"file": (input_path.name, f)}
+                upload_resp = await self.client.post(
+                    f"{ENDPOINTS['convertx']}/upload",
+                    files=files,
+                )
+
+            if upload_resp.status_code not in (200, 302):
+                return {
+                    "success": False,
+                    "error": f"Upload failed: {upload_resp.status_code}",
+                }
+
+            # Step 2: Request conversion
+            convert_data = {
+                "convert_to": target_format.lstrip("."),
+                "file_names": input_path.name,
+            }
+            convert_resp = await self.client.post(
+                f"{ENDPOINTS['convertx']}/convert",
+                data=convert_data,
+                follow_redirects=False,
+            )
+
+            # Extract job ID
+            job_id = None
+            if convert_resp.status_code == 302:
+                location = convert_resp.headers.get("Location", "")
+                if "/results/" in location:
+                    job_id = location.split("/results/")[-1]
+
+            if not job_id:
+                return {"success": False, "error": "Failed to start conversion"}
+
+            # Step 3: Wait for completion
+            await self._wait_for_convertx_job(job_id)
+
+            # Step 4: Download result
+            user_id = "1"
+            output_filename = f"{input_path.stem}.{target_format.lstrip('.')}"
+            download_url = (
+                f"{ENDPOINTS['convertx']}/download/{user_id}/{job_id}/{output_filename}"
+            )
+
+            download_resp = await self.client.get(download_url)
+
+            if download_resp.is_success:
+                output_path = Path(output_file)
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(output_path, "wb") as f:
+                    f.write(download_resp.content)
+
+                return {
+                    "success": True,
+                    "output_file": str(output_path),
+                    "input_format": input_path.suffix.lstrip("."),
+                    "output_format": target_format,
+                    "job_id": job_id,
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": f"Download failed: {download_resp.status_code}",
+                }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _wait_for_convertx_job(self, job_id: str, max_wait: int = 300):
+        """Wait for ConvertX job to complete."""
+        import time
+
+        start = time.time()
+
+        while time.time() - start < max_wait:
+            try:
+                resp = await self.client.post(
+                    f"{ENDPOINTS['convertx']}/progress/{job_id}"
+                )
+                if resp.is_success:
+                    text = resp.text.lower()
+                    if "download" in text and "pending" not in text:
+                        return
+                    if "completed" in text:
+                        return
+            except Exception:
+                pass
+            await asyncio.sleep(1.0)
+
+    async def convertx_batch(
+        self,
+        input_files: List[str],
+        target_format: str,
+        output_dir: str = None,
+    ) -> List[Dict]:
+        """Batch convert multiple files to target format."""
+        results = []
+        for input_file in input_files:
+            output_file = None
+            if output_dir:
+                from pathlib import Path
+
+                output_file = str(
+                    Path(output_dir)
+                    / f"{Path(input_file).stem}.{target_format.lstrip('.')}"
+                )
+            result = await self.convertx_convert(input_file, target_format, output_file)
+            results.append({**result, "input_file": input_file})
+        return results
+
+    async def convertx_get_formats(self, input_format: str) -> Dict:
+        """Get available output formats for a given input format."""
+        # Use local format mapping (faster than API call)
+        from integrations.convertx.utils import get_category, get_possible_conversions
+
+        outputs = get_possible_conversions(input_format)
+        category = get_category(input_format)
+
+        return {
+            "input_format": input_format,
+            "category": category,
+            "available_outputs": outputs,
+        }
+
+    # =========================================================================
     # UTILITY METHODS
     # =========================================================================
 
@@ -267,6 +432,7 @@ class YoloTools:
             ("librarian", f"{ENDPOINTS['librarian']}/health"),
             ("mcp", f"{ENDPOINTS['mcp']}/health"),
             ("gateway", f"{ENDPOINTS['gateway']}/health"),
+            ("convertx", f"{ENDPOINTS['convertx']}/"),
         ]
 
         for name, url in checks:
@@ -313,6 +479,27 @@ class YoloToolsSync:
     def gateway_chat(self, message: str, agent: str = "coordinator") -> Dict:
         return self._run(self._async_tools.gateway_chat(message, agent))
 
+    # ConvertX sync methods
+    def convertx_convert(
+        self, input_file: str, target_format: str, output_file: str = None
+    ) -> Dict:
+        """Convert file to target format (sync)."""
+        return self._run(
+            self._async_tools.convertx_convert(input_file, target_format, output_file)
+        )
+
+    def convertx_batch(
+        self, input_files: List[str], target_format: str, output_dir: str = None
+    ) -> List[Dict]:
+        """Batch convert files (sync)."""
+        return self._run(
+            self._async_tools.convertx_batch(input_files, target_format, output_dir)
+        )
+
+    def convertx_health(self) -> Dict:
+        """Check ConvertX health (sync)."""
+        return self._run(self._async_tools.convertx_health())
+
 
 # Quick access functions
 def get_tools() -> YoloTools:
@@ -334,5 +521,7 @@ if __name__ == "__main__":
         for service, health in status.items():
             print(f"  {service}: {health}")
         await tools.close()
+
+    asyncio.run(main())
 
     asyncio.run(main())

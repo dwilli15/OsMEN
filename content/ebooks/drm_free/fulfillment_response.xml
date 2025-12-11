@@ -1,0 +1,82 @@
+<envelope xmlns="http://ns.adobe.com/adept">
+  <fulfillmentResult>
+    <fulfillment>419ec39d-e964-42ef-aec4-8b6d72570b56-000009de</fulfillment>
+    <returnable>true</returnable>
+    <initial>false</initial>
+    <notify>
+      <notifyURL>https://rps2images.ebscohost.com/fulfillment/FulfillmentNotification</notifyURL>
+      <body>
+        <fulfillment>419ec39d-e964-42ef-aec4-8b6d72570b56-000009de</fulfillment>
+        <transaction>s6497946:56302866:3951416:1764978182082:93612665</transaction>
+        <user>urn:uuid:985c7082-994d-4475-9a87-b0224e71d7aa</user>
+        <fulfilled>true</fulfilled>
+        <returned>false</returned>
+      </body>
+    </notify>
+    <notify critical="no">
+      <notifyURL>http://rps2images.ebscohost.com/rpsweb/checkin</notifyURL>
+      <body>
+        <fulfillment>419ec39d-e964-42ef-aec4-8b6d72570b56-000009de</fulfillment>
+        <transaction>s6497946:56302866:3951416:1764978182082:93612665</transaction>
+        <user>urn:uuid:985c7082-994d-4475-9a87-b0224e71d7aa</user>
+        <fulfilled>true</fulfilled>
+        <returned>false</returned>
+      </body>
+    </notify>
+    <resourceItemInfo>
+      <resource>urn:uuid:5e6869db-b6c8-4dcb-b135-9fc5d92e97da</resource>
+      <resourceItem>0</resourceItem>
+      <metadata>
+        <dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">The Resilient Practitioner</dc:title>
+        <dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Thomas M. Skovholt;Michelle Trotter-Mathison;</dc:creator>
+        <dc:format xmlns:dc="http://purl.org/dc/elements/1.1/">application/epub+zip</dc:format>
+        <dc:publisher xmlns:dc="http://purl.org/dc/elements/1.1/">Taylor &amp; Francis (Unlimited)</dc:publisher>
+        <dc:language xmlns:dc="http://purl.org/dc/elements/1.1/">eng</dc:language>
+        <dc:description xmlns:dc="http://purl.org/dc/elements/1.1/">The Resilient Practitioner, 4th edition, gives students and practitioners valuable tools for creating their own boundaried generosity, a vibrant method for balancing caring for others and caring for oneself. The new edition builds on the strengths of the earlier editions and incorporates the lived experience of practitioners in the helping, caring, and relationship-intense fields. Readers will find new material in the Architecture of Resilience chapter, a self-care action plan that incorporates SMART goals to increase goal-setting success and a focus on both individual responsibility and organizational responsibility for burnout prevention and the development of resilience. The new edition also includes self-reflection exercises in each chapter, a resiliency inventory for practitioners, a strong focus on research, and an accessible writing style. The authors continue to chart a hopeful path for practitioners, one that allows for a high level of caring for others in the helping professions while also artfully caring for oneself.</dc:description>
+        <dc:identifier xmlns:dc="http://purl.org/dc/elements/1.1/">9781040150825</dc:identifier>
+        <modified>2024-09-16T10:53:40+00:00</modified>
+        <price>0.0</price>
+        <epubver>3.0</epubver>
+      </metadata>
+      <src>http://rps2images.ebscohost.com/rpsweb/download_artifact/NL$3951416$EPUB/s6497946:56302866:3951416:1764978182082:93612665/4fd5/01505ebd/850a4a2d_download.epub</src>
+      <downloadType>simple</downloadType>
+<licenseToken>
+    <user>urn:uuid:985c7082-994d-4475-9a87-b0224e71d7aa</user>
+    <resource>urn:uuid:5e6869db-b6c8-4dcb-b135-9fc5d92e97da</resource>
+    <resourceItemType>application/epub+zip</resourceItemType>
+    <deviceType>standalone</deviceType>
+    <device>urn:uuid:de6d24e3-60d1-4b88-952e-22caeffd43f6</device>
+    <voucher>urn:ep:NL$3951416$EPUB</voucher>
+    <licenseURL>https://nasigningservice.adobe.com/licensesign</licenseURL>
+    <operatorURL>https://rps2images.ebscohost.com/fulfillment</operatorURL>
+    <fulfillment>419ec39d-e964-42ef-aec4-8b6d72570b56-000009de</fulfillment>
+    <distributor>urn:uuid:501e16ca-f45c-4a0c-9a9f-8a270a9f2ed6</distributor>
+    <encryptedKey keyInfo="user">rkvdntPkFARjrtjb0Orsoi+PLNc+HdQVHUYv4GIzKInFYB4EVvA0lexV/vUD7X7SX285dPcsAgxwgkrWjnh2Sip5hGvKPm9o6zZexpdQQlkBvmcjWw/UdFp2seD+fGiVUAqdoU5qWfPJTK6HNZsTiKAxrCxk70+H1ok4ti2YVEg=</encryptedKey>
+    <model version="1.0">3073</model>
+    <permissions>
+      <display>
+        <loan>419ec39d-e964-42ef-aec4-8b6d72570b56-000009de</loan>
+        <until>2025-12-09T13:13:02Z</until>
+      </display>
+      <excerpt>
+        <loan>419ec39d-e964-42ef-aec4-8b6d72570b56-000009de</loan>
+        <until>2025-12-09T13:13:02Z</until>
+      </excerpt>
+      <print>
+        <loan>419ec39d-e964-42ef-aec4-8b6d72570b56-000009de</loan>
+        <until>2025-12-09T13:13:02Z</until>
+        <count initial="60"/>
+      </print>
+    </permissions>
+    <signature>VGIq6v4zbhtW2temI+RPzWEPIc5aHG9eF1MuAKHMh9P/LIsWmI5mY+hBu7kmKyymKLahqFgKWt5LrSAgmGztEmE2to5rOH9JM69t0vuWu+GjCKp4BShT9C4w6mljrU6gSISQXzZwnpVm6ksCXuNyiFrv+R3LStdQRBkzwpIo/l8=</signature>
+  </licenseToken>    </resourceItemInfo>
+  </fulfillmentResult>
+  <loanToken>
+    <time>2025-12-07T17:40:43+00:00</time>
+    <user>urn:uuid:985c7082-994d-4475-9a87-b0224e71d7aa</user>
+    <operatorURL>https://rps2images.ebscohost.com/fulfillment</operatorURL>
+    <licenseURL>https://nasigningservice.adobe.com/licensesign</licenseURL>
+    <loan>419ec39d-e964-42ef-aec4-8b6d72570b56-000009de</loan>
+    <signature>VAZuHwpniBd84S63OEIPtZXeycp7mkjLuNeCcMLR0EtQ5W+/MfDkPPaiOZjTxJfLEGYB/MUsKshizy5AATWT4zGRLDWJjEvuNqStlnfyiXZZWJ0r0AngKff4U5Ygj+CIlaMo5WpFyaGBXB3Cpckxm7GuDChBlmc0BeGT8la0/Cc=</signature>
+  </loanToken>
+</envelope>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - OsMEN Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen" x-data="agentDashboard('{{ agent_id }}')">
+    <!-- Navigation -->
+    <nav class="gradient-bg border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-3">
+                        <i class="fas fa-brain text-2xl text-blue-400"></i>
+                        <span class="text-xl font-bold">OsMEN</span>
+                    </a>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="/admin" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-arrow-left mr-2"></i>Admin Hub
+                            </a>
+                            <span class="px-3 py-2 rounded-md text-sm font-medium bg-slate-700">
+                                <i class="fas fa-robot mr-2"></i>{{ agent_id }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2">
+                <i class="fas fa-robot mr-3 text-green-400"></i>
+                <span x-text="details.info?.name || '{{ agent_id }}'"></span>
+            </h1>
+            <p class="text-slate-400" x-text="details.info?.description || 'Loading agent details...'"></p>
+        </div>
+
+        <!-- Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center space-x-3 mb-2">
+                    <i class="fas fa-tools text-purple-400"></i>
+                    <span class="text-slate-400">Tools</span>
+                </div>
+                <p class="text-3xl font-bold text-purple-400" x-text="details.info?.uses_tools?.length || 0"></p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center space-x-3 mb-2">
+                    <i class="fas fa-server text-blue-400"></i>
+                    <span class="text-slate-400">Nodes</span>
+                </div>
+                <p class="text-3xl font-bold text-blue-400" x-text="details.info?.uses_nodes?.length || 0"></p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center space-x-3 mb-2">
+                    <i class="fas fa-syringe text-green-400"></i>
+                    <span class="text-slate-400">Context Injections</span>
+                </div>
+                <p class="text-3xl font-bold text-green-400" x-text="details.context_injections?.length || 0"></p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center space-x-3 mb-2">
+                    <i class="fas fa-check-circle text-amber-400"></i>
+                    <span class="text-slate-400">Outcomes</span>
+                </div>
+                <p class="text-3xl font-bold text-amber-400" x-text="details.outcomes?.length || 0"></p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Agent Configuration -->
+            <div class="bg-slate-800 rounded-xl p-6">
+                <h2 class="text-xl font-semibold mb-4">
+                    <i class="fas fa-cog mr-2 text-slate-400"></i>
+                    Configuration
+                </h2>
+                <div class="space-y-4">
+                    <!-- Tools -->
+                    <div>
+                        <p class="text-sm text-slate-400 mb-2">Uses Tools</p>
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="tool in details.info?.uses_tools || []" :key="tool">
+                                <span class="px-3 py-1 text-sm rounded-full bg-purple-500/20 text-purple-400" x-text="tool"></span>
+                            </template>
+                            <template x-if="!details.info?.uses_tools?.length">
+                                <span class="text-slate-500">None</span>
+                            </template>
+                        </div>
+                    </div>
+                    <!-- Nodes -->
+                    <div>
+                        <p class="text-sm text-slate-400 mb-2">Uses Nodes</p>
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="node in details.info?.uses_nodes || []" :key="node">
+                                <span class="px-3 py-1 text-sm rounded-full bg-blue-500/20 text-blue-400" x-text="node"></span>
+                            </template>
+                            <template x-if="!details.info?.uses_nodes?.length">
+                                <span class="text-slate-500">None</span>
+                            </template>
+                        </div>
+                    </div>
+                    <!-- Provides -->
+                    <div>
+                        <p class="text-sm text-slate-400 mb-2">Provides</p>
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="item in details.info?.provides || []" :key="item">
+                                <span class="px-3 py-1 text-sm rounded-full bg-green-500/20 text-green-400" x-text="item"></span>
+                            </template>
+                            <template x-if="!details.info?.provides?.length">
+                                <span class="text-slate-500">None</span>
+                            </template>
+                        </div>
+                    </div>
+                    <!-- Consumes -->
+                    <div>
+                        <p class="text-sm text-slate-400 mb-2">Consumes</p>
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="item in details.info?.consumes || []" :key="item">
+                                <span class="px-3 py-1 text-sm rounded-full bg-amber-500/20 text-amber-400" x-text="item"></span>
+                            </template>
+                            <template x-if="!details.info?.consumes?.length">
+                                <span class="text-slate-500">None</span>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Context Preview -->
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold">
+                        <i class="fas fa-code mr-2 text-slate-400"></i>
+                        Context Preview
+                    </h2>
+                    <button @click="generateContext()" class="text-sm text-blue-400 hover:text-blue-300">
+                        <i class="fas fa-sync-alt mr-1"></i>Generate
+                    </button>
+                </div>
+                <div class="mb-4">
+                    <input type="text" x-model="taskInput" placeholder="Task description (optional)"
+                        class="w-full bg-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="bg-slate-700/50 rounded-lg p-4 max-h-80 overflow-y-auto">
+                    <pre class="text-sm text-slate-300 whitespace-pre-wrap" x-text="contextPreview || 'Click Generate to preview context injection'"></pre>
+                </div>
+            </div>
+
+            <!-- Recent Context Injections -->
+            <div class="bg-slate-800 rounded-xl p-6">
+                <h2 class="text-xl font-semibold mb-4">
+                    <i class="fas fa-history mr-2 text-slate-400"></i>
+                    Recent Context Injections
+                </h2>
+                <div class="space-y-2 max-h-80 overflow-y-auto">
+                    <template x-for="(injection, idx) in details.context_injections" :key="idx">
+                        <div class="bg-slate-700/50 rounded-lg p-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm" x-text="injection.task_description || 'No task'"></p>
+                                    <p class="text-xs text-slate-400" x-text="injection.timestamp"></p>
+                                </div>
+                                <span class="px-2 py-0.5 text-xs rounded-full"
+                                    :class="injection.success ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'"
+                                    x-text="injection.success ? 'OK' : 'Failed'"></span>
+                            </div>
+                            <div class="mt-2 text-xs text-slate-400">
+                                <span x-text="injection.context_tokens + ' tokens'"></span>
+                                • <span x-text="injection.duration_ms?.toFixed(1) + ' ms'"></span>
+                            </div>
+                        </div>
+                    </template>
+                    <template x-if="!details.context_injections?.length">
+                        <p class="text-center py-4 text-slate-400">No injection history</p>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Recent Outcomes -->
+            <div class="bg-slate-800 rounded-xl p-6">
+                <h2 class="text-xl font-semibold mb-4">
+                    <i class="fas fa-clipboard-list mr-2 text-slate-400"></i>
+                    Recent Outcomes
+                </h2>
+                <div class="space-y-2 max-h-80 overflow-y-auto">
+                    <template x-for="(outcome, idx) in details.outcomes" :key="idx">
+                        <div class="bg-slate-700/50 rounded-lg p-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm" x-text="outcome.task || 'Unknown task'"></p>
+                                    <p class="text-xs text-slate-400" x-text="outcome.timestamp"></p>
+                                </div>
+                                <span class="px-2 py-0.5 text-xs rounded-full"
+                                    :class="outcome.success ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'"
+                                    x-text="outcome.success ? 'Success' : 'Failed'"></span>
+                            </div>
+                            <p class="mt-2 text-xs text-slate-400" x-text="outcome.outcome"></p>
+                        </div>
+                    </template>
+                    <template x-if="!details.outcomes?.length">
+                        <p class="text-center py-4 text-slate-400">No outcome history</p>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function agentDashboard(agentId) {
+            return {
+                agentId: agentId,
+                details: {},
+                taskInput: '',
+                contextPreview: '',
+
+                async init() {
+                    await this.loadDetails();
+                },
+
+                async loadDetails() {
+                    try {
+                        const res = await fetch(`/api/admin/agent/${this.agentId}/details`);
+                        this.details = await res.json();
+                    } catch (e) {
+                        console.error('Failed to load agent details:', e);
+                    }
+                },
+
+                async generateContext() {
+                    try {
+                        let url = `/api/admin/agent/${this.agentId}/context`;
+                        if (this.taskInput) {
+                            url += `?task=${encodeURIComponent(this.taskInput)}`;
+                        }
+                        const res = await fetch(url);
+                        const context = await res.json();
+                        this.contextPreview = context._formatted_prompt || JSON.stringify(context, null, 2);
+                    } catch (e) {
+                        this.contextPreview = 'Error: ' + e.message;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

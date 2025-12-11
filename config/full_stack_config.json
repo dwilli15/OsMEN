@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-12-04T08:06:34.341099",
+  "services": {
+    "langflow": {
+      "name": "langflow",
+      "healthy": true,
+      "status_code": 200
+    },
+    "n8n": {
+      "name": "n8n",
+      "healthy": true,
+      "status_code": 200
+    },
+    "mcp": {
+      "name": "mcp",
+      "healthy": true,
+      "status_code": 200
+    },
+    "librarian": {
+      "name": "librarian",
+      "healthy": true,
+      "status_code": 200
+    },
+    "chromadb": {
+      "name": "chromadb",
+      "healthy": false,
+      "status_code": 410
+    },
+    "qdrant": {
+      "name": "qdrant",
+      "healthy": false,
+      "error": "All connection attempts failed"
+    },
+    "gateway": {
+      "name": "gateway",
+      "healthy": false,
+      "error": ""
+    }
+  },
+  "langflow": {
+    "flows": {},
+    "flow_count": 0
+  },
+  "n8n": {
+    "webhooks": {
+      "coordinator": "/webhook/coordinator",
+      "daily_brief": "/webhook/daily-brief",
+      "knowledge": "/webhook/knowledge-query",
+      "security": "/webhook/security-alert",
+      "task": "/webhook/task-create",
+      "voice": "/webhook/voice-input"
+    }
+  },
+  "librarian": {
+    "health": {
+      "status": "healthy",
+      "embedding_model": "dunzhang/stella_en_1.5B_v5",
+      "embedding_model_loaded": true,
+      "chroma_connected": false,
+      "documents_indexed": 0,
+      "default_mode": "lateral",
+      "api_port": 8200,
+      "timestamp": "2025-12-04T14:06:50.813462"
+    }
+  },
+  "mcp": {},
+  "local_llm": {
+    "lm_studio": {
+      "available": false,
+      "error": "All connection attempts failed"
+    },
+    "ollama": {
+      "available": false,
+      "error": "All connection attempts failed"
+    }
+  }
+}

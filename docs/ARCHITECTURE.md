@@ -3,13 +3,16 @@
 ## System Overview
 
 OsMEN is a **no-code agent team orchestration** platform that combines:
+
 - **Codex CLI**: OpenAI Codex for code generation and technical tasks
 - **Copilot CLI**: GitHub Copilot for development assistance
 - **Langflow**: Visual reasoning graph builder for LLM agents
 - **n8n**: Workflow automation and orchestration
 - **Cloud LLMs**: OpenAI GPT-4, Copilot, Amazon Q, Claude
 - **Local LLMs**: LM Studio, Ollama for privacy-focused inference
-- **Qdrant**: Vector database for memory storage
+- **ChromaDB**: Vector database for long-term memory (RAG, semantic search)
+- **SQLite**: Short-term structured memory (sessions, tasks, conversations)
+- **Hybrid Memory**: Dynamic bridges between short/long term with lateral thinking
 - **Tool Layer**: Integration with Zoom, Audiblez, Vibevoice, Obsidian, Notion, and system utilities
 
 ## Architecture Diagram
@@ -59,9 +62,16 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
         ┌─────────────────────┼─────────────────────┐
         ▼                     ▼                     ▼
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│   Qdrant     │    │  PostgreSQL  │    │    Redis     │
-│ (Vectors)    │    │ (Database)   │    │   (Cache)    │
+│  ChromaDB    │    │  PostgreSQL  │    │    Redis     │
+│ (Long-Term)  │    │ (Database)   │    │   (Cache)    │
 └──────────────┘    └──────────────┘    └──────────────┘
+        │                                       │
+        └───────────────┬───────────────────────┘
+                        ▼
+              ┌──────────────────┐
+              │  Hybrid Memory   │
+              │ (SQLite Bridge)  │
+              └──────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
@@ -105,6 +115,7 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
    - **Ollama**: Secondary option, CLI-focused
 
 **Model Selection Logic**:
+
 - Codex CLI for code generation tasks
 - Copilot CLI for development workflows
 - GPT-4 for complex reasoning
@@ -118,6 +129,7 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
 **Teams**:
 
 #### 1. Personal Productivity Team
+
 - **Personal Assistant Agent**: Task and calendar management
 - **Focus Guardrails Agent**: Distraction blocking
 - **Daily Brief Agent**: Morning summaries
@@ -125,6 +137,7 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
 **Primary Model**: GPT-4 for reasoning, Copilot CLI for scheduling
 
 #### 2. Content Creation Team
+
 - **Content Creator Agent**: Image/video generation
 - **Audiobook Creator Agent**: ebook to audiobook conversion
 - **Podcast Creator Agent**: Podcast generation from notes
@@ -132,6 +145,7 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
 **Primary Model**: GPT-4 for content, Codex CLI for processing scripts
 
 #### 3. Communication Team
+
 - **Email Manager Agent**: Email automation
 - **Live Caption Agent**: Meeting transcription
 - **Contact Management**: Contact database
@@ -139,6 +153,7 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
 **Primary Model**: GPT-4 for email composition, Claude for transcription
 
 #### 4. Knowledge Team
+
 - **Knowledge Management Agent**: Obsidian/Notion integration
 - **Syllabus Parser Agent**: Extract events from syllabuses
 - **Research Intel Agent**: Information gathering
@@ -146,6 +161,7 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
 **Primary Model**: Claude for long documents, GPT-4 for organization
 
 #### 5. System Team
+
 - **OS Optimizer Agent**: Performance tuning
 - **Boot Hardening Agent**: Security verification
 - **Performance Monitor**: Resource tracking
@@ -153,6 +169,7 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
 **Primary Model**: Codex CLI for scripts, Copilot CLI for commands
 
 #### 6. Security Team
+
 - **Security Operations Agent**: Vulnerability scanning
 - **Compliance Monitor**: Policy enforcement
 - **Threat Detection**: Anomaly detection
@@ -164,6 +181,7 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
 **Purpose**: Visual graph-based agent reasoning and coordination
 
 **Components**:
+
 - **Coordinator Agent**: Routes requests to appropriate specialist teams
 - **Specialist Agents**: Domain-specific agents organized in teams
   - Personal Productivity (3 agents)
@@ -174,14 +192,16 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
   - Security (3 agents)
 
 **Features**:
+
 - Visual flow builder with drag-and-drop
 - Multi-model LLM integration
 - Tool calling and orchestration
-- Memory retrieval from Qdrant
+- Memory retrieval from Hybrid Memory (ChromaDB + SQLite)
 - Conversation state management
 - Error handling and retry logic
 
 **Flow Types**:
+
 - **Coordinator Flow**: Main entry point, routes to specialists
 - **Specialist Flows**: Domain-specific reasoning graphs
 - **Tool Flows**: Integration with external tools
@@ -192,6 +212,7 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
 **Purpose**: Workflow automation, triggers, and state management
 
 **Components**:
+
 - **Trigger Workflows**: Schedule and event-based triggers
   - Daily boot hardening check (6 AM)
   - Morning daily brief (8 AM)
@@ -218,6 +239,7 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
   - Retry counters
 
 **Features**:
+
 - Cron scheduling with timezone support
 - HTTP webhooks for external triggers
 - Conditional logic and branching
@@ -226,31 +248,114 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
 - Error handling and notifications
 
 **Features**:
+
 - GPU acceleration support
 - Multiple model support (llama2, mistral, etc.)
 - API-compatible with OpenAI
 - Privacy-focused (all data stays local)
 
 **Models**:
+
 - **llama2**: General purpose reasoning
 - **mistral**: Fast inference for real-time tasks
 - **codellama**: Code analysis and generation
 
-### Qdrant (Vector Database)
+### ChromaDB (Vector Database - Long-Term Memory)
 
-**Purpose**: Memory storage and retrieval
+**Purpose**: Persistent semantic memory and RAG retrieval
+
+**Port**: 8000
 
 **Collections**:
-- **osmen_memory**: Global agent memory
+
+- **osmen_long_term**: Global agent memory with Context7 enrichment
 - **boot_hardening_memory**: Boot hardening context
 - **daily_brief_memory**: Historical briefs and trends
-- **focus_guardrails_memory**: Focus session history
+- **librarian_knowledge**: RAG knowledge base with Stella embeddings
 
 **Features**:
-- Vector similarity search
-- Metadata filtering
-- Persistent storage
-- High-performance retrieval
+
+- Semantic similarity search (cosine distance)
+- Context7 metadata for 7-dimensional context
+- Lateral thinking retrieval (focus + shadow vectors)
+- Bridge storage for synchronicity connections
+
+### SQLite (Short-Term Memory)
+
+**Purpose**: Session state, quick lookups, working memory
+
+**Location**: `data/memory/short_term.db`
+
+**Tables**:
+
+- **memories**: Active memories with Context7 metadata
+- **sessions**: Agent session state
+- **memories_fts**: Full-text search index
+
+**Features**:
+
+- Fast keyword search (FTS5)
+- Session state persistence
+- Recent conversation history
+- Task and working memory
+
+### Hybrid Memory System (`integrations/memory/`)
+
+**Purpose**: Dynamic bridging between short and long-term memory
+
+**Components**:
+
+1. **HybridMemory** (`hybrid_memory.py`)
+   - Unified interface for all memory operations
+   - Automatic tier management (working → short → long)
+   - Context7 enrichment on store
+
+2. **MemoryBridge** (`bridge.py`)
+   - Promotion: short-term → long-term based on access patterns
+   - Decay: archive stale memories
+   - Synchronicity detection between disparate concepts
+
+3. **SequentialReasoner** (`sequential_reasoning.py`)
+   - Query decomposition before search
+   - Progressive context building
+   - Hypothesis generation and verification
+
+4. **LateralBridge** (`lateral_synchronicity.py`)
+   - Multi-dimensional query expansion (Context7)
+   - Glimmer detection for unexpected connections
+   - Focus + Shadow result weaving
+
+**Data Flow**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      User/Agent Query                        │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                    SequentialReasoner
+                     (decompose query)
+                              │
+              ┌───────────────┴───────────────┐
+              ▼                               ▼
+       LateralExpander                   Working Memory
+    (focus + shadow queries)              (in-memory)
+              │                               │
+              ▼                               ▼
+┌─────────────────────┐           ┌─────────────────────┐
+│     ChromaDB        │           │       SQLite        │
+│   (Long-Term RAG)   │           │   (Short-Term FTS)  │
+└─────────────────────┘           └─────────────────────┘
+              │                               │
+              └───────────────┬───────────────┘
+                              ▼
+                       MemoryBridge
+                 (weave + detect glimmers)
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│           Woven Results with Synchronicity Bridges          │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ### Tool Layer
 
@@ -282,6 +387,7 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
 **Purpose**: Persistent storage for Langflow and n8n
 
 **Databases**:
+
 - **langflow**: Langflow flows and configurations
 - **n8n**: n8n workflows and execution history
 
@@ -290,6 +396,7 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
 **Purpose**: Caching and session management
 
 **Features**:
+
 - Session storage
 - Temporary data caching
 - Rate limiting
@@ -309,11 +416,11 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
    ↓
 5. Specialist uses Ollama for reasoning
    ↓
-6. Specialist retrieves context from Qdrant
+6. Specialist retrieves context from Hybrid Memory (ChromaDB + SQLite)
    ↓
 7. Specialist calls Sysinternals tools
    ↓
-8. Results stored in Qdrant
+8. Results stored in Hybrid Memory with Context7 enrichment
    ↓
 9. Response returned to n8n
    ↓
@@ -329,7 +436,7 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
    ↓
 3. Specialist gathers system status
    ↓
-4. Specialist queries Qdrant for historical data
+4. Specialist queries ChromaDB for historical data
    ↓
 5. Specialist uses Ollama to generate brief
    ↓
@@ -349,7 +456,7 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
    ↓
 4. Specialist enforces rules via Simplewall
    ↓
-5. Usage data stored in Qdrant
+5. Usage data stored in Hybrid Memory (ChromaDB + SQLite)
    ↓
 6. Status returned to n8n
 ```
@@ -357,16 +464,19 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
 ## Scalability Considerations
 
 ### Horizontal Scaling
+
 - Multiple Langflow instances (load balanced)
 - Multiple n8n workers for parallel execution
-- Qdrant cluster for distributed storage
+- ChromaDB with distributed storage
 
 ### Performance Optimization
+
 - Ollama model caching
 - Redis for frequently accessed data
 - PostgreSQL connection pooling
 
 ### Resource Management
+
 - GPU memory allocation for Ollama
 - Docker resource limits
 - Database query optimization
@@ -374,16 +484,19 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
 ## Security Considerations
 
 ### Network Security
+
 - All services in isolated Docker network
 - Simplewall for application-level firewall
 - No external network access required
 
 ### Data Privacy
+
 - All LLM inference local (no cloud API calls)
 - Vector storage encrypted at rest
 - Passwords managed via environment variables
 
 ### Access Control
+
 - n8n basic authentication
 - PostgreSQL user isolation
 - API authentication tokens
@@ -432,19 +545,25 @@ OsMEN is a **no-code agent team orchestration** platform that combines:
 ## Backup and Recovery
 
 ### Data to Backup
+
 - PostgreSQL databases
-- Qdrant collections
+- ChromaDB collections (via docker volume)
+- SQLite short-term memory (`data/memory/`)
 - n8n workflows
 - Langflow flows
 - Environment configuration
 
 ### Backup Strategy
+
 ```bash
 # Backup PostgreSQL
 docker exec osmen-postgres pg_dumpall -U postgres > backup.sql
 
-# Backup Qdrant
-docker exec osmen-qdrant tar czf /backup/qdrant.tar.gz /qdrant/storage
+# Backup ChromaDB
+tar czf chromadb-backup.tar.gz ./chromadb/data
+
+# Backup SQLite memories
+cp data/memory/*.db backup/
 
 # Backup configurations
 tar czf config-backup.tar.gz n8n/workflows langflow/flows .env

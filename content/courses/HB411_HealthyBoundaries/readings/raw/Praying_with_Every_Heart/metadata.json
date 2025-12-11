@@ -1,0 +1,118 @@
+{
+  "title": "Praying with Every Heart",
+  "author": "Unknown",
+  "source_file": "D:\\OsMEN\\content\\courses\\M483INT_Pastoral_Ministry\\raw\\Cl\u00e1udioCarvalhaes_2021_PrayingwithEveryHeartOrientingOurLivesto.epub",
+  "format": "EPUB",
+  "total_chapters": 15,
+  "total_words": 89412,
+  "estimated_hours": 9.9,
+  "extraction_date": "2025-12-10T05:07:49.005916",
+  "chapters": [
+    {
+      "number": 1,
+      "title": "Chapter 1",
+      "word_count": 50,
+      "estimated_minutes": 0.3,
+      "text_file": "chapter_001.txt"
+    },
+    {
+      "number": 2,
+      "title": "Introduction",
+      "word_count": 4117,
+      "estimated_minutes": 27.4,
+      "text_file": "chapter_002.txt"
+    },
+    {
+      "number": 3,
+      "title": "Praying with the World at Heart",
+      "word_count": 6952,
+      "estimated_minutes": 46.3,
+      "text_file": "chapter_003.txt"
+    },
+    {
+      "number": 4,
+      "title": "Praying Truly, with a Lump in the Throat",
+      "word_count": 8210,
+      "estimated_minutes": 54.7,
+      "text_file": "chapter_004.txt"
+    },
+    {
+      "number": 5,
+      "title": "How to Pray from the Ends of the World",
+      "word_count": 2342,
+      "estimated_minutes": 15.6,
+      "text_file": "chapter_005.txt"
+    },
+    {
+      "number": 6,
+      "title": "What Is Common about Our Common Worship?",
+      "word_count": 10708,
+      "estimated_minutes": 71.4,
+      "text_file": "chapter_006.txt"
+    },
+    {
+      "number": 7,
+      "title": "Praying with Black People for Darker Faith",
+      "word_count": 7495,
+      "estimated_minutes": 50.0,
+      "text_file": "chapter_007.txt"
+    },
+    {
+      "number": 8,
+      "title": "Praying with the People of Ax\u00e9",
+      "word_count": 6189,
+      "estimated_minutes": 41.3,
+      "text_file": "chapter_008.txt"
+    },
+    {
+      "number": 9,
+      "title": "Praying with the Earth",
+      "word_count": 12906,
+      "estimated_minutes": 86.0,
+      "text_file": "chapter_009.txt"
+    },
+    {
+      "number": 10,
+      "title": "Praying with Each Other during Infected Holy Week",
+      "word_count": 6652,
+      "estimated_minutes": 44.3,
+      "text_file": "chapter_010.txt"
+    },
+    {
+      "number": 11,
+      "title": "Praying with the Night",
+      "word_count": 6203,
+      "estimated_minutes": 41.4,
+      "text_file": "chapter_011.txt"
+    },
+    {
+      "number": 12,
+      "title": "Praying with a Lost Heart",
+      "word_count": 8128,
+      "estimated_minutes": 54.2,
+      "text_file": "chapter_012.txt"
+    },
+    {
+      "number": 13,
+      "title": "Praying with the End of the World",
+      "word_count": 4320,
+      "estimated_minutes": 28.8,
+      "text_file": "chapter_013.txt"
+    },
+    {
+      "number": 14,
+      "title": "Conclusion",
+      "word_count": 1459,
+      "estimated_minutes": 9.7,
+      "text_file": "chapter_014.txt"
+    },
+    {
+      "number": 15,
+      "title": "Bibliography",
+      "word_count": 3681,
+      "estimated_minutes": 24.5,
+      "text_file": "chapter_015.txt"
+    }
+  ],
+  "output_dir": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries\\readings\\raw\\Praying_with_Every_Heart"
+}

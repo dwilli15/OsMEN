@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "osmen": {
+      "command": "python",
+      "args": [
+        "-m",
+        "gateway.mcp.server"
+      ],
+      "env": {
+        "MCP_HOST": "localhost",
+        "MCP_PORT": "8081"
+      }
+    },
+    "osmen-remote": {
+      "url": "http://localhost:8081",
+      "description": "OsMEN Agent Hub via HTTP"
+    }
+  },
+  "osmen": {
+    "primaryDriver": "vscode-copilot",
+    "agents": {
+      "coordinator": "http://localhost:7860/api/v1/run",
+      "librarian": "http://localhost:8200",
+      "mcp": "http://localhost:8081"
+    },
+    "localLLM": {
+      "lmStudio": "http://localhost:1234/v1",
+      "ollama": "http://localhost:11434"
+    }
+  }
+}

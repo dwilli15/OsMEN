@@ -1,0 +1,29 @@
+{
+  "default_provider": "ollama",
+  "providers": {
+    "lm_studio": {
+      "url": "http://localhost:1234/v1",
+      "available": false,
+      "use_for": [
+        "code",
+        "analysis",
+        "complex_reasoning"
+      ]
+    },
+    "ollama": {
+      "url": "http://localhost:11434",
+      "available": false,
+      "use_for": [
+        "quick_responses",
+        "embeddings",
+        "classification"
+      ]
+    }
+  },
+  "agent_routing": {
+    "coordinator": "lm_studio",
+    "knowledge_specialist": "ollama",
+    "security_specialist": "lm_studio",
+    "daily_brief": "ollama"
+  }
+}

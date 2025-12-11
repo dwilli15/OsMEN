@@ -1,0 +1,107 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/specification/main/schema/mcp-config.json",
+  "version": "2.0.0",
+  "mcpServers": {
+    "osmen": {
+      "command": "python",
+      "args": ["-m", "gateway.mcp.server"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "N8N_URL": "http://localhost:5678",
+        "LANGFLOW_URL": "http://localhost:7860",
+        "QDRANT_URL": "http://localhost:6333",
+        "LIBRARIAN_URL": "http://localhost:8200",
+        "GATEWAY_URL": "http://localhost:8080",
+        "OBSIDIAN_VAULT_PATH": "${OBSIDIAN_VAULT_PATH:-./obsidian-vault}",
+        "OTEL_ENABLED": "true",
+        "OTEL_SERVICE_NAME": "osmen-mcp-server",
+        "OTEL_EXPORTER_TYPE": "console"
+      }
+    },
+    "osmen-http": {
+      "url": "http://localhost:8081/mcp",
+      "transport": "http"
+    }
+  },
+  "tools": {
+    "categories": {
+      "system": {
+        "description": "System administration and monitoring tools",
+        "tools": ["execute_command", "check_services", "get_system_info"]
+      },
+      "knowledge": {
+        "description": "Knowledge management and document tools",
+        "tools": [
+          "obsidian_create_note", "obsidian_read_note", "obsidian_search",
+          "obsidian_list_notes", "obsidian_update_note", "obsidian_delete_note",
+          "librarian_search", "librarian_ingest"
+        ]
+      },
+      "memory": {
+        "description": "Persistent vector memory operations",
+        "tools": ["memory_store", "memory_recall", "memory_forget", "memory_collections"]
+      },
+      "workflow": {
+        "description": "Workflow automation with n8n and Langflow",
+        "tools": [
+          "workflow_trigger", "workflow_list", "workflow_status",
+          "langflow_run", "langflow_list"
+        ]
+      },
+      "security": {
+        "description": "Security and firewall management",
+        "tools": [
+          "firewall_block", "firewall_unblock", "firewall_list_rules",
+          "sysinternals_autoruns", "sysinternals_procmon", "system_health"
+        ]
+      },
+      "media": {
+        "description": "Media processing with FFmpeg",
+        "tools": ["media_info", "media_convert", "media_extract_audio", "media_thumbnail"]
+      },
+      "productivity": {
+        "description": "Task and productivity management",
+        "tools": [
+          "task_create", "task_list", "task_update",
+          "reminder_set", "daily_summary"
+        ]
+      },
+      "agent": {
+        "description": "Agent orchestration and management",
+        "tools": ["agent_spawn", "agent_status", "agent_list"]
+      },
+      "integration": {
+        "description": "Core integration and logging tools",
+        "tools": ["log_action", "vector_search"]
+      }
+    }
+  },
+  "tracing": {
+    "enabled": true,
+    "provider": "opentelemetry",
+    "serviceName": "osmen-mcp-server",
+    "exporters": {
+      "console": true,
+      "otlp": {
+        "enabled": false,
+        "endpoint": "http://localhost:4317"
+      }
+    },
+    "sampling": {
+      "rate": 1.0
+    }
+  },
+  "security": {
+    "destructiveOperationPatterns": [
+      "rm -rf", "rm -r", "del /s", "rmdir /s", "Remove-Item -Recurse",
+      "format", "diskpart", "reg delete", "uninstall", 
+      "DROP TABLE", "DELETE FROM", "TRUNCATE"
+    ],
+    "requireConfirmation": [
+      "execute_command",
+      "firewall_block",
+      "obsidian_delete_note",
+      "memory_forget"
+    ]
+  }
+}

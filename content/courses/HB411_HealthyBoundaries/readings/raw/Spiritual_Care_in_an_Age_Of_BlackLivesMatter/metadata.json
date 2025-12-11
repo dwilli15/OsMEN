@@ -1,0 +1,83 @@
+{
+  "title": "Spiritual_Care_in_an_Age_Of_BlackLivesMatter",
+  "author": "Unknown",
+  "source_file": "D:\\semester_start\\Spiritual_Care_in_an_Age_Of_BlackLivesMatter.pdf",
+  "format": "PDF",
+  "total_chapters": 10,
+  "total_words": 74370,
+  "estimated_hours": 8.3,
+  "extraction_date": "2025-12-10T05:09:26.225142",
+  "chapters": [
+    {
+      "number": 1,
+      "title": "Section 1 (Pages 16-30)",
+      "word_count": 7237,
+      "estimated_minutes": 48.2,
+      "text_file": "chapter_001.txt"
+    },
+    {
+      "number": 2,
+      "title": "Section 2 (Pages 31-45)",
+      "word_count": 8131,
+      "estimated_minutes": 54.2,
+      "text_file": "chapter_002.txt"
+    },
+    {
+      "number": 3,
+      "title": "Section 3 (Pages 46-60)",
+      "word_count": 8176,
+      "estimated_minutes": 54.5,
+      "text_file": "chapter_003.txt"
+    },
+    {
+      "number": 4,
+      "title": "Section 4 (Pages 61-75)",
+      "word_count": 7189,
+      "estimated_minutes": 47.9,
+      "text_file": "chapter_004.txt"
+    },
+    {
+      "number": 5,
+      "title": "Section 5 (Pages 76-90)",
+      "word_count": 8050,
+      "estimated_minutes": 53.7,
+      "text_file": "chapter_005.txt"
+    },
+    {
+      "number": 6,
+      "title": "Section 6 (Pages 91-105)",
+      "word_count": 8775,
+      "estimated_minutes": 58.5,
+      "text_file": "chapter_006.txt"
+    },
+    {
+      "number": 7,
+      "title": "Section 7 (Pages 106-120)",
+      "word_count": 6797,
+      "estimated_minutes": 45.3,
+      "text_file": "chapter_007.txt"
+    },
+    {
+      "number": 8,
+      "title": "Section 8 (Pages 121-135)",
+      "word_count": 6084,
+      "estimated_minutes": 40.6,
+      "text_file": "chapter_008.txt"
+    },
+    {
+      "number": 9,
+      "title": "Section 9 (Pages 136-150)",
+      "word_count": 9168,
+      "estimated_minutes": 61.1,
+      "text_file": "chapter_009.txt"
+    },
+    {
+      "number": 10,
+      "title": "Section 10 (Pages 180-194)",
+      "word_count": 4763,
+      "estimated_minutes": 31.8,
+      "text_file": "chapter_010.txt"
+    }
+  ],
+  "output_dir": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries\\readings\\raw\\Spiritual_Care_in_an_Age_Of_BlackLivesMatter"
+}

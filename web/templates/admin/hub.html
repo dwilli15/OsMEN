@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - OsMEN Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        .status-healthy { color: #22c55e; }
+        .status-warning { color: #f59e0b; }
+        .status-error { color: #ef4444; }
+        .status-offline { color: #6b7280; }
+        .pulse-green { animation: pulse-green 2s infinite; }
+        @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen" x-data="adminHub()">
+    <!-- Navigation -->
+    <nav class="gradient-bg border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-3">
+                        <i class="fas fa-brain text-2xl text-blue-400"></i>
+                        <span class="text-xl font-bold">OsMEN</span>
+                    </a>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="/" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-home mr-2"></i>Dashboard
+                            </a>
+                            <a href="/admin" class="px-3 py-2 rounded-md text-sm font-medium bg-slate-700">
+                                <i class="fas fa-cog mr-2"></i>Admin Hub
+                            </a>
+                            <a href="/admin/health" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-heartbeat mr-2"></i>Health
+                            </a>
+                            <a href="/admin/approvals" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-check-circle mr-2"></i>Approvals
+                            </a>
+                            <a href="/admin/obsidian" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-book mr-2"></i>Obsidian
+                            </a>
+                            <a href="/admin/lifecycle" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-clock mr-2"></i>Lifecycle
+                            </a>
+                            <a href="/admin/flows" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-project-diagram mr-2"></i>Flows
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-slate-400">v{{ version }}</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full pulse-green"></span>
+                        <span class="text-sm text-slate-400" x-text="systemStatus"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2">
+                <i class="fas fa-tachometer-alt mr-3 text-blue-400"></i>
+                Admin Hub
+            </h1>
+            <p class="text-slate-400">Comprehensive infrastructure management and monitoring</p>
+        </div>
+
+        <!-- System Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Nodes Status -->
+            <div class="bg-slate-800 rounded-xl p-6 card-hover transition-all duration-200">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-blue-500/20 rounded-lg p-3">
+                        <i class="fas fa-server text-2xl text-blue-400"></i>
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">Live</span>
+                </div>
+                <p class="text-slate-400 text-sm">Services</p>
+                <div class="flex items-baseline space-x-2">
+                    <span class="text-3xl font-bold text-blue-400" x-text="infra.nodes?.healthy || 0"></span>
+                    <span class="text-slate-500">/ <span x-text="infra.nodes?.total || 0"></span></span>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">Healthy nodes</p>
+            </div>
+
+            <!-- Tools Status -->
+            <div class="bg-slate-800 rounded-xl p-6 card-hover transition-all duration-200">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-purple-500/20 rounded-lg p-3">
+                        <i class="fas fa-tools text-2xl text-purple-400"></i>
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">Active</span>
+                </div>
+                <p class="text-slate-400 text-sm">Tools</p>
+                <div class="flex items-baseline space-x-2">
+                    <span class="text-3xl font-bold text-purple-400" x-text="infra.tools?.available || 0"></span>
+                    <span class="text-slate-500">/ <span x-text="infra.tools?.total || 0"></span></span>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">Available tools</p>
+            </div>
+
+            <!-- Agents Status -->
+            <div class="bg-slate-800 rounded-xl p-6 card-hover transition-all duration-200">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-green-500/20 rounded-lg p-3">
+                        <i class="fas fa-robot text-2xl text-green-400"></i>
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">Running</span>
+                </div>
+                <p class="text-slate-400 text-sm">Agents</p>
+                <div class="flex items-baseline space-x-2">
+                    <span class="text-3xl font-bold text-green-400" x-text="infra.agents?.total || 0"></span>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">Registered agents</p>
+            </div>
+
+            <!-- Pending Approvals -->
+            <div class="bg-slate-800 rounded-xl p-6 card-hover transition-all duration-200">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-amber-500/20 rounded-lg p-3">
+                        <i class="fas fa-clipboard-check text-2xl text-amber-400"></i>
+                    </div>
+                    <template x-if="approvals.total > 0">
+                        <span class="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-400">Action Needed</span>
+                    </template>
+                </div>
+                <p class="text-slate-400 text-sm">Pending</p>
+                <div class="flex items-baseline space-x-2">
+                    <span class="text-3xl font-bold" :class="approvals.total > 0 ? 'text-amber-400' : 'text-slate-400'" x-text="approvals.total || 0"></span>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">Awaiting approval</p>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <a href="/admin/health" class="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center space-x-4 transition-all">
+                <i class="fas fa-heartbeat text-2xl text-red-400"></i>
+                <div>
+                    <p class="font-semibold">Health Monitor</p>
+                    <p class="text-xs text-slate-400">Service health & auto-heal</p>
+                </div>
+            </a>
+            <a href="/admin/infrastructure" class="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center space-x-4 transition-all">
+                <i class="fas fa-project-diagram text-2xl text-blue-400"></i>
+                <div>
+                    <p class="font-semibold">Infrastructure</p>
+                    <p class="text-xs text-slate-400">Node & pipeline graph</p>
+                </div>
+            </a>
+            <a href="/admin/approvals" class="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center space-x-4 transition-all">
+                <i class="fas fa-check-double text-2xl text-green-400"></i>
+                <div>
+                    <p class="font-semibold">Approval Queues</p>
+                    <p class="text-xs text-slate-400">Review pending actions</p>
+                </div>
+            </a>
+            <a href="/admin/obsidian" class="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center space-x-4 transition-all">
+                <i class="fas fa-book text-2xl text-purple-400"></i>
+                <div>
+                    <p class="font-semibold">Obsidian Sync</p>
+                    <p class="text-xs text-slate-400">Vault integration</p>
+                </div>
+            </a>
+            <a href="/admin/lifecycle" class="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center space-x-4 transition-all">
+                <i class="fas fa-clock text-2xl text-teal-400"></i>
+                <div>
+                    <p class="font-semibold">Lifecycle</p>
+                    <p class="text-xs text-slate-400">File aging & archival</p>
+                </div>
+            </a>
+            <a href="/admin/flows" class="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center space-x-4 transition-all">
+                <i class="fas fa-project-diagram text-2xl text-indigo-400"></i>
+                <div>
+                    <p class="font-semibold">Flows</p>
+                    <p class="text-xs text-slate-400">Langflow & n8n</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Main Panels -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Services Panel -->
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold">
+                        <i class="fas fa-server mr-2 text-blue-400"></i>
+                        Active Services
+                    </h2>
+                    <button @click="refreshInfra()" class="text-sm text-blue-400 hover:text-blue-300">
+                        <i class="fas fa-sync-alt mr-1"></i>Refresh
+                    </button>
+                </div>
+                <div class="space-y-3">
+                    <template x-for="node in nodes" :key="node.node_id">
+                        <div class="flex items-center justify-between bg-slate-700/50 rounded-lg p-3">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-2 h-2 rounded-full"
+                                    :class="node.status === 'healthy' ? 'bg-green-500' : node.status === 'unknown' ? 'bg-yellow-500' : 'bg-red-500'"></span>
+                                <div>
+                                    <p class="font-medium" x-text="node.name"></p>
+                                    <p class="text-xs text-slate-400" x-text="node.endpoint || 'No endpoint'"></p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs px-2 py-1 rounded-full"
+                                    :class="node.status === 'healthy' ? 'bg-green-500/20 text-green-400' : 'bg-slate-600 text-slate-300'"
+                                    x-text="node.status"></span>
+                                <button @click="restartNode(node.node_id)" class="text-slate-400 hover:text-white p-1"
+                                    title="Restart service">
+                                    <i class="fas fa-redo text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                    <template x-if="nodes.length === 0">
+                        <div class="text-center py-8 text-slate-400">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Loading services...</p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Context Injection Stats -->
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold">
+                        <i class="fas fa-syringe mr-2 text-purple-400"></i>
+                        Context Injection
+                    </h2>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-slate-700/50 rounded-lg p-4 text-center">
+                        <p class="text-3xl font-bold text-green-400" x-text="contextStats.successful || 0"></p>
+                        <p class="text-xs text-slate-400">Successful</p>
+                    </div>
+                    <div class="bg-slate-700/50 rounded-lg p-4 text-center">
+                        <p class="text-3xl font-bold text-red-400" x-text="contextStats.failed || 0"></p>
+                        <p class="text-xs text-slate-400">Failed</p>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-400">Avg. Tokens</span>
+                        <span x-text="contextStats.avg_context_tokens || '-'"></span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-400">Avg. Duration</span>
+                        <span x-text="(contextStats.avg_duration_ms || 0).toFixed(1) + ' ms'"></span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-400">Success Rate</span>
+                        <span x-text="((contextStats.success_rate || 0) * 100).toFixed(1) + '%'"></span>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm text-slate-400 mb-2">By Agent</p>
+                    <div class="space-y-1">
+                        <template x-for="(count, agent) in contextStats.by_agent || {}" :key="agent">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-300" x-text="agent"></span>
+                                <span class="text-slate-400" x-text="count"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workspace Lifecycle -->
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold">
+                        <i class="fas fa-folder-open mr-2 text-amber-400"></i>
+                        Workspace Lifecycle
+                    </h2>
+                </div>
+                <div class="space-y-4">
+                    <template x-for="(data, folder) in lifecycle" :key="folder">
+                        <div class="bg-slate-700/50 rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium capitalize" x-text="folder.replace('_', ' ')"></span>
+                                <span class="text-sm" x-text="data.file_count + ' files'"></span>
+                            </div>
+                            <template x-if="data.total_old > 0">
+                                <div class="mt-2">
+                                    <p class="text-xs text-amber-400 mb-1">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                        <span x-text="data.total_old"></span> files need review
+                                    </p>
+                                    <div class="text-xs text-slate-400 space-y-1">
+                                        <template x-for="file in data.old_files.slice(0, 3)" :key="file.path">
+                                            <p class="truncate" x-text="file.path + ' (' + file.age_days + ' days)'"></p>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Recent Activity Log -->
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold">
+                        <i class="fas fa-history mr-2 text-slate-400"></i>
+                        Recent Activity
+                    </h2>
+                </div>
+                <div class="space-y-2 max-h-80 overflow-y-auto">
+                    <template x-for="(record, idx) in healthHistory.slice(0, 20)" :key="idx">
+                        <div class="flex items-center space-x-3 text-sm py-2 border-b border-slate-700/50">
+                            <span class="w-2 h-2 rounded-full"
+                                :class="record.status === 'healthy' ? 'bg-green-500' : 'bg-red-500'"></span>
+                            <span class="text-slate-400 text-xs" x-text="new Date(record.timestamp * 1000).toLocaleTimeString()"></span>
+                            <span x-text="record.node_id || 'System'"></span>
+                            <span class="text-xs px-2 py-0.5 rounded" 
+                                :class="record.status === 'healthy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'"
+                                x-text="record.status"></span>
+                        </div>
+                    </template>
+                    <template x-if="healthHistory.length === 0">
+                        <p class="text-center py-4 text-slate-400">No recent activity</p>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function adminHub() {
+            return {
+                systemStatus: 'Loading...',
+                infra: {},
+                nodes: [],
+                approvals: { total: 0 },
+                contextStats: {},
+                lifecycle: {},
+                healthHistory: [],
+
+                async init() {
+                    await Promise.all([
+                        this.loadInfraStatus(),
+                        this.loadApprovals(),
+                        this.loadContextStats(),
+                        this.loadLifecycle(),
+                        this.loadHealthHistory()
+                    ]);
+                    
+                    this.systemStatus = 'Operational';
+                    
+                    // Auto-refresh every 30 seconds
+                    setInterval(() => this.refreshInfra(), 30000);
+                },
+
+                async loadInfraStatus() {
+                    try {
+                        const res = await fetch('/api/admin/infrastructure/status');
+                        const data = await res.json();
+                        this.infra = data;
+                        
+                        // Extract nodes for display
+                        if (data.nodes) {
+                            const graphRes = await fetch('/api/admin/infrastructure/graph');
+                            const graph = await graphRes.json();
+                            this.nodes = graph.nodes || [];
+                        }
+                    } catch (e) {
+                        console.error('Failed to load infra status:', e);
+                    }
+                },
+
+                async loadApprovals() {
+                    try {
+                        const res = await fetch('/api/admin/approvals/pending');
+                        const data = await res.json();
+                        this.approvals = {
+                            total: data.total_pending || 0,
+                            queues: data.queues || {}
+                        };
+                    } catch (e) {
+                        console.error('Failed to load approvals:', e);
+                    }
+                },
+
+                async loadContextStats() {
+                    try {
+                        const res = await fetch('/api/admin/context/stats');
+                        this.contextStats = await res.json();
+                    } catch (e) {
+                        console.error('Failed to load context stats:', e);
+                    }
+                },
+
+                async loadLifecycle() {
+                    try {
+                        const res = await fetch('/api/admin/workspace/lifecycle');
+                        this.lifecycle = await res.json();
+                    } catch (e) {
+                        console.error('Failed to load lifecycle:', e);
+                    }
+                },
+
+                async loadHealthHistory() {
+                    try {
+                        const res = await fetch('/api/admin/health/history?hours=24');
+                        const data = await res.json();
+                        this.healthHistory = data.history || [];
+                    } catch (e) {
+                        console.error('Failed to load health history:', e);
+                    }
+                },
+
+                async refreshInfra() {
+                    await this.loadInfraStatus();
+                },
+
+                async restartNode(nodeId) {
+                    if (!confirm(`Restart service ${nodeId}?`)) return;
+                    
+                    try {
+                        const res = await fetch(`/api/admin/health/restart/${nodeId}`, { method: 'POST' });
+                        const result = await res.json();
+                        
+                        if (result.success) {
+                            alert('Service restart initiated');
+                            setTimeout(() => this.refreshInfra(), 3000);
+                        } else {
+                            alert('Restart failed: ' + (result.error || 'Unknown error'));
+                        }
+                    } catch (e) {
+                        alert('Failed to restart: ' + e.message);
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

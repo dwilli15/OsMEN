@@ -1,0 +1,342 @@
+{
+  "title": "Sacred Wounds",
+  "author": "Unknown",
+  "source_file": "D:\\semester_start\\Sacred Wounds - Teresa B. Pasquale.epub",
+  "format": "EPUB",
+  "total_chapters": 47,
+  "total_words": 55337,
+  "estimated_hours": 6.1,
+  "extraction_date": "2025-12-10T05:08:11.589490",
+  "chapters": [
+    {
+      "number": 1,
+      "title": "Chapter 1",
+      "word_count": 73,
+      "estimated_minutes": 0.5,
+      "text_file": "chapter_001.txt"
+    },
+    {
+      "number": 2,
+      "title": "CONTENTS",
+      "word_count": 79,
+      "estimated_minutes": 0.5,
+      "text_file": "chapter_002.txt"
+    },
+    {
+      "number": 3,
+      "title": "FOREWORD",
+      "word_count": 586,
+      "estimated_minutes": 3.9,
+      "text_file": "chapter_003.txt"
+    },
+    {
+      "number": 4,
+      "title": "ACkNOWLEDGMENTS",
+      "word_count": 530,
+      "estimated_minutes": 3.5,
+      "text_file": "chapter_004.txt"
+    },
+    {
+      "number": 5,
+      "title": "INTRODUCTION",
+      "word_count": 718,
+      "estimated_minutes": 4.8,
+      "text_file": "chapter_005.txt"
+    },
+    {
+      "number": 6,
+      "title": "Chapter 6",
+      "word_count": 435,
+      "estimated_minutes": 2.9,
+      "text_file": "chapter_006.txt"
+    },
+    {
+      "number": 7,
+      "title": "Chapter 7",
+      "word_count": 412,
+      "estimated_minutes": 2.7,
+      "text_file": "chapter_007.txt"
+    },
+    {
+      "number": 8,
+      "title": "Chapter 8",
+      "word_count": 6899,
+      "estimated_minutes": 46.0,
+      "text_file": "chapter_008.txt"
+    },
+    {
+      "number": 9,
+      "title": "CHAPTER 2",
+      "word_count": 1086,
+      "estimated_minutes": 7.2,
+      "text_file": "chapter_009.txt"
+    },
+    {
+      "number": 10,
+      "title": "Chapter 10",
+      "word_count": 423,
+      "estimated_minutes": 2.8,
+      "text_file": "chapter_010.txt"
+    },
+    {
+      "number": 11,
+      "title": "Chapter 11",
+      "word_count": 1205,
+      "estimated_minutes": 8.0,
+      "text_file": "chapter_011.txt"
+    },
+    {
+      "number": 12,
+      "title": "Chapter 12",
+      "word_count": 374,
+      "estimated_minutes": 2.5,
+      "text_file": "chapter_012.txt"
+    },
+    {
+      "number": 13,
+      "title": "Chapter 13",
+      "word_count": 7007,
+      "estimated_minutes": 46.7,
+      "text_file": "chapter_013.txt"
+    },
+    {
+      "number": 14,
+      "title": "Chapter 14",
+      "word_count": 402,
+      "estimated_minutes": 2.7,
+      "text_file": "chapter_014.txt"
+    },
+    {
+      "number": 15,
+      "title": "Chapter 15",
+      "word_count": 88,
+      "estimated_minutes": 0.6,
+      "text_file": "chapter_015.txt"
+    },
+    {
+      "number": 16,
+      "title": "CHAPTER 3",
+      "word_count": 1474,
+      "estimated_minutes": 9.8,
+      "text_file": "chapter_016.txt"
+    },
+    {
+      "number": 17,
+      "title": "Chapter 17",
+      "word_count": 384,
+      "estimated_minutes": 2.6,
+      "text_file": "chapter_017.txt"
+    },
+    {
+      "number": 18,
+      "title": "Chapter 18",
+      "word_count": 172,
+      "estimated_minutes": 1.1,
+      "text_file": "chapter_018.txt"
+    },
+    {
+      "number": 19,
+      "title": "CHAPTER 4",
+      "word_count": 2850,
+      "estimated_minutes": 19.0,
+      "text_file": "chapter_019.txt"
+    },
+    {
+      "number": 20,
+      "title": "Chapter 20",
+      "word_count": 402,
+      "estimated_minutes": 2.7,
+      "text_file": "chapter_020.txt"
+    },
+    {
+      "number": 21,
+      "title": "Chapter 21",
+      "word_count": 1340,
+      "estimated_minutes": 8.9,
+      "text_file": "chapter_021.txt"
+    },
+    {
+      "number": 22,
+      "title": "Chapter 22",
+      "word_count": 432,
+      "estimated_minutes": 2.9,
+      "text_file": "chapter_022.txt"
+    },
+    {
+      "number": 23,
+      "title": "Chapter 23",
+      "word_count": 1948,
+      "estimated_minutes": 13.0,
+      "text_file": "chapter_023.txt"
+    },
+    {
+      "number": 24,
+      "title": "CHAPTER 5",
+      "word_count": 669,
+      "estimated_minutes": 4.5,
+      "text_file": "chapter_024.txt"
+    },
+    {
+      "number": 25,
+      "title": "Chapter 25",
+      "word_count": 432,
+      "estimated_minutes": 2.9,
+      "text_file": "chapter_025.txt"
+    },
+    {
+      "number": 26,
+      "title": "Chapter 26",
+      "word_count": 422,
+      "estimated_minutes": 2.8,
+      "text_file": "chapter_026.txt"
+    },
+    {
+      "number": 27,
+      "title": "Chapter 27",
+      "word_count": 416,
+      "estimated_minutes": 2.8,
+      "text_file": "chapter_027.txt"
+    },
+    {
+      "number": 28,
+      "title": "Chapter 28",
+      "word_count": 370,
+      "estimated_minutes": 2.5,
+      "text_file": "chapter_028.txt"
+    },
+    {
+      "number": 29,
+      "title": "Chapter 29",
+      "word_count": 418,
+      "estimated_minutes": 2.8,
+      "text_file": "chapter_029.txt"
+    },
+    {
+      "number": 30,
+      "title": "Chapter 30",
+      "word_count": 1360,
+      "estimated_minutes": 9.1,
+      "text_file": "chapter_030.txt"
+    },
+    {
+      "number": 31,
+      "title": "CHAPTER 6",
+      "word_count": 6221,
+      "estimated_minutes": 41.5,
+      "text_file": "chapter_031.txt"
+    },
+    {
+      "number": 32,
+      "title": "Chapter 32",
+      "word_count": 393,
+      "estimated_minutes": 2.6,
+      "text_file": "chapter_032.txt"
+    },
+    {
+      "number": 33,
+      "title": "Chapter 33",
+      "word_count": 1326,
+      "estimated_minutes": 8.8,
+      "text_file": "chapter_033.txt"
+    },
+    {
+      "number": 34,
+      "title": "Chapter 34",
+      "word_count": 444,
+      "estimated_minutes": 3.0,
+      "text_file": "chapter_034.txt"
+    },
+    {
+      "number": 35,
+      "title": "Chapter 35",
+      "word_count": 2246,
+      "estimated_minutes": 15.0,
+      "text_file": "chapter_035.txt"
+    },
+    {
+      "number": 36,
+      "title": "Chapter 36",
+      "word_count": 471,
+      "estimated_minutes": 3.1,
+      "text_file": "chapter_036.txt"
+    },
+    {
+      "number": 37,
+      "title": "Chapter 37",
+      "word_count": 458,
+      "estimated_minutes": 3.1,
+      "text_file": "chapter_037.txt"
+    },
+    {
+      "number": 38,
+      "title": "Chapter 38",
+      "word_count": 432,
+      "estimated_minutes": 2.9,
+      "text_file": "chapter_038.txt"
+    },
+    {
+      "number": 39,
+      "title": "Chapter 39",
+      "word_count": 439,
+      "estimated_minutes": 2.9,
+      "text_file": "chapter_039.txt"
+    },
+    {
+      "number": 40,
+      "title": "Chapter 40",
+      "word_count": 401,
+      "estimated_minutes": 2.7,
+      "text_file": "chapter_040.txt"
+    },
+    {
+      "number": 41,
+      "title": "Chapter 41",
+      "word_count": 408,
+      "estimated_minutes": 2.7,
+      "text_file": "chapter_041.txt"
+    },
+    {
+      "number": 42,
+      "title": "CHAPTER 8",
+      "word_count": 3760,
+      "estimated_minutes": 25.1,
+      "text_file": "chapter_042.txt"
+    },
+    {
+      "number": 43,
+      "title": "CHAPTER 9",
+      "word_count": 2952,
+      "estimated_minutes": 19.7,
+      "text_file": "chapter_043.txt"
+    },
+    {
+      "number": 44,
+      "title": "EPILOGUE",
+      "word_count": 684,
+      "estimated_minutes": 4.6,
+      "text_file": "chapter_044.txt"
+    },
+    {
+      "number": 45,
+      "title": "Chapter 45",
+      "word_count": 490,
+      "estimated_minutes": 3.3,
+      "text_file": "chapter_045.txt"
+    },
+    {
+      "number": 46,
+      "title": "ADDENDUM",
+      "word_count": 646,
+      "estimated_minutes": 4.3,
+      "text_file": "chapter_046.txt"
+    },
+    {
+      "number": 47,
+      "title": "Chapter 47",
+      "word_count": 160,
+      "estimated_minutes": 1.1,
+      "text_file": "chapter_047.txt"
+    }
+  ],
+  "output_dir": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries\\readings\\raw\\Sacred_Wounds"
+}

@@ -1,0 +1,83 @@
+{
+  "title": "Saying No to Say Yes",
+  "author": "Unknown",
+  "source_file": "D:\\semester_start\\saynotosayyes.epub",
+  "format": "EPUB",
+  "total_chapters": 10,
+  "total_words": 34025,
+  "estimated_hours": 3.8,
+  "extraction_date": "2025-12-10T05:08:27.462968",
+  "chapters": [
+    {
+      "number": 1,
+      "title": "Introduction",
+      "word_count": 966,
+      "estimated_minutes": 6.4,
+      "text_file": "chapter_001.txt"
+    },
+    {
+      "number": 2,
+      "title": "The Problem with Boundaries",
+      "word_count": 6237,
+      "estimated_minutes": 41.6,
+      "text_file": "chapter_002.txt"
+    },
+    {
+      "number": 3,
+      "title": "Healthy Selves and Boundaries",
+      "word_count": 4444,
+      "estimated_minutes": 29.6,
+      "text_file": "chapter_003.txt"
+    },
+    {
+      "number": 4,
+      "title": "Setting Boundaries in Anxious Congregational Systems",
+      "word_count": 7138,
+      "estimated_minutes": 47.6,
+      "text_file": "chapter_004.txt"
+    },
+    {
+      "number": 5,
+      "title": "When the Self and System Collide",
+      "word_count": 4103,
+      "estimated_minutes": 27.4,
+      "text_file": "chapter_005.txt"
+    },
+    {
+      "number": 6,
+      "title": "Saying No to Say Yes",
+      "word_count": 9102,
+      "estimated_minutes": 60.7,
+      "text_file": "chapter_006.txt"
+    },
+    {
+      "number": 7,
+      "title": "Boundary-Awareness Training",
+      "word_count": 880,
+      "estimated_minutes": 5.9,
+      "text_file": "chapter_007.txt"
+    },
+    {
+      "number": 8,
+      "title": "Tips for How to Organize a Clergy Group",
+      "word_count": 335,
+      "estimated_minutes": 2.2,
+      "text_file": "chapter_008.txt"
+    },
+    {
+      "number": 9,
+      "title": "Bibliography",
+      "word_count": 710,
+      "estimated_minutes": 4.7,
+      "text_file": "chapter_009.txt"
+    },
+    {
+      "number": 10,
+      "title": "About the Authors",
+      "word_count": 110,
+      "estimated_minutes": 0.7,
+      "text_file": "chapter_010.txt"
+    }
+  ],
+  "output_dir": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries\\readings\\raw\\Saying_No_to_Say_Yes"
+}

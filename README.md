@@ -18,6 +18,7 @@ OsMEN provides an **agent orchestration platform** with comprehensive frameworks
 ## 🚀 What's New in v3.0
 
 ### ✅ Implementation of v1/v2 Frameworks
+
 - 🔗 **Unified Integration Layer**: Connects all framework components automatically
 - 🎨 **No-Code OAuth Setup**: Interactive CLI for Google and Microsoft OAuth configuration
 - 📅 **Working Calendar Integration**: Fully functional Google and Microsoft calendar APIs
@@ -28,6 +29,7 @@ OsMEN provides an **agent orchestration platform** with comprehensive frameworks
 - 📚 **Comprehensive Documentation**: Complete v3.0 implementation guide
 
 ### ✅ New Features in v3.0
+
 - **v3 Integration Layer** (`integrations/v3_integration_layer.py`): Unified interface for all external services
 - **OAuth Setup CLI** (`scripts/setup_oauth.py`): No-code interactive configuration
 - **OAuth Completion Tool** (`scripts/complete_oauth.py`): Streamlined authorization flow
@@ -39,6 +41,7 @@ See [v3.0 Implementation Guide](docs/v3.0_IMPLEMENTATION_GUIDE.md) for complete 
 ## 🚀 What Was in v2.0
 
 ### ✅ Production Infrastructure Ready
+
 - 🔐 **OAuth Automation Framework**: Universal OAuth handlers for Google, Microsoft (extensible to Zoom, Notion, Todoist)
 - 🔧 **API Utilities**: Retry with exponential backoff, token bucket rate limiting, response normalization
 - 🧪 **Testing Infrastructure**: Comprehensive unit/integration/end-to-end test framework (16 passing, capacity for 300+)
@@ -48,18 +51,21 @@ See [v3.0 Implementation Guide](docs/v3.0_IMPLEMENTATION_GUIDE.md) for complete 
 - 📚 **Comprehensive Documentation**: 6-day blitz completion report with detailed deliverables
 
 ### ✅ API Integration Frameworks
+
 - 📅 **Google APIs**: Calendar, Gmail, Contacts (CRUD operations, multi-calendar support)
 - 📧 **Microsoft APIs**: Outlook Calendar, Mail, Contacts (Azure AD integration)
 - 📝 **Notion & Todoist**: API integration frameworks ready
 - 🔄 **Multi-Provider Support**: Unified interface for all calendar/email/contact providers
 
 ### ✅ TTS & Audio Pipeline Frameworks
+
 - 🎙️ **TTS Service**: Multi-provider framework (Coqui, ElevenLabs, Azure)
 - 📖 **Audiobook Pipeline**: Ebook parsing, chapter detection, parallel TTS generation
 - 🎧 **Podcast Pipeline**: Script generation, multi-voice support, RSS feeds
 - 📹 **Zoom Integration**: OAuth framework, Whisper transcription ready
 
 ### ✅ Fully Working Now (v1.0 Core)
+
 - 🛡️ **Boot Hardening**: System security and boot integrity monitoring (Windows)
 - 📊 **Daily Briefing**: System status reports and task summaries
 - 🎯 **Focus Guardrails**: Productivity timers and distraction blocking (Windows)
@@ -70,6 +76,7 @@ See [v3.0 Implementation Guide](docs/v3.0_IMPLEMENTATION_GUIDE.md) for complete 
 - 🔒 **Security Operations**: System scanning and monitoring
 
 ### 🏗️ Framework Ready (Needs Configuration)
+
 - 📧 **Email & Calendar**: OAuth automation complete, needs provider credentials
 - 📚 **Syllabus Parser**: Working, calendar sync ready with OAuth
 - 📧 **Contact Management**: Full framework with sync capabilities
@@ -104,6 +111,7 @@ See [LIBRARIAN_INTEGRATION_PLAN.md](LIBRARIAN_INTEGRATION_PLAN.md) for details.
 ## 🏗️ Architecture
 
 **Agent Orchestration Platform:**
+
 - **Langflow**: Visual reasoning graph builder with coordinator + specialist agents
 - **n8n**: Workflow automation with triggers and subflows
 - **LLM Agents**: OpenAI GPT-4, Claude, LM Studio (local), Ollama (local)
@@ -114,13 +122,16 @@ See [LIBRARIAN_INTEGRATION_PLAN.md](LIBRARIAN_INTEGRATION_PLAN.md) for details.
 - **Tool Layer**: Obsidian, FFmpeg, Simplewall, Sysinternals
 
 **Planned Integrations** (frameworks in place):
-- Codex CLI, Copilot CLI, Zoom API, Google Calendar/Gmail, Outlook, Notion, Audiblez, Vibevoice
+
+- Codex CLI, Copilot CLI, Zoom API, Google Calendar/Gmail, Outlook, Notion, Audiblez, Vibeboice
 
 **Agent Teams:**
+
 1. **Personal Productivity**: Personal Assistant, Focus Guardrails, Daily Brief
 2. **Content Processing**: Content Creator (basic), Audiobook Creator (planned), Podcast Creator (planned)
 3. **Knowledge Management**: Obsidian integration, Syllabus Parser, Note organization, **Librarian RAG**
 4. **System Operations**: OS Optimizer, Boot Hardening, Security Operations
+5. **DRM Liberation** (BLACKHAT): ACSM fulfillment, Adobe ADEPT decryption, format conversion
 
 **Flexible deployment** - Use cloud LLMs or run locally for privacy.
 
@@ -131,6 +142,7 @@ See [LIBRARIAN_INTEGRATION_PLAN.md](LIBRARIAN_INTEGRATION_PLAN.md) for details.
 **🤖 AI Agents**: See **[1stsetup.md](1stsetup.md)** for automated setup guide.
 
 **Prerequisites**:
+
 - Docker & Docker Compose
 - Python 3.12+
 - 16GB+ RAM recommended
@@ -162,11 +174,13 @@ python3 check_operational.py
 ```
 
 **Access Your Agent Hub**:
-- **Langflow**: http://localhost:7860
-- **n8n**: http://localhost:5678 (admin/[your-password])
-- **Qdrant**: http://localhost:6333/dashboard
+
+- **Langflow**: <http://localhost:7860>
+- **n8n**: <http://localhost:5678> (admin/[your-password])
+- **Qdrant**: <http://localhost:6333/dashboard>
 
 **Test Your First Agent**:
+
 ```bash
 python3 agents/daily_brief/daily_brief_agent.py
 ```
@@ -186,6 +200,7 @@ make check-operational
 ```
 
 This will verify:
+
 - ✅ Docker daemon availability
 - ✅ Docker Compose installation
 - ✅ Python runtime
@@ -213,21 +228,25 @@ See **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)** for complet
 ## 📖 Documentation
 
 ### Understanding OsMEN
+
 - **[Feature Status](FEATURE_STATUS.md)** - Complete feature capability matrix (✅ Working, ⚠️ Framework, ❌ Planned)
 - **[Final Product Assessment](FINAL_PRODUCT_ASSESSMENT.md)** - Honest evaluation of current state
 - **[Realistic Roadmap](REALISTIC_ROADMAP.md)** - 8-month plan to v2.0 completion
 
 ### Getting Started
+
 - **[AI Agent Setup](1stsetup.md)** - Automated first-use setup instructions for AI agents
 - **[Setup Guide](docs/SETUP.md)** - Installation and configuration
 - **[LLM Agents](docs/LLM_AGENTS.md)** - Configure OpenAI, Claude, LM Studio, Ollama
 
 ### Operations
+
 - **[Usage Guide](docs/USAGE.md)** - How to use OsMEN features
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 - **[Runbooks](docs/runbooks/)** - Operational runbooks for each workflow
 
 ### Technical
+
 - **[Architecture](docs/ARCHITECTURE.md)** - System design and components
 - **[OAuth Workflow](docs/OAUTH_WORKFLOW.md)** - Complete OAuth integration guide
 - **[Obsidian Integration](docs/OBSIDIAN_INTEGRATION.md)** - Knowledge management with Obsidian
@@ -235,18 +254,21 @@ See **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)** for complet
 ## 🔧 Key Features
 
 ### No-Code Agent Orchestration
+
 - **Visual workflow builder** with Langflow for agent reasoning
 - **Automated triggers** with n8n for scheduled and event-based execution
 - **Agent teams** for collaborative task completion
 - **Multi-model support** with Codex CLI, Copilot CLI, and cloud/local LLMs
 
 ### Model Context Protocol (MCP)
+
 - **Standardized tool integration** for LLM agents
 - **Tool discovery and execution** via REST API
 - **Built-in tools**: Codex CLI, Copilot CLI, Obsidian, Simplewall, Sysinternals, FFmpeg, Zoom, Audiblez, Vibevoice
-- **MCP Server**: http://localhost:8081
+- **MCP Server**: <http://localhost:8081>
 
 ### Personal Assistant Capabilities
+
 - Task management and prioritization
 - Calendar integration (Google, Outlook)
 - Reminder system with notifications
@@ -254,6 +276,7 @@ See **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)** for complet
 - Contact and email management
 
 ### Content Creation Suite
+
 - **Image Generation**: AI-powered image creation from text prompts
 - **Video Processing**: FFmpeg integration for editing and conversion
 - **Audiobook Creation**: Convert ebooks to audiobooks with Audiblez/Vibevoice
@@ -261,18 +284,22 @@ See **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)** for complet
 - **Podcast Generation**: Create podcasts from knowledge base content
 
 ### Communication & Collaboration
+
 - **Live Captioning**: Real-time transcription for Zoom and meetings
 - **Email Automation**: Smart rules and automated workflows
 - **Contact Management**: Unified contact database with tagging
 
 ### Knowledge Management
+
 - **Obsidian Integration**: Full vault access and note operations
+- **Course Manager**: Import syllabi, sync to calendar, create course notes
 - **Notion Integration**: Sync and manage Notion databases
 - **Multi-source Knowledge Bases**: Build from syllabuses, interests, and more
 - **Knowledge Graph**: Analyze connections and find insights
 - **Automated workflows**: n8n webhook for note capture
 
 ### System Operations
+
 - **OS Optimization**: Performance tuning and customization
 - **Security Operations**: White hat monitoring and vulnerability assessment
 - **Boot Hardening**: System security and integrity verification
@@ -281,6 +308,7 @@ See **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)** for complet
 ## 🎯 Agent Capabilities
 
 ### Personal Assistant Agent
+
 - Create and manage tasks with priorities
 - Set reminders and notifications
 - Schedule calendar events
@@ -292,6 +320,7 @@ python agents/personal_assistant/personal_assistant_agent.py
 ```
 
 ### Content Creator Agent
+
 - Generate images from text prompts
 - Process and edit videos
 - Convert media formats
@@ -303,6 +332,7 @@ python agents/content_creator/content_creator_agent.py
 ```
 
 ### Email Manager Agent
+
 - Manage contacts with tags
 - Send automated emails
 - Create email rules
@@ -314,6 +344,7 @@ python agents/email_manager/email_manager_agent.py
 ```
 
 ### Live Caption Agent
+
 - Real-time meeting transcription
 - Multi-language support
 - Speaker identification
@@ -325,6 +356,7 @@ python agents/live_caption/live_caption_agent.py
 ```
 
 ### Audiobook Creator Agent
+
 - Convert ebooks to audiobooks
 - Voice cloning for narration
 - Multi-format support (epub, pdf, txt)
@@ -336,6 +368,7 @@ python agents/audiobook_creator/audiobook_creator_agent.py
 ```
 
 ### Podcast Creator Agent
+
 - Generate podcasts from knowledge base
 - Create podcast series
 - Add intro/outro music
@@ -347,6 +380,7 @@ python agents/podcast_creator/podcast_creator_agent.py
 ```
 
 ### OS Optimizer Agent
+
 - System performance analysis
 - Apply optimizations
 - Custom system configurations
@@ -358,6 +392,7 @@ python agents/os_optimizer/os_optimizer_agent.py
 ```
 
 ### Security Operations Agent
+
 - Security scanning
 - Vulnerability assessment
 - Event logging and monitoring
@@ -369,6 +404,7 @@ python agents/security_ops/security_ops_agent.py
 ```
 
 ### Boot Hardening Agent
+
 - Automated daily security checks
 - Boot integrity verification
 - Startup program analysis
@@ -380,6 +416,7 @@ python agents/boot_hardening/boot_hardening_agent.py
 ```
 
 ### Daily Brief Agent
+
 - Morning briefings at 8 AM
 - System health status
 - Scheduled tasks overview
@@ -391,6 +428,7 @@ python agents/daily_brief/daily_brief_agent.py
 ```
 
 ### Focus Guardrails Agent
+
 - Timed focus sessions (Pomodoro)
 - Automatic distraction blocking
 - Application usage monitoring
@@ -401,6 +439,7 @@ python agents/focus_guardrails/focus_guardrails_agent.py
 ```
 
 ### Knowledge Management Agent
+
 - Create and organize notes in Obsidian/Notion
 - Search and retrieve knowledge
 - Find connections between notes
@@ -411,50 +450,71 @@ python agents/focus_guardrails/focus_guardrails_agent.py
 python agents/knowledge_management/knowledge_agent.py
 ```
 
+### Course Manager
+
+- Import course syllabi (PDF/DOCX) with automatic parsing
+- Extract assignments, exams, deadlines, and schedules
+- Sync events to Google/Outlook calendar
+- Create structured notes in Obsidian vault
+- Detect scheduling conflicts between courses
+- Semester overview with upcoming events
+
+```bash
+python agents/knowledge_management/course_manager.py
+```
+
 ## 🛠️ Tool Integrations
 
 ### Codex CLI
+
 - Code generation from natural language
 - Code completion and suggestions
 - Code explanation and documentation
 - Code review and quality checks
 
 ### Copilot CLI
+
 - Command line assistance
 - Shell command suggestions
 - Git command help
 - Code context suggestions
 
 ### Zoom
+
 - Meeting transcription
 - Live caption generation
 - Recording processing
 - Participant management
 
 ### Audiblez & Vibevoice
+
 - Text-to-speech conversion
 - Voice cloning
 - Audiobook generation
 - Multi-language support
 
 ### Simplewall
+
 - Firewall rule management
 - Application/domain blocking
 - Network traffic control
 
 ### Sysinternals Suite
+
 - Autoruns - Startup analysis
 - Process Monitor - Activity tracking
 - TCPView - Network monitoring
 - RootkitRevealer - Threat detection
 
 ### FFmpeg
+
 - Video/audio processing
 - Media format conversion
 - Thumbnail generation
 - Content optimization
 
 ### Obsidian & Notion
+
 - Note creation and management
 - Knowledge graph building
 - Search and retrieval
@@ -467,6 +527,7 @@ python agents/knowledge_management/knowledge_agent.py
 **Realistic Status**: See [FEATURE_STATUS.md](FEATURE_STATUS.md) for complete details
 
 ### ✅ Production-Ready Core (100%)
+
 - Core infrastructure (Docker Compose)
 - PostgreSQL, Redis, Qdrant databases
 - Langflow visual agent builder
@@ -476,6 +537,7 @@ python agents/knowledge_management/knowledge_agent.py
 - Comprehensive documentation
 
 ### ✅ Fully Working Agents (8 agents)
+
 - Boot Hardening Agent (Windows)
 - Daily Brief Agent
 - Focus Guardrails Agent (Windows)
@@ -486,6 +548,7 @@ python agents/knowledge_management/knowledge_agent.py
 - Security Operations Agent (scanning)
 
 ### ✅ Working Tool Integrations
+
 - Obsidian (full vault access)
 - FFmpeg (video/audio processing)
 - Simplewall (Windows firewall)
@@ -493,12 +556,14 @@ python agents/knowledge_management/knowledge_agent.py
 - LLM providers (OpenAI, Claude, LM Studio, Ollama)
 
 ### ⚠️ Frameworks in Place (Needs Configuration/Development)
+
 - Google Calendar/Gmail (OAuth needed)
 - Microsoft Outlook/Calendar (OAuth needed)
 - Notion API (completion needed)
 - Todoist (completion needed)
 
 ### 🚧 In Active Development
+
 - Live Caption Agent (Zoom API integration)
 - Audiobook Creator Agent (TTS service needed)
 - Podcast Creator Agent (TTS service needed)
@@ -509,6 +574,7 @@ python agents/knowledge_management/knowledge_agent.py
 - Production hardening (SSL, monitoring, backups)
 
 ### 📋 Planned for v2.0 (6-8 months)
+
 - Complete OAuth flows for Google/Microsoft
 - TTS integration (Coqui, ElevenLabs, or Azure)
 - Zoom API full integration
@@ -531,6 +597,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 ## 🙏 Acknowledgments
 
 Built with:
+
 - [Langflow](https://github.com/logspace-ai/langflow) - Visual LLM flow builder
 - [n8n](https://github.com/n8n-io/n8n) - Workflow automation
 - [OpenAI](https://openai.com/) - GPT-4, Codex CLI for code generation

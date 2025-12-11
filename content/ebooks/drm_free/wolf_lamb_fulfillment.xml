@@ -1,0 +1,64 @@
+<envelope xmlns="http://ns.adobe.com/adept">
+  <fulfillmentResult>
+    <fulfillment>9b3428e6-90c5-4a17-83b3-3a14169ce270-00004b65</fulfillment>
+    <returnable>false</returnable>
+    <initial>false</initial>
+    <notify>
+      <notifyURL>https://acs.ebookcentral.proquest.com/fulfillment/FulfillmentNotification</notifyURL>
+      <body>
+        <fulfillment>9b3428e6-90c5-4a17-83b3-3a14169ce270-00004b65</fulfillment>
+        <transaction>3118502_638268812</transaction>
+        <user>urn:uuid:985c7082-994d-4475-9a87-b0224e71d7aa</user>
+        <fulfilled>true</fulfilled>
+        <returned>false</returned>
+      </body>
+    </notify>
+    <resourceItemInfo>
+      <resource>urn:uuid:e0000000-0000-0000-0000-000003118502</resource>
+      <resourceItem>0</resourceItem>
+      <metadata>
+        <dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">The Wolf Shall Dwell with the Lamb</dc:title>
+        <dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Law, Eric;</dc:creator>
+        <dc:format xmlns:dc="http://purl.org/dc/elements/1.1/">application/epub+zip</dc:format>
+        <dc:publisher xmlns:dc="http://purl.org/dc/elements/1.1/">Chalice Press</dc:publisher>
+        <dc:language xmlns:dc="http://purl.org/dc/elements/1.1/">en-US</dc:language>
+        <dc:identifier xmlns:dc="http://purl.org/dc/elements/1.1/">3118502</dc:identifier>
+        <subscriptionid>urn:uuid:00000000-0000-0000-0000-000000000000</subscriptionid>
+        <price>0.0</price>
+        <epubver>2.0</epubver>
+      </metadata>
+      <src>https://acs.ebookcentral.proquest.com/document/003/003118/e4258fc2-7ef6-345a-86d2-4c3815c20e85.epub</src>
+      <downloadType>simple</downloadType>
+<licenseToken>
+    <user>urn:uuid:985c7082-994d-4475-9a87-b0224e71d7aa</user>
+    <resource>urn:uuid:e0000000-0000-0000-0000-000003118502</resource>
+    <resourceItemType>application/epub+zip</resourceItemType>
+    <deviceType>standalone</deviceType>
+    <device>urn:uuid:de6d24e3-60d1-4b88-952e-22caeffd43f6</device>
+    <voucher>e0000000-0000-0000-0000-000003118502</voucher>
+    <licenseURL>https://nasigningservice.adobe.com/licensesign</licenseURL>
+    <operatorURL>https://acs.ebookcentral.proquest.com/fulfillment</operatorURL>
+    <fulfillment>9b3428e6-90c5-4a17-83b3-3a14169ce270-00004b65</fulfillment>
+    <distributor>urn:uuid:9cb786e8-586a-4950-8901-fff8d2ee6025</distributor>
+    <encryptedKey keyInfo="user" keyType="0876623053">sVNWOo9e1T5doJv1Dh/2/AJHyHKBhhvPQoga527f0GW1qAfF5nNt+C+WGyZdCp6uXkN23i5t/RyyvPBO+u8MziJgb6kVdIDWEQDrJtoiiTlv7tnt3OBenPG27T7fCxgDrieUaRSbk5GW31/aUCsP6jTsLNQ68iLlWQ8NU1u0gWvOiOU3FELHPYGjOTatucZy</encryptedKey>
+    <model version="1.0">2817</model>
+    <permissions>
+      <display>
+        <until>2025-12-18T09:45:54Z</until>
+      </display>
+      <excerpt>
+        <until>2025-12-18T09:45:54Z</until>
+        <count initial="30" max="30" incrementInterval="40319"/>
+      </excerpt>
+      <print>
+        <until>2025-12-18T09:45:54Z</until>
+        <count initial="59" max="59" incrementInterval="20501"/>
+      </print>
+      <play>
+        <until>2025-12-18T09:45:54Z</until>
+      </play>
+    </permissions>
+    <signature>CECSCy64cfaHR9MMiAHptHHH/g+RG1qNUQfIvn6ItuWBlpgxnvzzKilbzPy6wk1pT1/zHI0+gIhsyg0HuqmvHsTgbJpPi+fRg4MEtcJiuFEBOTwlFYZlrGFnus+QoGGphGYCATC0Z+38i67y6iYBWy8000dOO4o9xYJrpe9itbY=</signature>
+  </licenseToken>    </resourceItemInfo>
+  </fulfillmentResult>
+</envelope>

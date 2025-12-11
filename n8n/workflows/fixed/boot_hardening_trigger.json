@@ -1,0 +1,142 @@
+{
+  "name": "Boot Hardening Trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "id": "2cea9603-381b-4536-9732-7c251ee9d1bf"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Check if boot hardening is enabled\nconst enabled = $env('BOOT_HARDENING_ENABLED') === 'true';\nreturn [{ json: { enabled } }];"
+      },
+      "name": "Check If Enabled",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ],
+      "id": "7bac6aca-2219-4f5f-a6b0-cddb745e33b7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.enabled}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "If Enabled",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ],
+      "id": "1e8a129a-05a5-4377-9ed7-216cfe54f916"
+    },
+    {
+      "parameters": {
+        "url": "http://langflow:7860/api/v1/run/boot_hardening_specialist",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={\n  \"input\": \"Perform daily boot hardening check\",\n  \"tweaks\": {}\n}"
+      },
+      "name": "Call Boot Hardening Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ],
+      "id": "3cfb1fc9-64a3-4a10-bfa6-b49d416fbcce"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Log the result\nconst result = $input.first().json;\nconsole.log('Boot hardening check completed:', result);\nreturn [{ json: { status: 'completed', result } }];"
+      },
+      "name": "Log Result",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ],
+      "id": "f3e851f9-c887-4897-9c07-b949ec949f63"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check If Enabled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Enabled": {
+      "main": [
+        [
+          {
+            "node": "If Enabled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Enabled": {
+      "main": [
+        [
+          {
+            "node": "Call Boot Hardening Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Boot Hardening Agent": {
+      "main": [
+        [
+          {
+            "node": "Log Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8a27a523-f0d6-4e1f-9f97-06d93da2a8f4",
+  "meta": {
+    "instanceId": "osmen-local"
+  }
+}

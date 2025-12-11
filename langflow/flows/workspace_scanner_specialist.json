@@ -1,0 +1,175 @@
+{
+  "name": "workspace_scanner_specialist",
+  "description": "Deep workspace analysis and awareness flow - maintains the living map of the entire OsMEN workspace",
+  "data": {
+    "nodes": [
+      {
+        "id": "input_1",
+        "type": "ChatInput",
+        "position": {
+          "x": 100,
+          "y": 200
+        },
+        "data": {
+          "label": "User Query",
+          "description": "Queries about workspace components, capabilities, or structure"
+        }
+      },
+      {
+        "id": "workspace_loader",
+        "type": "PythonFunctionTool",
+        "position": {
+          "x": 300,
+          "y": 100
+        },
+        "data": {
+          "label": "Load Workspace Map",
+          "description": "Load the current workspace map from infrastructure/workspace_map.json",
+          "code": "from pathlib import Path\nimport json\n\ndef load_workspace_map():\n    map_path = Path('infrastructure/workspace_map.json')\n    if map_path.exists():\n        return json.loads(map_path.read_text())\n    return {'error': 'Workspace map not found'}"
+        }
+      },
+      {
+        "id": "capability_analyzer",
+        "type": "PythonFunctionTool",
+        "position": {
+          "x": 300,
+          "y": 300
+        },
+        "data": {
+          "label": "Analyze Capabilities",
+          "description": "Analyze and summarize workspace capabilities",
+          "code": "def analyze_capabilities(workspace_map: dict) -> dict:\n    caps = workspace_map.get('capabilities', {})\n    return {\n        'total': len(caps),\n        'by_count': sorted([(k, len(v)) for k, v in caps.items()], key=lambda x: -x[1])[:20]\n    }"
+        }
+      },
+      {
+        "id": "agent_analyzer",
+        "type": "PythonFunctionTool",
+        "position": {
+          "x": 500,
+          "y": 100
+        },
+        "data": {
+          "label": "Analyze Agents",
+          "description": "List and analyze all agents in the workspace",
+          "code": "def analyze_agents(workspace_map: dict) -> dict:\n    agents = workspace_map.get('agents', {})\n    instructions = workspace_map.get('instruction_files', {})\n    return {\n        'total_agents': len(agents),\n        'instruction_files': len(instructions),\n        'agents': list(agents.keys())[:30]\n    }"
+        }
+      },
+      {
+        "id": "pipeline_analyzer",
+        "type": "PythonFunctionTool",
+        "position": {
+          "x": 500,
+          "y": 300
+        },
+        "data": {
+          "label": "Analyze Pipelines",
+          "description": "Analyze Langflow flows and n8n workflows",
+          "code": "def analyze_pipelines(workspace_map: dict) -> dict:\n    return {\n        'langflow_flows': len(workspace_map.get('langflow_flows', {})),\n        'n8n_workflows': len(workspace_map.get('n8n_workflows', {})),\n        'native_pipelines': len(workspace_map.get('native_pipelines', {}))\n    }"
+        }
+      },
+      {
+        "id": "search_tool",
+        "type": "PythonFunctionTool",
+        "position": {
+          "x": 500,
+          "y": 500
+        },
+        "data": {
+          "label": "Search Workspace",
+          "description": "Search for files, capabilities, or components in the workspace",
+          "code": "def search_workspace(workspace_map: dict, query: str) -> list:\n    results = []\n    query_lower = query.lower()\n    \n    # Search files\n    for path, info in workspace_map.get('files', {}).items():\n        if query_lower in path.lower():\n            results.append({'type': 'file', 'path': path})\n    \n    # Search capabilities\n    for cap, files in workspace_map.get('capabilities', {}).items():\n        if query_lower in cap.lower():\n            results.append({'type': 'capability', 'name': cap, 'file_count': len(files)})\n    \n    return results[:20]"
+        }
+      },
+      {
+        "id": "llm_reasoner",
+        "type": "ChatModel",
+        "position": {
+          "x": 700,
+          "y": 250
+        },
+        "data": {
+          "label": "Workspace Reasoner",
+          "description": "LLM that reasons about workspace structure and answers queries",
+          "model": "gpt-4",
+          "temperature": 0.3,
+          "system_prompt": "You are the Workspace Scanner Specialist - the 'tech admin' who knows every node, pipeline, framework, and capability in the OsMEN workspace.\n\nYour role:\n1. Answer questions about workspace structure, files, and capabilities\n2. Help users find components, integrations, and tools\n3. Explain relationships between agents, pipelines, and capabilities\n4. Suggest relevant components for specific tasks\n5. Provide insights into the workspace architecture\n\nAlways reference specific file paths, capability names, and component types when answering."
+        }
+      },
+      {
+        "id": "output_1",
+        "type": "ChatOutput",
+        "position": {
+          "x": 900,
+          "y": 250
+        },
+        "data": {
+          "label": "Response",
+          "description": "Workspace analysis response"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "input_1",
+        "target": "workspace_loader"
+      },
+      {
+        "source": "workspace_loader",
+        "target": "capability_analyzer"
+      },
+      {
+        "source": "workspace_loader",
+        "target": "agent_analyzer"
+      },
+      {
+        "source": "workspace_loader",
+        "target": "pipeline_analyzer"
+      },
+      {
+        "source": "workspace_loader",
+        "target": "search_tool"
+      },
+      {
+        "source": "input_1",
+        "target": "search_tool"
+      },
+      {
+        "source": "capability_analyzer",
+        "target": "llm_reasoner"
+      },
+      {
+        "source": "agent_analyzer",
+        "target": "llm_reasoner"
+      },
+      {
+        "source": "pipeline_analyzer",
+        "target": "llm_reasoner"
+      },
+      {
+        "source": "search_tool",
+        "target": "llm_reasoner"
+      },
+      {
+        "source": "input_1",
+        "target": "llm_reasoner"
+      },
+      {
+        "source": "llm_reasoner",
+        "target": "output_1"
+      }
+    ]
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "created": "2025-12-09",
+    "type": "specialist",
+    "connected_agent": "workspace_scanner",
+    "capabilities": [
+      "workspace_analysis",
+      "capability_discovery",
+      "agent_enumeration",
+      "pipeline_tracking",
+      "file_search"
+    ]
+  }
+}

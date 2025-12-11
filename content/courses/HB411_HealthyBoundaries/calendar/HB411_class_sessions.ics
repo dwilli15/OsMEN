@@ -1,0 +1,197 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//OsMEN//Course Calendar//EN
+X-WR-CALNAME:HB411 Class Sessions
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:a5af94e0abb321be@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Introductions to the Course and One Another
+DTSTART:20250814T100000
+DTEND:20250814T120000
+DESCRIPTION:Week 1: Introductions to the Course and One Another\n\nReadings Due:\n  • Syllabus and Populi course\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Introductions to the Course and One Another
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:a5197d172c443e8e@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Frameworks for Healthy Boundaries
+DTSTART:20250821T100000
+DTEND:20250821T120000
+DESCRIPTION:Week 2: Frameworks for Healthy Boundaries\n\nReadings Due:\n  • Fortune\, Healthy Boundaries 201: 'Joy of Boundaries' p.5\, 'Boundary Basics' p.77-82\n  • Olsen and Devor\, Saying No to Say Yes: Ch. 1\n  • Stephens\, 'Fiduciary Duty and Sacred Trust' (PDF)\n  • Rogers\, 'What Color Is Your Ministry Traffic Light?'\n  • Tawwab\, Set Boundaries Find Peace: Ch. 1-4\n\nAssignments Due:\n  • Journal Prompt - Boundary Image (required)\n  • Reading Response 1 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Frameworks for Healthy Boundaries
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:70dd9908045100b6@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411 INTENSIVE: Grounding Values\, Ethical Commitments\, and Flourishing
+DTSTART:20250828T093000
+DTEND:20250828T163000
+DESCRIPTION:Week 3: Grounding Values\, Ethical Commitments\, and Flourishing\n\nReadings Due:\n  • Common Code of Ethics for Chaplains\n  • Captari and Sandage\, 'I Love This Work\, but It's Killing Me'\n  • Pope-Lance\, 'Whence We Come and How\, and Whither'\n  • UUMA Guidelines for the Conduct of Ministry\n  • Sawyer et al.\, Responding to Spiritual Leader Misconduct: Parts 1-2\n\nAssignments Due:\n  • Reading Response 2 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411 INTENSIVE: Grounding Values\, Ethical Commitments\, and Flourishing
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:f3cd61f650ee5bd0@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Integrating Boundaries
+DTSTART:20250904T100000
+DTEND:20250904T120000
+DESCRIPTION:Week 4: Integrating Boundaries\n\nReadings Due:\n  • Hemphill\, What It Takes to Heal (full book)\n\nAssignments Due:\n  • Reading Response 3 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Integrating Boundaries
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:42ff438c3ddea509@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Boundaries\, Self\, and Systems I
+DTSTART:20250911T100000
+DTEND:20250911T120000
+DESCRIPTION:Week 5: Boundaries\, Self\, and Systems I\n\nReadings Due:\n  • Buhuro and Hawley\, 'If They're Black\, Call 911 First: Self Care for Black Trauma'\n  • Coble and Springer\, 'Interpersonal Competence in Contextualizing Power Dynamics'\n  • Sharp\, 'Crossing Borders with Healthy Boundaries'\n\nAssignments Due:\n  • Reading Response 4 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Boundaries\, Self\, and Systems I
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:6497614d8b40a932@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Boundaries\, Self\, and Systems II
+DTSTART:20250918T100000
+DTEND:20250918T120000
+DESCRIPTION:Week 6: Boundaries\, Self\, and Systems II\n\nReadings Due:\n  • Cooper-White\, Shared Wisdom (full book)\n\nAssignments Due:\n  • Reading Response 5 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Boundaries\, Self\, and Systems II
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:bf2cb58aeec0cf69@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Sharing Guiding Documents Papers
+DTSTART:20250925T100000
+DTEND:20250925T120000
+DESCRIPTION:Week 7: Sharing Guiding Documents Papers\n\nAssignments Due:\n  • Guiding Document Paper (required)\n\nNote: Be prepared to share about your paper with colleagues\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Sharing Guiding Documents Papers
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:11729bc1258076a3@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Trauma-Informed Perspectives I: Religious and Spiritual Trauma
+DTSTART:20251002T100000
+DTEND:20251002T120000
+DESCRIPTION:Week 8: Trauma-Informed Perspectives I: Religious and Spiritual Trauma\n\nReadings Due:\n  • Pasquale\, Sacred Wounds (full book)\n\nAssignments Due:\n  • Project Synopsis (required)\n  • Reading Response 6 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Trauma-Informed Perspectives I: Religious and Spiritual Trauma
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:56d7b0b4f732e19f@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411 (Async): Asynchronous Work Week
+DTSTART;VALUE=DATE:20251009
+DTEND;VALUE=DATE:20251010
+DESCRIPTION:Week 9: Asynchronous Work Week\n\nAsync work week - no live session.\n\nNote: Use for group presentation planning and final project preparation
+END:VEVENT
+BEGIN:VEVENT
+UID:89b55aa991fefd47@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Navigating Boundaries I: Technology
+DTSTART:20251023T100000
+DTEND:20251023T120000
+DESCRIPTION:Week 11: Navigating Boundaries I: Technology\n\nReadings Due:\n  • Haidt\, The Anxious Generation (presenters)\n  • Haidt interview by Michelle Obama (non-presenters option)\n\nAssignments Due:\n  • Navigating Boundaries Presentation (presenters)\n  • Reading Response 7 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Navigating Boundaries I: Technology
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:98985066ed7d823c@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Navigating Boundaries II: Conflict
+DTSTART:20251030T100000
+DTEND:20251030T120000
+DESCRIPTION:Week 12: Navigating Boundaries II: Conflict\n\nReadings Due:\n  • Ross\, Calling In (presenters)\n  • Ross interview at Roosevelt House (non-presenters option)\n\nAssignments Due:\n  • Navigating Boundaries Presentation (presenters)\n  • Reading Response 8 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Navigating Boundaries II: Conflict
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:6d05c0a31cc0e344@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Navigating Boundaries III: Connection
+DTSTART:20251106T100000
+DTEND:20251106T120000
+DESCRIPTION:Week 13: Navigating Boundaries III: Connection\n\nReadings Due:\n  • Murthy\, Together (presenters)\n  • Murthy interview by Simon Sinek (non-presenters option)\n\nAssignments Due:\n  • Navigating Boundaries Presentation (presenters)\n  • Reading Response 9 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Navigating Boundaries III: Connection
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:50c781032f111567@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Celebrating and Sharing Learning: Presentations I
+DTSTART:20251113T100000
+DTEND:20251113T120000
+DESCRIPTION:Week 14: Celebrating and Sharing Learning: Presentations I\n\nAssignments Due:\n  • Final Project Presentation (optional date)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Celebrating and Sharing Learning: Presentations I
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:60f9d7e0567500a1@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Celebrating and Sharing Learning: Presentations II
+DTSTART:20251120T100000
+DTEND:20251120T120000
+DESCRIPTION:Week 15: Celebrating and Sharing Learning: Presentations II\n\nAssignments Due:\n  • Journal (required)\n  • Final Project Presentation (optional date)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Celebrating and Sharing Learning: Presentations II
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+END:VCALENDAR

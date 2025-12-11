@@ -1,81 +1,321 @@
 {
-  "name": "Daily Brief Specialist Agent",
-  "description": "Specialist agent for generating daily briefings and summaries",
-  "nodes": [
-    {
-      "id": "input",
-      "type": "ChatInput",
-      "data": {
-        "message": "Daily brief request"
+  "name": "Daily Brief Specialist",
+  "description": "Generates daily briefings with calendar events, tasks, weather, and system status",
+  "data": {
+    "nodes": [
+      {
+        "id": "ChatInput-DB001",
+        "type": "genericNode",
+        "position": {
+          "x": 100,
+          "y": 300
+        },
+        "data": {
+          "id": "ChatInput-DB001",
+          "description": "Receive briefing request",
+          "display_name": "Briefing Request",
+          "node": {
+            "base_classes": [
+              "Message"
+            ],
+            "description": "Get chat inputs from the Playground.",
+            "display_name": "Chat Input",
+            "icon": "MessagesSquare",
+            "template": {
+              "input_value": {
+                "display_name": "Text",
+                "info": "Request for daily brief",
+                "value": "Generate my daily briefing",
+                "type": "str",
+                "show": true
+              },
+              "sender": {
+                "value": "User",
+                "options": [
+                  "Machine",
+                  "User"
+                ],
+                "type": "str",
+                "show": true
+              },
+              "sender_name": {
+                "value": "User",
+                "type": "str",
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "message",
+                "display_name": "Message",
+                "types": [
+                  "Message"
+                ],
+                "method": "message_response"
+              }
+            ]
+          },
+          "type": "ChatInput"
+        }
+      },
+      {
+        "id": "Prompt-DB002",
+        "type": "genericNode",
+        "position": {
+          "x": 100,
+          "y": 550
+        },
+        "data": {
+          "id": "Prompt-DB002",
+          "description": "Daily brief system prompt",
+          "display_name": "Brief System Prompt",
+          "node": {
+            "base_classes": [
+              "Message"
+            ],
+            "description": "Create a prompt template for daily briefings.",
+            "display_name": "Prompt",
+            "icon": "braces",
+            "template": {
+              "template": {
+                "display_name": "Template",
+                "type": "prompt",
+                "value": "You are the OsMEN Daily Brief Assistant. Generate a comprehensive daily briefing.\n\nInclude the following sections:\n\n## 📅 Today's Date\nProvide the current date and day of week.\n\n## ⏰ Schedule Overview\nList key appointments, meetings, and deadlines.\n\n## ✅ Priority Tasks\nHighlight the most important tasks for today.\n\n## 🔔 Reminders\nAny important reminders or follow-ups.\n\n## 💡 Daily Tip\nProvide a productivity or wellness tip.\n\n## 🖥️ System Status\nBrief overview of system health (if issues detected).\n\nUser context: {user_input}\n\nGenerate a personalized, actionable daily briefing:",
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "prompt",
+                "display_name": "Prompt",
+                "types": [
+                  "Message"
+                ],
+                "method": "build_prompt"
+              }
+            ]
+          },
+          "type": "Prompt"
+        }
+      },
+      {
+        "id": "ChatOllama-DB003",
+        "type": "genericNode",
+        "position": {
+          "x": 500,
+          "y": 400
+        },
+        "data": {
+          "id": "ChatOllama-DB003",
+          "description": "Generate briefing with Ollama",
+          "display_name": "Briefing Generator",
+          "node": {
+            "base_classes": [
+              "LanguageModel",
+              "Message"
+            ],
+            "description": "Generate text using Ollama local models.",
+            "display_name": "Ollama",
+            "icon": "Ollama",
+            "template": {
+              "model_name": {
+                "display_name": "Model Name",
+                "type": "str",
+                "value": "llama3.2",
+                "show": true
+              },
+              "base_url": {
+                "display_name": "Base URL",
+                "type": "str",
+                "value": "http://localhost:11434",
+                "show": true
+              },
+              "temperature": {
+                "display_name": "Temperature",
+                "type": "float",
+                "value": 0.5,
+                "show": true
+              },
+              "input_value": {
+                "display_name": "Input",
+                "type": "str",
+                "input_types": [
+                  "Message"
+                ],
+                "show": true
+              },
+              "system_message": {
+                "display_name": "System Message",
+                "type": "str",
+                "input_types": [
+                  "Message"
+                ],
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "text_output",
+                "display_name": "Text Response",
+                "types": [
+                  "Message"
+                ],
+                "method": "text_response"
+              }
+            ]
+          },
+          "type": "ChatOllama"
+        }
+      },
+      {
+        "id": "ChatOutput-DB004",
+        "type": "genericNode",
+        "position": {
+          "x": 900,
+          "y": 400
+        },
+        "data": {
+          "id": "ChatOutput-DB004",
+          "description": "Display the daily briefing",
+          "display_name": "Briefing Output",
+          "node": {
+            "base_classes": [
+              "Message"
+            ],
+            "description": "Display a chat message in the Playground.",
+            "display_name": "Chat Output",
+            "icon": "MessagesSquare",
+            "template": {
+              "input_value": {
+                "display_name": "Text",
+                "info": "Daily briefing output.",
+                "type": "str",
+                "input_types": [
+                  "Message",
+                  "Data"
+                ],
+                "show": true
+              },
+              "sender": {
+                "value": "Machine",
+                "options": [
+                  "Machine",
+                  "User"
+                ],
+                "type": "str",
+                "show": true
+              },
+              "sender_name": {
+                "value": "Daily Brief Agent",
+                "type": "str",
+                "show": true
+              }
+            },
+            "outputs": [
+              {
+                "name": "message",
+                "display_name": "Message",
+                "types": [
+                  "Message"
+                ],
+                "method": "message_response"
+              }
+            ]
+          },
+          "type": "ChatOutput"
+        }
       }
-    },
-    {
-      "id": "llm",
-      "type": "ChatOllama",
-      "data": {
-        "model": "llama2",
-        "base_url": "http://ollama:11434",
-        "temperature": 0.5,
-        "system_message": "You are a daily briefing specialist. You gather information from various sources, summarize key events, and present a comprehensive daily brief."
-      }
-    },
-    {
-      "id": "tools",
-      "type": "ToolCallingAgent",
-      "data": {
-        "tools": [
-          {
-            "name": "gather_system_status",
-            "description": "Gather system health and status information"
+    ],
+    "edges": [
+      {
+        "id": "edge-db-1",
+        "source": "ChatInput-DB001",
+        "target": "ChatOllama-DB003",
+        "sourceHandle": "{\"dataType\": \"ChatInput\", \"id\": \"ChatInput-DB001\", \"name\": \"message\", \"output_types\": [\"Message\"]}",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"ChatOllama-DB003\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}",
+        "data": {
+          "sourceHandle": {
+            "dataType": "ChatInput",
+            "id": "ChatInput-DB001",
+            "name": "message",
+            "output_types": [
+              "Message"
+            ]
           },
-          {
-            "name": "check_scheduled_tasks",
-            "description": "Review scheduled tasks and appointments"
-          },
-          {
-            "name": "analyze_resource_usage",
-            "description": "Analyze system resource usage"
-          },
-          {
-            "name": "fetch_updates",
-            "description": "Fetch pending updates and notifications"
+          "targetHandle": {
+            "fieldName": "input_value",
+            "id": "ChatOllama-DB003",
+            "inputTypes": [
+              "Message"
+            ],
+            "type": "str"
           }
-        ]
+        }
+      },
+      {
+        "id": "edge-db-2",
+        "source": "Prompt-DB002",
+        "target": "ChatOllama-DB003",
+        "sourceHandle": "{\"dataType\": \"Prompt\", \"id\": \"Prompt-DB002\", \"name\": \"prompt\", \"output_types\": [\"Message\"]}",
+        "targetHandle": "{\"fieldName\": \"system_message\", \"id\": \"ChatOllama-DB003\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}",
+        "data": {
+          "sourceHandle": {
+            "dataType": "Prompt",
+            "id": "Prompt-DB002",
+            "name": "prompt",
+            "output_types": [
+              "Message"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "system_message",
+            "id": "ChatOllama-DB003",
+            "inputTypes": [
+              "Message"
+            ],
+            "type": "str"
+          }
+        }
+      },
+      {
+        "id": "edge-db-3",
+        "source": "ChatOllama-DB003",
+        "target": "ChatOutput-DB004",
+        "sourceHandle": "{\"dataType\": \"ChatOllama\", \"id\": \"ChatOllama-DB003\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"ChatOutput-DB004\", \"inputTypes\": [\"Message\", \"Data\"], \"type\": \"str\"}",
+        "data": {
+          "sourceHandle": {
+            "dataType": "ChatOllama",
+            "id": "ChatOllama-DB003",
+            "name": "text_output",
+            "output_types": [
+              "Message"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "input_value",
+            "id": "ChatOutput-DB004",
+            "inputTypes": [
+              "Message",
+              "Data"
+            ],
+            "type": "str"
+          }
+        }
       }
-    },
-    {
-      "id": "memory",
-      "type": "VectorStoreRetriever",
-      "data": {
-        "vector_store": "qdrant",
-        "collection_name": "daily_brief_memory",
-        "host": "http://qdrant:6333"
-      }
-    },
-    {
-      "id": "output",
-      "type": "ChatOutput",
-      "data": {
-        "message": "Daily brief response"
-      }
+    ],
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 0.8
     }
-  ],
-  "edges": [
-    {
-      "source": "input",
-      "target": "llm"
-    },
-    {
-      "source": "llm",
-      "target": "tools"
-    },
-    {
-      "source": "memory",
-      "target": "llm"
-    },
-    {
-      "source": "tools",
-      "target": "output"
-    }
+  },
+  "id": "daily-brief-specialist-v1",
+  "is_component": false,
+  "last_tested_version": "1.5.0",
+  "tags": [
+    "osmen",
+    "daily-brief",
+    "productivity"
   ]
 }

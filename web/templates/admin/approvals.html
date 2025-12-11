@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - OsMEN Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen" x-data="approvals()">
+    <!-- Navigation -->
+    <nav class="gradient-bg border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-3">
+                        <i class="fas fa-brain text-2xl text-blue-400"></i>
+                        <span class="text-xl font-bold">OsMEN</span>
+                    </a>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="/admin" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-arrow-left mr-2"></i>Admin Hub
+                            </a>
+                            <a href="/admin/approvals" class="px-3 py-2 rounded-md text-sm font-medium bg-slate-700">
+                                <i class="fas fa-check-circle mr-2"></i>Approvals
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2">
+                <i class="fas fa-clipboard-check mr-3 text-green-400"></i>
+                Approval Queues
+            </h1>
+            <p class="text-slate-400">Review and approve pending agent actions</p>
+        </div>
+
+        <!-- Queue Tabs -->
+        <div class="flex space-x-1 mb-6 border-b border-slate-700">
+            <button @click="activeTab = 'knowledge'" 
+                class="px-4 py-2 text-sm font-medium transition-colors"
+                :class="activeTab === 'knowledge' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-slate-400 hover:text-white'">
+                Knowledge Writes
+                <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-slate-700" 
+                    x-text="queues.knowledge_writes?.length || 0"></span>
+            </button>
+            <button @click="activeTab = 'destructive'" 
+                class="px-4 py-2 text-sm font-medium transition-colors"
+                :class="activeTab === 'destructive' ? 'text-red-400 border-b-2 border-red-400' : 'text-slate-400 hover:text-white'">
+                Destructive Fixes
+                <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-slate-700"
+                    x-text="queues.destructive_fixes?.length || 0"></span>
+            </button>
+            <button @click="activeTab = 'obsidian'" 
+                class="px-4 py-2 text-sm font-medium transition-colors"
+                :class="activeTab === 'obsidian' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-slate-400 hover:text-white'">
+                Obsidian Exports
+                <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-slate-700"
+                    x-text="queues.obsidian_exports?.length || 0"></span>
+            </button>
+        </div>
+
+        <!-- Knowledge Writes Queue -->
+        <div x-show="activeTab === 'knowledge'" class="space-y-4">
+            <template x-if="queues.knowledge_writes?.length === 0">
+                <div class="bg-slate-800 rounded-xl p-8 text-center">
+                    <i class="fas fa-check-circle text-4xl text-green-500 mb-4"></i>
+                    <p class="text-slate-400">No pending knowledge writes</p>
+                </div>
+            </template>
+            <template x-for="item in queues.knowledge_writes" :key="item.id">
+                <div class="bg-slate-800 rounded-xl p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-semibold" x-text="item.title || 'Knowledge Write'"></h3>
+                            <p class="text-sm text-slate-400">
+                                From: <span x-text="item.agent_id || 'Unknown'"></span>
+                                • <span x-text="item.timestamp || ''"></span>
+                            </p>
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400"
+                            x-text="item.target || 'memories'"></span>
+                    </div>
+                    <div class="bg-slate-700/50 rounded-lg p-4 mb-4 max-h-40 overflow-y-auto">
+                        <pre class="text-sm text-slate-300 whitespace-pre-wrap" x-text="item.content || item.preview || 'No preview available'"></pre>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button @click="approve('knowledge_writes', item.id)" 
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm">
+                            <i class="fas fa-check mr-2"></i>Approve
+                        </button>
+                        <button @click="reject('knowledge_writes', item.id)" 
+                            class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm">
+                            <i class="fas fa-times mr-2"></i>Reject
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Destructive Fixes Queue -->
+        <div x-show="activeTab === 'destructive'" class="space-y-4">
+            <template x-if="queues.destructive_fixes?.length === 0">
+                <div class="bg-slate-800 rounded-xl p-8 text-center">
+                    <i class="fas fa-shield-alt text-4xl text-green-500 mb-4"></i>
+                    <p class="text-slate-400">No pending destructive fixes</p>
+                </div>
+            </template>
+            <template x-for="item in queues.destructive_fixes" :key="item.id">
+                <div class="bg-slate-800 rounded-xl p-6 border-2 border-red-500/30">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-500"></i>
+                        <span class="text-red-400 font-semibold">Destructive Action Required</span>
+                    </div>
+                    <div class="mb-4">
+                        <h3 class="font-semibold" x-text="item.fix_type || 'Unknown Fix'"></h3>
+                        <p class="text-sm text-slate-400" x-text="item.reason"></p>
+                    </div>
+                    <div class="bg-slate-700/50 rounded-lg p-4 mb-4">
+                        <p class="text-sm"><span class="text-slate-400">Target:</span> <span x-text="item.target_node"></span></p>
+                        <p class="text-sm"><span class="text-slate-400">Checkpoint:</span> <span x-text="item.checkpoint_id || 'Will be created'"></span></p>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button @click="approve('destructive_fixes', item.id)" 
+                            class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm">
+                            <i class="fas fa-bolt mr-2"></i>Execute Fix
+                        </button>
+                        <button @click="reject('destructive_fixes', item.id)" 
+                            class="px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm">
+                            <i class="fas fa-times mr-2"></i>Dismiss
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Obsidian Exports Queue -->
+        <div x-show="activeTab === 'obsidian'" class="space-y-4">
+            <template x-if="queues.obsidian_exports?.length === 0">
+                <div class="bg-slate-800 rounded-xl p-8 text-center">
+                    <i class="fas fa-book text-4xl text-purple-500 mb-4"></i>
+                    <p class="text-slate-400">No pending Obsidian exports</p>
+                </div>
+            </template>
+            <template x-for="item in queues.obsidian_exports" :key="item.id">
+                <div class="bg-slate-800 rounded-xl p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-semibold" x-text="item.filename || 'Untitled'"></h3>
+                            <p class="text-sm text-slate-400">
+                                Agent: <span x-text="item.agent_id"></span>
+                                • Target: <span x-text="item.target_folder || 'OsMEN-Exports'"></span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-700/50 rounded-lg p-4 mb-4 max-h-60 overflow-y-auto">
+                        <pre class="text-sm text-slate-300 whitespace-pre-wrap" x-text="item.content"></pre>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button @click="approve('obsidian_exports', item.id)" 
+                            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm">
+                            <i class="fas fa-file-export mr-2"></i>Export
+                        </button>
+                        <button @click="reject('obsidian_exports', item.id)" 
+                            class="px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm">
+                            <i class="fas fa-times mr-2"></i>Discard
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </main>
+
+    <script>
+        function approvals() {
+            return {
+                activeTab: 'knowledge',
+                queues: { knowledge_writes: [], destructive_fixes: [], obsidian_exports: [] },
+
+                async init() {
+                    await this.loadQueues();
+                },
+
+                async loadQueues() {
+                    try {
+                        const res = await fetch('/api/admin/approvals/pending');
+                        const data = await res.json();
+                        this.queues = data.queues || {};
+                    } catch (e) {
+                        console.error('Failed to load queues:', e);
+                    }
+                },
+
+                async approve(queue, itemId) {
+                    try {
+                        await fetch(`/api/admin/approvals/approve/${queue}/${itemId}`, { method: 'POST' });
+                        await this.loadQueues();
+                    } catch (e) {
+                        alert('Approval failed: ' + e.message);
+                    }
+                },
+
+                async reject(queue, itemId) {
+                    const reason = prompt('Rejection reason (optional):');
+                    try {
+                        const formData = new FormData();
+                        formData.append('reason', reason || '');
+                        await fetch(`/api/admin/approvals/reject/${queue}/${itemId}`, { 
+                            method: 'POST',
+                            body: formData
+                        });
+                        await this.loadQueues();
+                    } catch (e) {
+                        alert('Rejection failed: ' + e.message);
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

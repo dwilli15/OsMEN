@@ -1,0 +1,16 @@
+{
+  "name": "santa_claus",
+  "description": "Deep, warm, jolly male voice. Slow pace, rich bass tones.",
+  "backends": {
+    "kokoro": {
+      "voice_id": "am_adam"
+    },
+    "parler": {
+      "prompt": "A deep, warm male voice with a jolly tone. Slow speaking pace, bass-heavy, grandfatherly."
+    },
+    "openvoice": {
+      "style": "default"
+    }
+  },
+  "notes": "Use pitch shifting + warmth filters for authentic Santa"
+}

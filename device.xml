@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<adept:deviceInfo xmlns:adept="http://ns.adobe.com/adept">
+<adept:deviceType>standalone</adept:deviceType>
+<adept:deviceClass>Desktop</adept:deviceClass>
+<adept:deviceSerial>9c4a7b95a05f970589d7cb8d038779d5b080e54d</adept:deviceSerial>
+<adept:deviceName>D-Omen</adept:deviceName>
+<adept:version name="hobbes" value="9.3.58046"/>
+<adept:version name="clientOS" value="Windows Vista"/>
+<adept:version name="clientLocale" value="en"/>
+<adept:fingerprint>c1WcSFwLIBV2mkOWa9vOX7Z1Mh4=</adept:fingerprint>
+</adept:deviceInfo>

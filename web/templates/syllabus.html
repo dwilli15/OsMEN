@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - OsMEN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); }
+        .drop-zone { border: 2px dashed #475569; }
+        .drop-zone.drag-over { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen" x-data="syllabusApp()">
+    <!-- Navigation -->
+    <nav class="gradient-bg border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-3">
+                        <i class="fas fa-brain text-2xl text-blue-400"></i>
+                        <span class="text-xl font-bold">OsMEN</span>
+                    </a>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="/" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-home mr-2"></i>Dashboard
+                            </a>
+                            <a href="/syllabus" class="px-3 py-2 rounded-md text-sm font-medium bg-slate-700">
+                                <i class="fas fa-file-alt mr-2"></i>Syllabus
+                            </a>
+                            <a href="/calendar" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-calendar mr-2"></i>Calendar
+                            </a>
+                            <a href="/tasks" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-tasks mr-2"></i>Tasks
+                            </a>
+                            <a href="/agents" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-robot mr-2"></i>Agents
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2">Syllabus Parser</h1>
+            <p class="text-slate-400">Upload your syllabus to automatically extract deadlines and events</p>
+        </div>
+
+        <!-- Upload Section -->
+        <div x-show="!preview" class="mb-8">
+            <div 
+                class="drop-zone rounded-xl p-12 text-center transition-all duration-200"
+                :class="{ 'drag-over': isDragging }"
+                @dragover.prevent="isDragging = true"
+                @dragleave.prevent="isDragging = false"
+                @drop.prevent="handleDrop($event)"
+            >
+                <input 
+                    type="file" 
+                    id="file-input" 
+                    class="hidden" 
+                    accept=".pdf,.docx,.doc"
+                    @change="handleFileSelect($event)"
+                >
+                <label for="file-input" class="cursor-pointer">
+                    <div class="space-y-4">
+                        <i class="fas fa-cloud-upload-alt text-6xl text-slate-500"></i>
+                        <div>
+                            <p class="text-xl font-semibold">Drop your syllabus here</p>
+                            <p class="text-slate-400">or click to browse</p>
+                        </div>
+                        <p class="text-sm text-slate-500">Supports PDF and DOCX files</p>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Loading State -->
+            <div x-show="loading" class="mt-8 text-center">
+                <i class="fas fa-spinner fa-spin text-4xl text-blue-400 mb-4"></i>
+                <p class="text-slate-400">Parsing syllabus...</p>
+            </div>
+
+            <!-- Error State -->
+            <div x-show="error" class="mt-8 bg-red-500/20 border border-red-500 rounded-xl p-4">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-exclamation-circle text-red-500"></i>
+                    <span x-text="error"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Section -->
+        <div x-show="preview" class="space-y-6">
+            <!-- Course Info -->
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold">
+                        <i class="fas fa-book mr-2 text-blue-400"></i>
+                        Course Information
+                    </h2>
+                    <button @click="reset()" class="text-slate-400 hover:text-white">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <p class="text-slate-400 text-sm">Course Code</p>
+                        <p class="font-semibold" x-text="preview?.course_info?.course_code || 'N/A'"></p>
+                    </div>
+                    <div>
+                        <p class="text-slate-400 text-sm">Course Name</p>
+                        <p class="font-semibold" x-text="preview?.course_info?.course_name || 'N/A'"></p>
+                    </div>
+                    <div>
+                        <p class="text-slate-400 text-sm">Instructor</p>
+                        <p class="font-semibold" x-text="preview?.course_info?.instructor || 'N/A'"></p>
+                    </div>
+                    <div>
+                        <p class="text-slate-400 text-sm">Semester</p>
+                        <p class="font-semibold" x-text="(preview?.course_info?.semester || '') + ' ' + (preview?.course_info?.year || '')"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events List -->
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold">
+                        <i class="fas fa-calendar-alt mr-2 text-green-400"></i>
+                        Extracted Events (<span x-text="preview?.events?.length || 0"></span>)
+                    </h2>
+                    <div class="flex items-center space-x-2">
+                        <button 
+                            @click="selectAll()"
+                            class="text-sm px-3 py-1 bg-slate-700 rounded hover:bg-slate-600"
+                        >
+                            Select All
+                        </button>
+                        <button 
+                            @click="deselectAll()"
+                            class="text-sm px-3 py-1 bg-slate-700 rounded hover:bg-slate-600"
+                        >
+                            Deselect All
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="space-y-3 max-h-96 overflow-y-auto">
+                    <template x-for="event in preview?.events || []" :key="event.id">
+                        <div class="flex items-center space-x-4 bg-slate-700/50 rounded-lg p-4">
+                            <input 
+                                type="checkbox" 
+                                :value="event.id"
+                                x-model="selectedEvents"
+                                class="w-5 h-5 rounded border-slate-500 bg-slate-600 text-blue-500 focus:ring-blue-500"
+                            >
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <span 
+                                        class="text-xs px-2 py-0.5 rounded-full"
+                                        :class="{
+                                            'bg-red-500/20 text-red-400': event.type === 'exam',
+                                            'bg-amber-500/20 text-amber-400': event.type === 'assignment',
+                                            'bg-blue-500/20 text-blue-400': event.type === 'class',
+                                            'bg-slate-500/20 text-slate-400': !['exam', 'assignment', 'class'].includes(event.type)
+                                        }"
+                                        x-text="event.type"
+                                    ></span>
+                                    <span 
+                                        class="text-xs px-2 py-0.5 rounded-full"
+                                        :class="{
+                                            'bg-red-500/20 text-red-400': event.priority === 'critical' || event.priority === 'high',
+                                            'bg-amber-500/20 text-amber-400': event.priority === 'medium',
+                                            'bg-green-500/20 text-green-400': event.priority === 'low'
+                                        }"
+                                        x-text="event.priority"
+                                    ></span>
+                                </div>
+                                <p class="font-semibold mt-1" x-text="event.title"></p>
+                                <p class="text-sm text-slate-400" x-text="event.description"></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-mono text-sm" x-text="event.date || 'No date'"></p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <div x-show="preview?.events?.length === 0" class="text-center py-8 text-slate-400">
+                    <i class="fas fa-inbox text-4xl mb-2"></i>
+                    <p>No events found in syllabus</p>
+                </div>
+            </div>
+
+            <!-- Calendar Sync -->
+            <div class="bg-slate-800 rounded-xl p-6">
+                <h2 class="text-xl font-semibold mb-4">
+                    <i class="fas fa-sync mr-2 text-purple-400"></i>
+                    Add to Calendar
+                </h2>
+                
+                <div class="flex flex-col md:flex-row items-start md:items-center gap-4">
+                    <select 
+                        x-model="calendarProvider"
+                        class="bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="google">Google Calendar</option>
+                        <option value="outlook">Outlook Calendar</option>
+                    </select>
+                    
+                    <button 
+                        @click="createCalendarEvents()"
+                        :disabled="selectedEvents.length === 0 || creatingEvents"
+                        class="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed px-6 py-2 rounded-lg font-semibold transition-colors"
+                    >
+                        <span x-show="!creatingEvents">
+                            <i class="fas fa-calendar-plus mr-2"></i>
+                            Add <span x-text="selectedEvents.length"></span> Event(s) to Calendar
+                        </span>
+                        <span x-show="creatingEvents">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>
+                            Creating...
+                        </span>
+                    </button>
+                </div>
+
+                <!-- Results -->
+                <div x-show="createResult" class="mt-4 rounded-lg p-4" :class="createResult?.success ? 'bg-green-500/20' : 'bg-red-500/20'">
+                    <div class="flex items-center space-x-2">
+                        <i :class="createResult?.success ? 'fas fa-check-circle text-green-500' : 'fas fa-exclamation-circle text-red-500'"></i>
+                        <span x-text="createResult?.success ? `Successfully created ${createResult.created_count} event(s)` : 'Failed to create some events'"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function syllabusApp() {
+            return {
+                isDragging: false,
+                loading: false,
+                error: null,
+                preview: null,
+                selectedEvents: [],
+                calendarProvider: 'google',
+                creatingEvents: false,
+                createResult: null,
+
+                handleDrop(event) {
+                    this.isDragging = false;
+                    const files = event.dataTransfer.files;
+                    if (files.length > 0) {
+                        this.uploadFile(files[0]);
+                    }
+                },
+
+                handleFileSelect(event) {
+                    const files = event.target.files;
+                    if (files.length > 0) {
+                        this.uploadFile(files[0]);
+                    }
+                },
+
+                async uploadFile(file) {
+                    this.loading = true;
+                    this.error = null;
+                    this.preview = null;
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    try {
+                        const response = await fetch('/api/syllabus/upload', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.detail || 'Upload failed');
+                        }
+
+                        this.preview = await response.json();
+                        // Pre-select all events
+                        this.selectedEvents = this.preview.events.map(e => e.id);
+                    } catch (err) {
+                        this.error = err.message;
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                selectAll() {
+                    this.selectedEvents = this.preview?.events?.map(e => e.id) || [];
+                },
+
+                deselectAll() {
+                    this.selectedEvents = [];
+                },
+
+                reset() {
+                    this.preview = null;
+                    this.selectedEvents = [];
+                    this.createResult = null;
+                },
+
+                async createCalendarEvents() {
+                    this.creatingEvents = true;
+                    this.createResult = null;
+
+                    try {
+                        const response = await fetch('/api/calendar/create', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                session_id: this.preview.session_id,
+                                event_ids: this.selectedEvents,
+                                calendar_provider: this.calendarProvider
+                            })
+                        });
+
+                        this.createResult = await response.json();
+                    } catch (err) {
+                        this.createResult = { success: false, error: err.message };
+                    } finally {
+                        this.creatingEvents = false;
+                    }
+                }
+            };
+        }
+    </script>
+</body>
+</html>

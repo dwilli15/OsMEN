@@ -1,0 +1,22 @@
+{
+  "whisper": {
+    "model": "small",
+    "device": "cpu",
+    "compute_type": "int8",
+    "language": "en"
+  },
+  "pipeline": {
+    "input_webhook": "http://localhost:5678/webhook/voice-input",
+    "transcription_flow": "voice_transcription",
+    "command_parser": "voice_command_parser"
+  },
+  "wake_words": [
+    "hey osmen",
+    "osmen",
+    "computer"
+  ],
+  "output": {
+    "tts_enabled": true,
+    "tts_engine": "pyttsx3"
+  }
+}

@@ -1,0 +1,627 @@
+{
+  "name": "Course Semester Setup",
+  "description": "Automated workflow for importing course syllabi and setting up semester knowledge base",
+  "nodes": [
+    {
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        100,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "course-import",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "webhookId": "course-import-webhook"
+    },
+    {
+      "id": "schedule-trigger",
+      "name": "Weekly Schedule Check",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        100,
+        500
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                0
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "extract-files",
+      "name": "Extract File Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        300,
+        300
+      ],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "file_path",
+              "value": "={{ $json.body.file_path }}"
+            },
+            {
+              "name": "semester",
+              "value": "={{ $json.body.semester || '' }}"
+            },
+            {
+              "name": "year",
+              "value": "={{ $json.body.year || new Date().getFullYear() }}"
+            },
+            {
+              "name": "sync_calendar",
+              "value": "={{ $json.body.sync_calendar !== false }}"
+            },
+            {
+              "name": "create_notes",
+              "value": "={{ $json.body.create_obsidian_notes !== false }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "check-operation",
+      "name": "Check Operation Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [
+        500,
+        300
+      ],
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "value": "import",
+              "operation": "equals",
+              "outputKey": "Import Syllabus"
+            },
+            {
+              "value": "bulk",
+              "operation": "equals",
+              "outputKey": "Bulk Import"
+            },
+            {
+              "value": "overview",
+              "operation": "equals",
+              "outputKey": "Get Overview"
+            }
+          ],
+          "fallbackOutput": "Import Syllabus"
+        },
+        "dataPropertyName": "={{ $json.body.operation || 'import' }}"
+      }
+    },
+    {
+      "id": "import-syllabus",
+      "name": "Import Syllabus",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        700,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://gateway:8080/api/courses/import/confirm",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ file_path: $json.file_path, semester: $json.semester, year: parseInt($json.year), sync_calendar: $json.sync_calendar === 'true', create_obsidian_notes: $json.create_notes === 'true' }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      }
+    },
+    {
+      "id": "bulk-import",
+      "name": "Bulk Import",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        700,
+        350
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://gateway:8080/api/courses/import/bulk",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ file_paths: $json.body.file_paths, semester: $json.semester, year: parseInt($json.year) }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      }
+    },
+    {
+      "id": "get-overview",
+      "name": "Get Semester Overview",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        700,
+        500
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://gateway:8080/api/courses/semester",
+        "authentication": "none",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "semester",
+              "value": "={{ $json.semester }}"
+            },
+            {
+              "name": "year",
+              "value": "={{ $json.year }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "process-import-result",
+      "name": "Process Import Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        900,
+        200
+      ],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "={{ $json.success ? 'success' : 'failed' }}"
+            },
+            {
+              "name": "course_code",
+              "value": "={{ $json.course?.code || 'Unknown' }}"
+            },
+            {
+              "name": "course_name",
+              "value": "={{ $json.course?.name || 'Unknown' }}"
+            },
+            {
+              "name": "events_created",
+              "value": "={{ $json.events_created || 0 }}"
+            },
+            {
+              "name": "calendar_events",
+              "value": "={{ $json.calendar_events || 0 }}"
+            },
+            {
+              "name": "obsidian_notes",
+              "value": "={{ JSON.stringify($json.obsidian_notes || []) }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "check-conflicts",
+      "name": "Check for Conflicts",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        200
+      ],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.conflicts?.length > 0 }}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "notify-conflicts",
+      "name": "Create Conflict Alert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        150
+      ],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "alert_type",
+              "value": "scheduling_conflict"
+            },
+            {
+              "name": "message",
+              "value": "\u26a0\ufe0f Scheduling conflicts detected for {{ $json.course_code }}: {{ $json.conflicts?.length }} conflicts found"
+            },
+            {
+              "name": "priority",
+              "value": "high"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "create-reminder",
+      "name": "Create Study Reminder",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        300
+      ],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "reminder_type",
+              "value": "course_setup_complete"
+            },
+            {
+              "name": "message",
+              "value": "\u2705 Course {{ $json.course_code }} imported successfully! {{ $json.events_created }} events scheduled."
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "weekly-check",
+      "name": "Get Weekly Overview",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        300,
+        500
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://gateway:8080/api/courses/semester",
+        "authentication": "none",
+        "options": {}
+      }
+    },
+    {
+      "id": "check-upcoming",
+      "name": "Check Upcoming Events",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        500,
+        500
+      ],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.upcoming_this_week?.length > 0 }}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "create-weekly-summary",
+      "name": "Create Weekly Summary",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        700,
+        500
+      ],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "summary_type",
+              "value": "weekly_academic"
+            },
+            {
+              "name": "title",
+              "value": "\ud83d\udcda Weekly Academic Summary"
+            },
+            {
+              "name": "upcoming_count",
+              "value": "={{ $json.upcoming_this_week?.length || 0 }}"
+            },
+            {
+              "name": "message",
+              "value": "You have {{ $json.upcoming_this_week?.length || 0 }} academic events this week across {{ $json.total_courses }} courses."
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "store-memory",
+      "name": "Store in Memory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1500,
+        250
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://mcp-server:8081/tools/memory_store",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: `Course ${$json.course_code} imported: ${$json.course_name}. Events: ${$json.events_created}. Calendar synced: ${$json.calendar_events}.`, category: 'academic', tags: ['course', 'import', $json.course_code] }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1700,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, status: $json.status, course: $json.course_code, events: $json.events_created, message: $json.message || 'Import completed' }) }}"
+      }
+    },
+    {
+      "id": "log-action",
+      "name": "Log Action",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        400
+      ],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "log_entry",
+              "value": "[{{ new Date().toISOString() }}] Course import: {{ $json.course_code }} - {{ $json.status }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {
+      "main": [
+        [
+          {
+            "node": "extract-files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract-files": {
+      "main": [
+        [
+          {
+            "node": "check-operation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-operation": {
+      "main": [
+        [
+          {
+            "node": "import-syllabus",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "bulk-import",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "get-overview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "import-syllabus": {
+      "main": [
+        [
+          {
+            "node": "process-import-result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bulk-import": {
+      "main": [
+        [
+          {
+            "node": "process-import-result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-overview": {
+      "main": [
+        [
+          {
+            "node": "respond-webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process-import-result": {
+      "main": [
+        [
+          {
+            "node": "check-conflicts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-conflicts": {
+      "main": [
+        [
+          {
+            "node": "notify-conflicts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create-reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "notify-conflicts": {
+      "main": [
+        [
+          {
+            "node": "store-memory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-reminder": {
+      "main": [
+        [
+          {
+            "node": "store-memory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "store-memory": {
+      "main": [
+        [
+          {
+            "node": "log-action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log-action": {
+      "main": [
+        [
+          {
+            "node": "respond-webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "schedule-trigger": {
+      "main": [
+        [
+          {
+            "node": "weekly-check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "weekly-check": {
+      "main": [
+        [
+          {
+            "node": "check-upcoming",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-upcoming": {
+      "main": [
+        [
+          {
+            "node": "create-weekly-summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "triggerCount": 2,
+  "updatedAt": "2025-01-01T00:00:00.000Z",
+  "versionId": "1",
+  "meta": {
+    "instanceId": "osmen-local"
+  },
+  "active": false
+}

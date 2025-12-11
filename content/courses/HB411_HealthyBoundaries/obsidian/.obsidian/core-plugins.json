@@ -1,0 +1,17 @@
+{
+  "snippets": {
+    "enabled": true
+  },
+  "templates": {
+    "enabled": true,
+    "folder": "templates"
+  },
+  "hotkeys": {},
+  "graph": {
+    "enabled": true
+  },
+  "dailynotes": {
+    "enabled": true,
+    "folder": "journal"
+  }
+}

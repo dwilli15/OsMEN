@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lifecycle Management - OsMEN Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div x-data="lifecycleManager()" x-init="init()">
+        <!-- Header -->
+        <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="/admin" class="text-gray-400 hover:text-white">&larr; Admin Hub</a>
+                    <h1 class="text-2xl font-bold text-cyan-400">📁 Lifecycle Management</h1>
+                </div>
+                <div class="flex gap-3">
+                    <button @click="refresh()" 
+                            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center gap-2">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6">
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <button @click="runWeeklyReview()" 
+                        :disabled="running"
+                        class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 p-4 rounded-lg text-left">
+                    <div class="text-lg font-semibold">📅 Run Weekly Review</div>
+                    <div class="text-sm text-blue-200">Move expired files, create archive prompts</div>
+                </button>
+                
+                <button @click="runDailyCleanup()" 
+                        :disabled="running"
+                        class="bg-green-600 hover:bg-green-700 disabled:opacity-50 p-4 rounded-lg text-left">
+                    <div class="text-lg font-semibold">🧹 Run Daily Cleanup</div>
+                    <div class="text-sm text-green-200">Remove temp files and empty dirs</div>
+                </button>
+                
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                    <div class="text-sm text-gray-400">Total Files</div>
+                    <div class="text-2xl font-bold" x-text="totalFiles"></div>
+                </div>
+                
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                    <div class="text-sm text-gray-400">Needs Attention</div>
+                    <div class="text-2xl font-bold text-yellow-400" x-text="totalExpired"></div>
+                </div>
+            </div>
+
+            <!-- Status Message -->
+            <div x-show="statusMessage" x-cloak
+                 :class="statusError ? 'bg-red-600' : 'bg-green-600'"
+                 class="p-4 rounded-lg mb-6">
+                <span x-text="statusMessage"></span>
+            </div>
+
+            <!-- Tabs -->
+            <div class="border-b border-gray-700 mb-6">
+                <nav class="flex gap-4">
+                    <button @click="activeTab = 'workspace'" 
+                            :class="activeTab === 'workspace' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-gray-400 hover:text-white'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        📂 Workspace
+                    </button>
+                    <button @click="activeTab = 'expired'" 
+                            :class="activeTab === 'expired' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-gray-400 hover:text-white'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        ⚠️ Expired
+                        <span x-show="totalExpired > 0" class="ml-1 px-2 py-0.5 bg-yellow-500 text-black text-xs rounded-full" x-text="totalExpired"></span>
+                    </button>
+                    <button @click="activeTab = 'archive'" 
+                            :class="activeTab === 'archive' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-gray-400 hover:text-white'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        📦 Archive
+                        <span x-show="archivePrompts.length > 0" class="ml-1 px-2 py-0.5 bg-orange-500 text-black text-xs rounded-full" x-text="archivePrompts.length"></span>
+                    </button>
+                    <button @click="activeTab = 'schedules'" 
+                            :class="activeTab === 'schedules' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-gray-400 hover:text-white'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        ⏰ Schedules
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Workspace Tab -->
+            <div x-show="activeTab === 'workspace'" x-cloak>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <template x-for="(files, location) in workspace" :key="location">
+                        <div class="bg-gray-800 rounded-lg border border-gray-700">
+                            <div class="px-4 py-3 border-b border-gray-700 flex justify-between items-center">
+                                <h3 class="font-semibold capitalize" x-text="location"></h3>
+                                <span class="text-sm text-gray-400" x-text="files.length + ' files'"></span>
+                            </div>
+                            <div class="p-4 max-h-96 overflow-y-auto">
+                                <template x-if="files.length === 0">
+                                    <div class="text-center text-gray-500 py-4">Empty</div>
+                                </template>
+                                <template x-for="file in files" :key="file.path">
+                                    <div class="py-2 border-b border-gray-700 last:border-0">
+                                        <div class="text-sm font-medium truncate" x-text="file.path"></div>
+                                        <div class="text-xs text-gray-400 flex gap-4">
+                                            <span x-text="formatSize(file.size_bytes)"></span>
+                                            <span :class="file.age_days > 30 ? 'text-red-400' : file.age_days > 10 ? 'text-yellow-400' : ''"
+                                                  x-text="file.age_days + ' days'"></span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Expired Tab -->
+            <div x-show="activeTab === 'expired'" x-cloak>
+                <div class="bg-gray-800 rounded-lg border border-gray-700">
+                    <div class="px-4 py-3 border-b border-gray-700">
+                        <h3 class="font-semibold">Files Exceeding Age Threshold</h3>
+                        <p class="text-sm text-gray-400">These files will be moved to pending_review on the next weekly review</p>
+                    </div>
+                    <div class="p-4">
+                        <template x-if="totalExpired === 0">
+                            <div class="text-center text-green-400 py-8">
+                                ✅ No expired files! Workspace is well-maintained.
+                            </div>
+                        </template>
+                        <template x-for="(files, location) in expired" :key="location">
+                            <div x-show="files.length > 0" class="mb-6">
+                                <h4 class="font-medium text-yellow-400 mb-2 capitalize" x-text="location + ' (' + files.length + ' files)'"></h4>
+                                <div class="space-y-2">
+                                    <template x-for="file in files" :key="file.path">
+                                        <div class="bg-gray-700 rounded px-3 py-2 flex justify-between items-center">
+                                            <span class="text-sm truncate flex-1" x-text="file.path"></span>
+                                            <span class="text-sm text-red-400 ml-4" x-text="file.age_days + ' days'"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Archive Tab -->
+            <div x-show="activeTab === 'archive'" x-cloak>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Archive Prompts -->
+                    <div class="bg-gray-800 rounded-lg border border-gray-700">
+                        <div class="px-4 py-3 border-b border-gray-700">
+                            <h3 class="font-semibold">📋 Pending Archive Prompts</h3>
+                        </div>
+                        <div class="p-4">
+                            <template x-if="archivePrompts.length === 0">
+                                <div class="text-center text-gray-500 py-8">
+                                    No pending archive prompts
+                                </div>
+                            </template>
+                            <template x-for="prompt in archivePrompts" :key="prompt.id">
+                                <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <div class="font-medium" x-text="prompt.total_files + ' files'"></div>
+                                            <div class="text-sm text-gray-400" x-text="formatSize(prompt.total_size)"></div>
+                                        </div>
+                                        <div class="text-xs text-gray-400" x-text="prompt.created_at"></div>
+                                    </div>
+                                    <div class="text-sm text-gray-300 mb-3" x-text="prompt.message"></div>
+                                    <div class="flex gap-2">
+                                        <button @click="approveArchive(prompt.id)"
+                                                class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm">
+                                            ✓ Archive
+                                        </button>
+                                        <button @click="rejectArchive(prompt.id)"
+                                                class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm">
+                                            ✗ Dismiss
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Archive Contents -->
+                    <div class="bg-gray-800 rounded-lg border border-gray-700">
+                        <div class="px-4 py-3 border-b border-gray-700">
+                            <h3 class="font-semibold">📦 Archive Contents</h3>
+                        </div>
+                        <div class="p-4">
+                            <template x-if="Object.keys(archiveContents).length === 0">
+                                <div class="text-center text-gray-500 py-8">
+                                    Archive is empty
+                                </div>
+                            </template>
+                            <template x-for="(folder, name) in archiveContents" :key="name">
+                                <div class="mb-4">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="font-medium" x-text="name"></span>
+                                        <span class="text-sm text-gray-400" 
+                                              x-text="folder.total_files + ' files (' + formatSize(folder.total_size) + ')'"></span>
+                                    </div>
+                                    <div class="pl-4 space-y-1">
+                                        <template x-for="file in folder.files.slice(0, 5)" :key="file.path">
+                                            <div class="text-sm text-gray-400 truncate" x-text="file.path"></div>
+                                        </template>
+                                        <div x-show="folder.files.length > 5" class="text-sm text-gray-500"
+                                             x-text="'...and ' + (folder.files.length - 5) + ' more'"></div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedules Tab -->
+            <div x-show="activeTab === 'schedules'" x-cloak>
+                <div class="bg-gray-800 rounded-lg border border-gray-700">
+                    <div class="px-4 py-3 border-b border-gray-700">
+                        <h3 class="font-semibold">⏰ Scheduled Tasks</h3>
+                        <p class="text-sm text-gray-400">Automated lifecycle maintenance tasks</p>
+                    </div>
+                    <div class="p-4">
+                        <div class="space-y-4">
+                            <template x-for="task in schedules" :key="task.name">
+                                <div class="bg-gray-700 rounded-lg p-4">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <div class="font-medium" x-text="task.name"></div>
+                                            <div class="text-sm text-gray-400" x-text="task.description"></div>
+                                        </div>
+                                        <span :class="task.enabled ? 'bg-green-600' : 'bg-gray-600'"
+                                              class="px-2 py-1 rounded text-xs"
+                                              x-text="task.enabled ? 'Enabled' : 'Disabled'"></span>
+                                    </div>
+                                    <div class="mt-2 text-sm">
+                                        <span class="text-gray-400">Schedule:</span>
+                                        <span x-text="formatSchedule(task.schedule)"></span>
+                                    </div>
+                                    <div class="mt-1 text-xs text-gray-500 font-mono" x-text="task.command"></div>
+                                </div>
+                            </template>
+                        </div>
+                        
+                        <div class="mt-6 p-4 bg-gray-700 rounded-lg">
+                            <h4 class="font-medium mb-2">🖥️ Windows Installation</h4>
+                            <p class="text-sm text-gray-400 mb-2">Run as Administrator to install scheduled tasks:</p>
+                            <code class="block bg-gray-800 px-3 py-2 rounded text-sm">
+                                scripts\automation\install_scheduled_tasks.bat
+                            </code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function lifecycleManager() {
+            return {
+                activeTab: 'workspace',
+                workspace: {},
+                expired: {},
+                archivePrompts: [],
+                archiveContents: {},
+                schedules: [],
+                running: false,
+                statusMessage: '',
+                statusError: false,
+                
+                get totalFiles() {
+                    let total = 0;
+                    for (let files of Object.values(this.workspace)) {
+                        total += files.length;
+                    }
+                    return total;
+                },
+                
+                get totalExpired() {
+                    let total = 0;
+                    for (let files of Object.values(this.expired)) {
+                        total += files.length;
+                    }
+                    return total;
+                },
+                
+                async init() {
+                    await this.refresh();
+                },
+                
+                async refresh() {
+                    await Promise.all([
+                        this.loadWorkspace(),
+                        this.loadExpired(),
+                        this.loadArchivePrompts(),
+                        this.loadArchiveContents(),
+                        this.loadSchedules()
+                    ]);
+                },
+                
+                async loadWorkspace() {
+                    const res = await fetch('/api/admin/lifecycle/scan');
+                    this.workspace = await res.json();
+                },
+                
+                async loadExpired() {
+                    const res = await fetch('/api/admin/lifecycle/expired');
+                    this.expired = await res.json();
+                },
+                
+                async loadArchivePrompts() {
+                    const res = await fetch('/api/admin/archive/prompts');
+                    this.archivePrompts = await res.json();
+                },
+                
+                async loadArchiveContents() {
+                    const res = await fetch('/api/admin/archive/browse');
+                    this.archiveContents = await res.json();
+                },
+                
+                async loadSchedules() {
+                    const res = await fetch('/api/admin/schedules');
+                    const data = await res.json();
+                    this.schedules = data.scheduled_tasks || [];
+                },
+                
+                async runWeeklyReview() {
+                    this.running = true;
+                    this.showStatus('Running weekly review...');
+                    
+                    try {
+                        const res = await fetch('/api/admin/lifecycle/run-weekly', { method: 'POST' });
+                        const data = await res.json();
+                        
+                        if (data.error) {
+                            this.showStatus(data.error, true);
+                        } else {
+                            this.showStatus(`Weekly review complete: ${data.files_moved} files moved, ${data.prompts_created} prompts created`);
+                            await this.refresh();
+                        }
+                    } catch (e) {
+                        this.showStatus('Error running weekly review', true);
+                    }
+                    
+                    this.running = false;
+                },
+                
+                async runDailyCleanup() {
+                    this.running = true;
+                    this.showStatus('Running daily cleanup...');
+                    
+                    try {
+                        const res = await fetch('/api/admin/lifecycle/run-daily', { method: 'POST' });
+                        const data = await res.json();
+                        
+                        if (data.error) {
+                            this.showStatus(data.error, true);
+                        } else {
+                            this.showStatus(`Daily cleanup complete: ${data.empty_dirs_removed} dirs, ${data.temp_files_removed} temp files removed`);
+                            await this.refresh();
+                        }
+                    } catch (e) {
+                        this.showStatus('Error running daily cleanup', true);
+                    }
+                    
+                    this.running = false;
+                },
+                
+                async approveArchive(promptId) {
+                    const res = await fetch(`/api/admin/archive/approve/${promptId}`, { method: 'POST' });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        this.showStatus(`Archived ${data.archived.length} files to ${data.archive_folder}`);
+                        await this.refresh();
+                    } else {
+                        this.showStatus(data.error || 'Failed to archive', true);
+                    }
+                },
+                
+                async rejectArchive(promptId) {
+                    const res = await fetch(`/api/admin/archive/reject/${promptId}`, { method: 'POST' });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        this.showStatus('Archive prompt dismissed');
+                        await this.refresh();
+                    } else {
+                        this.showStatus(data.error || 'Failed to dismiss', true);
+                    }
+                },
+                
+                showStatus(message, isError = false) {
+                    this.statusMessage = message;
+                    this.statusError = isError;
+                    
+                    setTimeout(() => {
+                        this.statusMessage = '';
+                    }, 5000);
+                },
+                
+                formatSize(bytes) {
+                    if (bytes < 1024) return bytes + ' B';
+                    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+                    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+                },
+                
+                formatSchedule(schedule) {
+                    if (schedule.type === 'weekly') {
+                        return `Every ${schedule.day} at ${schedule.time}`;
+                    } else if (schedule.type === 'daily') {
+                        return `Daily at ${schedule.time}`;
+                    } else if (schedule.type === 'interval') {
+                        return `Every ${schedule.minutes} minutes`;
+                    }
+                    return JSON.stringify(schedule);
+                }
+            };
+        }
+    </script>
+</body>
+</html>

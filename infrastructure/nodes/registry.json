@@ -1,0 +1,330 @@
+{
+  "$schema": "./registry.schema.json",
+  "version": "1.0.0",
+  "updated_at": null,
+  "nodes": {
+    "langflow": {
+      "name": "Langflow",
+      "type": "workflow_engine",
+      "description": "Visual LLM flow builder for agent reasoning graphs",
+      "endpoint": "http://localhost:7860",
+      "health_endpoint": "/health",
+      "docker_service": "langflow",
+      "port": 7860,
+      "status": "unknown",
+      "last_health_check": null,
+      "capabilities": [
+        "flow_execution",
+        "visual_builder",
+        "component_library"
+      ],
+      "dependencies": [
+        "postgres",
+        "redis"
+      ],
+      "startup_order": 3
+    },
+    "n8n": {
+      "name": "n8n",
+      "type": "workflow_automation",
+      "description": "Event-driven workflow automation platform",
+      "endpoint": "http://localhost:5678",
+      "health_endpoint": "/healthz",
+      "docker_service": "n8n",
+      "port": 5678,
+      "status": "unknown",
+      "last_health_check": null,
+      "capabilities": [
+        "workflow_automation",
+        "webhooks",
+        "scheduling",
+        "integrations"
+      ],
+      "dependencies": [
+        "postgres"
+      ],
+      "startup_order": 3
+    },
+    "ollama": {
+      "name": "Ollama",
+      "type": "llm_inference",
+      "description": "Local LLM inference server",
+      "endpoint": "http://localhost:11434",
+      "health_endpoint": "/api/tags",
+      "docker_service": "ollama",
+      "port": 11434,
+      "status": "unknown",
+      "last_health_check": null,
+      "capabilities": [
+        "text_generation",
+        "embeddings",
+        "local_inference"
+      ],
+      "dependencies": [],
+      "startup_order": 1,
+      "gpu_required": true
+    },
+    "chromadb": {
+      "name": "ChromaDB",
+      "type": "vector_database",
+      "description": "Vector database for embeddings and similarity search",
+      "endpoint": "http://localhost:8000",
+      "health_endpoint": "/api/v1/heartbeat",
+      "docker_service": "chromadb",
+      "port": 8000,
+      "status": "unknown",
+      "last_health_check": null,
+      "capabilities": [
+        "vector_storage",
+        "similarity_search",
+        "collections"
+      ],
+      "dependencies": [],
+      "startup_order": 1
+    },
+    "qdrant": {
+      "name": "Qdrant",
+      "type": "vector_database",
+      "description": "High-performance vector database for agent memory",
+      "endpoint": "http://localhost:6333",
+      "health_endpoint": "/",
+      "docker_service": "qdrant",
+      "port": 6333,
+      "status": "unknown",
+      "last_health_check": null,
+      "capabilities": [
+        "vector_storage",
+        "filtering",
+        "clustering"
+      ],
+      "dependencies": [],
+      "startup_order": 1
+    },
+    "postgres": {
+      "name": "PostgreSQL",
+      "type": "database",
+      "description": "Relational database for persistent storage",
+      "endpoint": "postgresql://localhost:5432",
+      "health_endpoint": null,
+      "docker_service": "postgres",
+      "port": 5432,
+      "status": "unknown",
+      "last_health_check": null,
+      "capabilities": [
+        "sql",
+        "transactions",
+        "persistence"
+      ],
+      "dependencies": [],
+      "startup_order": 0
+    },
+    "redis": {
+      "name": "Redis",
+      "type": "cache",
+      "description": "In-memory cache and session management",
+      "endpoint": "redis://localhost:6379",
+      "health_endpoint": null,
+      "docker_service": "redis",
+      "port": 6379,
+      "status": "unknown",
+      "last_health_check": null,
+      "capabilities": [
+        "caching",
+        "sessions",
+        "pub_sub"
+      ],
+      "dependencies": [],
+      "startup_order": 0
+    },
+    "agent_gateway": {
+      "name": "Agent Gateway",
+      "type": "api_gateway",
+      "description": "Central API gateway for agent coordination",
+      "endpoint": "http://localhost:8080",
+      "health_endpoint": "/health",
+      "docker_service": "agent-gateway",
+      "port": 8080,
+      "status": "unknown",
+      "last_health_check": null,
+      "capabilities": [
+        "routing",
+        "completion",
+        "agent_coordination"
+      ],
+      "dependencies": [
+        "postgres",
+        "redis",
+        "ollama"
+      ],
+      "startup_order": 4
+    },
+    "mcp_server": {
+      "name": "MCP Server",
+      "type": "protocol_server",
+      "description": "Model Context Protocol server for tool integration",
+      "endpoint": "http://localhost:8081",
+      "health_endpoint": "/health",
+      "docker_service": "mcp-server",
+      "port": 8081,
+      "status": "unknown",
+      "last_health_check": null,
+      "capabilities": [
+        "tool_registration",
+        "context_protocol",
+        "tool_execution"
+      ],
+      "dependencies": [
+        "agent_gateway"
+      ],
+      "startup_order": 5
+    },
+    "convertx": {
+      "name": "ConvertX",
+      "type": "file_converter",
+      "description": "Universal file converter (1000+ formats)",
+      "endpoint": "http://localhost:3000",
+      "health_endpoint": "/health",
+      "docker_service": "convertx",
+      "port": 3000,
+      "status": "unknown",
+      "last_health_check": null,
+      "capabilities": [
+        "video_conversion",
+        "audio_conversion",
+        "document_conversion",
+        "image_conversion"
+      ],
+      "dependencies": [],
+      "startup_order": 2
+    },
+    "librarian": {
+      "name": "Librarian RAG",
+      "type": "rag_engine",
+      "description": "RAG engine for knowledge retrieval",
+      "endpoint": "http://localhost:8200",
+      "health_endpoint": "/health",
+      "docker_service": "librarian",
+      "port": 8200,
+      "status": "unknown",
+      "last_health_check": null,
+      "capabilities": [
+        "rag_retrieval",
+        "embeddings",
+        "fact_checking",
+        "lateral_search"
+      ],
+      "dependencies": [
+        "chromadb",
+        "ollama"
+      ],
+      "startup_order": 4
+    }
+  },
+  "mcp_servers": {
+    "chroma-core": {
+      "name": "Chroma MCP",
+      "type": "mcp_server",
+      "description": "ChromaDB MCP integration",
+      "status": "unknown",
+      "last_health_check": null,
+      "tools": [
+        "c_chroma_create_collection",
+        "c_chroma_list_collections"
+      ]
+    },
+    "copilot_conta": {
+      "name": "Container MCP",
+      "type": "mcp_server",
+      "description": "Docker container management MCP",
+      "status": "unknown",
+      "last_health_check": null,
+      "tools": [
+        "list_networks",
+        "prune"
+      ]
+    },
+    "deepwiki": {
+      "name": "DeepWiki MCP",
+      "type": "mcp_server",
+      "description": "GitHub repository documentation MCP",
+      "status": "unknown",
+      "last_health_check": null,
+      "tools": [
+        "ask_question",
+        "read_wiki_contents",
+        "read_wiki_structure"
+      ]
+    },
+    "io_github_ups": {
+      "name": "Context7 MCP",
+      "type": "mcp_server",
+      "description": "Library documentation retrieval MCP",
+      "status": "unknown",
+      "last_health_check": null,
+      "tools": [
+        "get-library-docs",
+        "resolve-library-id"
+      ]
+    },
+    "memory": {
+      "name": "Memory MCP",
+      "type": "mcp_server",
+      "description": "Knowledge graph memory MCP",
+      "status": "unknown",
+      "last_health_check": null,
+      "tools": [
+        "create_entities",
+        "create_relations"
+      ]
+    },
+    "microsoftdocs": {
+      "name": "Microsoft Docs MCP",
+      "type": "mcp_server",
+      "description": "Microsoft documentation search MCP",
+      "status": "unknown",
+      "last_health_check": null,
+      "tools": [
+        "microsoft_code_sample_search",
+        "microsoft_docs_fetch",
+        "microsoft_docs_search"
+      ]
+    },
+    "osmen-mcp": {
+      "name": "OsMEN MCP",
+      "type": "mcp_server",
+      "description": "OsMEN system management MCP",
+      "status": "unknown",
+      "last_health_check": null,
+      "tools": [
+        "langflow_run",
+        "task_create",
+        "workflow_trigger",
+        "get_system_info",
+        "memory_store",
+        "memory_recall"
+      ]
+    },
+    "pylance_mcp_s": {
+      "name": "Pylance MCP",
+      "type": "mcp_server",
+      "description": "Python language server MCP",
+      "status": "unknown",
+      "last_health_check": null,
+      "tools": [
+        "pylanceDocuments",
+        "pylanceInvokeRefactoring",
+        "pylanceWorkspaceRoots"
+      ]
+    },
+    "sequentialthi": {
+      "name": "Sequential Thinking MCP",
+      "type": "mcp_server",
+      "description": "Chain-of-thought reasoning MCP",
+      "status": "unknown",
+      "last_health_check": null,
+      "tools": [
+        "sequentialthinking"
+      ]
+    }
+  }
+}

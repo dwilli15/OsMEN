@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uuid_id" version="2.0">
+    <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+        <dc:identifier opf:scheme="calibre" id="calibre_id">3374</dc:identifier>
+        <dc:identifier opf:scheme="uuid" id="uuid_id">632e6043-621c-49b8-9eae-4998bc326c6d</dc:identifier>
+        <dc:title>The Resilient Practitioner</dc:title>
+        <dc:creator opf:file-as="Trotter-Mathison;, Thomas M. Skovholt;Michelle &amp; Trotter-Mathison, Michelle" opf:role="aut">Thomas M. Skovholt;Michelle Trotter-Mathison;</dc:creator>
+        <dc:creator opf:file-as="Trotter-Mathison;, Thomas M. Skovholt;Michelle &amp; Trotter-Mathison, Michelle" opf:role="aut">Trotter-Mathison, Michelle</dc:creator>
+        <dc:contributor opf:file-as="calibre" opf:role="bkp">calibre (8.16.1) [https://calibre-ebook.com]</dc:contributor>
+        <dc:date>2024-09-16T00:00:00+00:00</dc:date>
+        <dc:description>The Resilient Practitioner, 4th edition, gives students and practitioners valuable tools for creating their own boundaried generosity, a vibrant method for balancing caring for others and caring for oneself. The new edition builds on the strengths of the earlier editions and incorporates the lived experience of practitioners in the helping, caring, and relationship-intense fields. Readers will find new material in the Architecture of Resilience chapter, a self-care action plan that incorporates SMART goals to increase goal-setting success and a focus on both individual responsibility and organizational responsibility for burnout prevention and the development of resilience. The new edition also includes self-reflection exercises in each chapter, a resiliency inventory for practitioners, a strong focus on research, and an accessible writing style. The authors continue to chart a hopeful path for practitioners, one that allows for a high level of caring for others in the helping professions while also artfully caring for oneself.</dc:description>
+        <dc:publisher>Taylor &amp; Francis (Unlimited)</dc:publisher>
+        <dc:identifier opf:scheme="DOI">10.4324/9781003221388</dc:identifier>
+        <dc:language>eng</dc:language>
+        <meta name="calibre:timestamp" content="2025-12-07T07:26:34+00:00"/>
+        <meta name="calibre:title_sort" content="Resilient Practitioner, The"/>
+    </metadata>
+    <guide/>
+</package>

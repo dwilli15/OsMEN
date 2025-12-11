@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - OsMEN Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen" x-data="obsidianSync()">
+    <!-- Navigation -->
+    <nav class="gradient-bg border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-3">
+                        <i class="fas fa-brain text-2xl text-blue-400"></i>
+                        <span class="text-xl font-bold">OsMEN</span>
+                    </a>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="/admin" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-arrow-left mr-2"></i>Admin Hub
+                            </a>
+                            <a href="/admin/obsidian" class="px-3 py-2 rounded-md text-sm font-medium bg-slate-700">
+                                <i class="fas fa-book mr-2"></i>Obsidian Sync
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2">
+                <i class="fas fa-book mr-3 text-purple-400"></i>
+                Obsidian Vault Sync
+            </h1>
+            <p class="text-slate-400">Manage knowledge base synchronization with Obsidian</p>
+        </div>
+
+        <!-- Status Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold">Watcher Status</h3>
+                    <span class="w-2 h-2 rounded-full" :class="status.running ? 'bg-green-500' : 'bg-slate-500'"></span>
+                </div>
+                <p class="text-2xl font-bold" :class="status.running ? 'text-green-400' : 'text-slate-400'" 
+                    x-text="status.running ? 'Running' : 'Stopped'"></p>
+                <p class="text-sm text-slate-400 mt-2">Poll interval: <span x-text="status.poll_interval || 30"></span>s</p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6">
+                <h3 class="font-semibold mb-4">Tracked Files</h3>
+                <p class="text-2xl font-bold text-blue-400" x-text="status.tracked_files || 0"></p>
+                <p class="text-sm text-slate-400 mt-2">In sync state</p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6">
+                <h3 class="font-semibold mb-4">Write Policy</h3>
+                <p class="text-2xl font-bold text-purple-400 capitalize" x-text="(status.write_policy || 'export_only').replace('_', ' ')"></p>
+                <p class="text-sm text-slate-400 mt-2">Export folder: <span x-text="status.export_path || 'OsMEN-Exports'"></span></p>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="bg-slate-800 rounded-xl p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold">Sync Actions</h2>
+                <button @click="triggerSync()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm"
+                    :disabled="syncing">
+                    <i class="fas mr-2" :class="syncing ? 'fa-spinner fa-spin' : 'fa-sync-alt'"></i>
+                    <span x-text="syncing ? 'Syncing...' : 'Sync Now'"></span>
+                </button>
+            </div>
+            <div x-show="lastSync" class="bg-slate-700/50 rounded-lg p-4">
+                <p class="text-sm text-slate-400 mb-2">Last sync result:</p>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <p class="text-xl font-bold text-green-400" x-text="lastSync.synced || 0"></p>
+                        <p class="text-xs text-slate-400">Synced</p>
+                    </div>
+                    <div>
+                        <p class="text-xl font-bold text-red-400" x-text="lastSync.failed || 0"></p>
+                        <p class="text-xs text-slate-400">Failed</p>
+                    </div>
+                    <div>
+                        <p class="text-xl font-bold text-slate-400" x-text="lastSync.skipped || 0"></p>
+                        <p class="text-xs text-slate-400">Skipped</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Readable Notes -->
+        <div class="bg-slate-800 rounded-xl p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold">Readable Notes</h2>
+                <button @click="loadNotes()" class="text-sm text-blue-400 hover:text-blue-300">
+                    <i class="fas fa-refresh mr-1"></i>Refresh
+                </button>
+            </div>
+            <p class="text-sm text-slate-400 mb-4">Notes that pass read filters (tags: osmen, research, knowledge)</p>
+            
+            <div class="space-y-2 max-h-96 overflow-y-auto">
+                <template x-for="note in notes" :key="note.path">
+                    <div class="flex items-center justify-between bg-slate-700/50 rounded-lg p-3">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium truncate" x-text="note.title"></p>
+                            <p class="text-xs text-slate-400 truncate" x-text="note.path"></p>
+                        </div>
+                        <div class="flex items-center space-x-2 ml-4">
+                            <template x-for="tag in note.tags?.slice(0, 3)" :key="tag">
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400" x-text="'#' + tag"></span>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+                <template x-if="notes.length === 0">
+                    <div class="text-center py-8 text-slate-400">
+                        <i class="fas fa-folder-open text-4xl mb-2"></i>
+                        <p>No readable notes found</p>
+                        <p class="text-sm">Check your vault path and read filters</p>
+                    </div>
+                </template>
+            </div>
+            <p class="text-sm text-slate-400 mt-4">
+                Total: <span x-text="notes.length"></span> notes
+            </p>
+        </div>
+    </main>
+
+    <script>
+        function obsidianSync() {
+            return {
+                status: {},
+                notes: [],
+                syncing: false,
+                lastSync: null,
+
+                async init() {
+                    await Promise.all([this.loadStatus(), this.loadNotes()]);
+                },
+
+                async loadStatus() {
+                    try {
+                        const res = await fetch('/api/admin/obsidian/status');
+                        this.status = await res.json();
+                    } catch (e) {
+                        console.error('Failed to load status:', e);
+                    }
+                },
+
+                async loadNotes() {
+                    try {
+                        const res = await fetch('/api/admin/obsidian/readable');
+                        const data = await res.json();
+                        this.notes = data.notes || [];
+                    } catch (e) {
+                        console.error('Failed to load notes:', e);
+                    }
+                },
+
+                async triggerSync() {
+                    this.syncing = true;
+                    try {
+                        const res = await fetch('/api/admin/obsidian/sync', { method: 'POST' });
+                        const data = await res.json();
+                        this.lastSync = data.sync_result || {};
+                        await this.loadStatus();
+                    } catch (e) {
+                        alert('Sync failed: ' + e.message);
+                    } finally {
+                        this.syncing = false;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

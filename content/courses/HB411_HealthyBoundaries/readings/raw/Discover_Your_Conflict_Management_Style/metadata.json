@@ -1,0 +1,48 @@
+{
+  "title": "Discover Your Conflict Management Style",
+  "author": "Unknown",
+  "source_file": "D:\\OsMEN\\content\\courses\\M483INT_Pastoral_Ministry\\raw\\Speed B. Leas - Discover Your Conflict Management Style (1998, Rowman & Littlefield Publishers) - libgen.li.epub",
+  "format": "EPUB",
+  "total_chapters": 5,
+  "total_words": 9166,
+  "estimated_hours": 1.0,
+  "extraction_date": "2025-12-10T05:07:49.579913",
+  "chapters": [
+    {
+      "number": 1,
+      "title": "ACKNOWLEDGMENTS",
+      "word_count": 120,
+      "estimated_minutes": 0.8,
+      "text_file": "chapter_001.txt"
+    },
+    {
+      "number": 2,
+      "title": "Choosing a Conflict Management Strategy",
+      "word_count": 8327,
+      "estimated_minutes": 55.5,
+      "text_file": "chapter_002.txt"
+    },
+    {
+      "number": 3,
+      "title": "Conclusion",
+      "word_count": 89,
+      "estimated_minutes": 0.6,
+      "text_file": "chapter_003.txt"
+    },
+    {
+      "number": 4,
+      "title": "FOREWORD",
+      "word_count": 485,
+      "estimated_minutes": 3.2,
+      "text_file": "chapter_004.txt"
+    },
+    {
+      "number": 5,
+      "title": "NOTES",
+      "word_count": 145,
+      "estimated_minutes": 1.0,
+      "text_file": "chapter_005.txt"
+    }
+  ],
+  "output_dir": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries\\readings\\raw\\Discover_Your_Conflict_Management_Style"
+}

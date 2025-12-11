@@ -1,0 +1,142 @@
+{
+  "name": "Focus Guardrails Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/15 * * * *"
+            }
+          ]
+        }
+      },
+      "name": "Check Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "id": "84188286-50e2-4a17-bdc9-1bad9b021050"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Check if focus guardrails are enabled\nconst enabled = $env('FOCUS_GUARDRAILS_ENABLED') === 'true';\nreturn [{ json: { enabled } }];"
+      },
+      "name": "Check If Enabled",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ],
+      "id": "fc9e3cec-aa39-479d-9e7b-102d436c8b7b"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.enabled}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "If Enabled",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ],
+      "id": "c71384eb-c534-45d4-a4df-26b274f5dd5c"
+    },
+    {
+      "parameters": {
+        "url": "http://langflow:7860/api/v1/run/focus_guardrails_specialist",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={\n  \"input\": \"Monitor and enforce focus guardrails\",\n  \"tweaks\": {}\n}"
+      },
+      "name": "Call Focus Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ],
+      "id": "b474087b-a3c9-4525-bdcc-dd7852437ab8"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process focus monitoring result\nconst result = $input.first().json;\nconst actions = result.actions || [];\nconsole.log('Focus check completed:', actions);\nreturn [{ json: { status: 'monitored', actions } }];"
+      },
+      "name": "Process Result",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ],
+      "id": "4cbffa00-f8b2-4091-94a8-629a489d92e5"
+    }
+  ],
+  "connections": {
+    "Check Every 15 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Check If Enabled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Enabled": {
+      "main": [
+        [
+          {
+            "node": "If Enabled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Enabled": {
+      "main": [
+        [
+          {
+            "node": "Call Focus Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Focus Agent": {
+      "main": [
+        [
+          {
+            "node": "Process Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8f92eac8-af8a-4e66-b127-ebc71e7aee41",
+  "meta": {
+    "instanceId": "osmen-local"
+  }
+}

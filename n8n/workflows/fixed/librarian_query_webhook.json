@@ -1,0 +1,90 @@
+{
+  "name": "Librarian RAG Query Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "librarian-query",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "librarian-query-webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://librarian:8200/query",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "librarian-query",
+      "name": "Librarian Query",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        650,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Librarian Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Librarian Query": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "librarian-1.0.0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "osmen-local"
+  },
+  "pinData": {}
+}

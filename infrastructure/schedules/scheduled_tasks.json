@@ -1,0 +1,62 @@
+{
+  "version": "1.0",
+  "scheduled_tasks": [
+    {
+      "name": "osmen_weekly_review",
+      "description": "Weekly workspace file review and cleanup",
+      "schedule": {
+        "type": "weekly",
+        "day": "Sunday",
+        "time": "02:00"
+      },
+      "command": "python scripts/automation/weekly_review.py",
+      "enabled": true,
+      "last_run": null,
+      "next_run": null
+    },
+    {
+      "name": "osmen_daily_cleanup",
+      "description": "Daily temp file cleanup and empty directory removal",
+      "schedule": {
+        "type": "daily",
+        "time": "03:00"
+      },
+      "command": "python scripts/automation/lifecycle_automation.py --action daily",
+      "enabled": true,
+      "last_run": null,
+      "next_run": null
+    },
+    {
+      "name": "osmen_health_check",
+      "description": "Periodic health monitoring check",
+      "schedule": {
+        "type": "interval",
+        "minutes": 5
+      },
+      "command": "python infrastructure/health_monitor.py --check",
+      "enabled": true,
+      "last_run": null,
+      "next_run": null
+    },
+    {
+      "name": "osmen_obsidian_sync",
+      "description": "Sync changes from Obsidian vault",
+      "schedule": {
+        "type": "interval",
+        "minutes": 30
+      },
+      "command": "python tools/obsidian/obsidian_sync_watcher.py --sync",
+      "enabled": true,
+      "last_run": null,
+      "next_run": null
+    }
+  ],
+  "windows_task_scheduler": {
+    "install_command": "schtasks /create /tn \"OsMEN\\{task_name}\" /tr \"cd /d {base_path} && {command}\" /sc {schedule_type} /st {time}",
+    "uninstall_command": "schtasks /delete /tn \"OsMEN\\{task_name}\" /f"
+  },
+  "linux_cron": {
+    "cron_file": "/etc/cron.d/osmen",
+    "format": "{minute} {hour} {day_of_month} {month} {day_of_week} {user} cd {base_path} && {command}"
+  }
+}

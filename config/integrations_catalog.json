@@ -1,0 +1,577 @@
+{
+  "version": "2.0.0",
+  "description": "OsMEN Integration Catalog - All available and planned integrations",
+  "updated": "2025-12-04",
+
+  "status_legend": {
+    "ready": "Fully implemented and tested",
+    "wired": "Code exists, needs credentials/configuration",
+    "planned": "Architecture defined, easy to implement",
+    "research": "Needs investigation before implementation"
+  },
+
+  "categories": {
+    "llm_providers": {
+      "description": "Local and cloud LLM model providers",
+      "integrations": {
+        "ollama": {
+          "status": "wired",
+          "url": "http://localhost:11434",
+          "env_vars": ["OLLAMA_URL"],
+          "models": ["llama3.2", "mistral", "codellama", "phi3", "qwen2.5"],
+          "file": "integrations/llm_providers.py",
+          "notes": "Start with: docker-compose --profile ollama up -d"
+        },
+        "lm_studio": {
+          "status": "wired",
+          "url": "http://localhost:1234/v1",
+          "env_vars": ["LM_STUDIO_URL"],
+          "features": ["OpenAI-compatible API", "Local GPU inference"],
+          "file": "gateway/gateway.py",
+          "notes": "Run LM Studio on host, enable local server"
+        },
+        "ai_foundry_local": {
+          "status": "planned",
+          "description": "Azure AI Foundry local model deployment",
+          "env_vars": ["AZURE_AI_FOUNDRY_ENDPOINT", "AZURE_AI_FOUNDRY_KEY"],
+          "implementation": {
+            "provider": "azure-ai-inference SDK",
+            "features": ["Local model hosting", "Azure integration"]
+          }
+        },
+        "openai": {
+          "status": "wired",
+          "env_vars": ["OPENAI_API_KEY", "OPENAI_BASE_URL"],
+          "models": ["gpt-4", "gpt-4-turbo", "gpt-4o", "gpt-3.5-turbo"],
+          "file": "gateway/gateway.py"
+        },
+        "anthropic_claude": {
+          "status": "wired",
+          "env_vars": ["ANTHROPIC_API_KEY"],
+          "models": ["claude-3-opus", "claude-3-sonnet", "claude-3-haiku"],
+          "file": "gateway/gateway.py"
+        },
+        "onnx_runtime": {
+          "status": "research",
+          "description": "ONNX Runtime for optimized local inference",
+          "packages": ["onnxruntime", "onnxruntime-gpu"],
+          "use_cases": ["Fast CPU inference", "Optimized models"],
+          "research_links": [
+            "https://onnxruntime.ai/",
+            "https://huggingface.co/docs/optimum/onnxruntime/overview"
+          ]
+        },
+        "nvidia_gaia": {
+          "status": "research",
+          "description": "NVIDIA GAIA for local AI assistants",
+          "packages": ["lemonade-cli"],
+          "features": ["RTX optimization", "Local GPU inference"],
+          "research_links": [
+            "https://github.com/nvidia/trt-llm-as-openai-windows"
+          ],
+          "notes": "Investigate via lemonade package for Windows RTX"
+        }
+      }
+    },
+
+    "gpu_compute": {
+      "description": "GPU acceleration and CUDA optimization",
+      "integrations": {
+        "cuda_monitor": {
+          "status": "planned",
+          "description": "Monitor GPU/CUDA utilization",
+          "packages": ["nvidia-ml-py3", "pynvml"],
+          "metrics": ["GPU utilization", "VRAM usage", "Temperature", "Power draw"],
+          "implementation": {
+            "tool_name": "gpu_status",
+            "category": "system"
+          }
+        },
+        "cuda_memory_manager": {
+          "status": "planned",
+          "description": "Manage CUDA memory allocation across services",
+          "features": [
+            "Pre-designated RAM allocations",
+            "VRAM partitioning",
+            "Memory pool management"
+          ]
+        },
+        "tensorrt_llm": {
+          "status": "research",
+          "description": "TensorRT-LLM for optimized inference",
+          "packages": ["tensorrt-llm"],
+          "notes": "For NVIDIA RTX optimization"
+        }
+      }
+    },
+
+    "calendar_email": {
+      "description": "Calendar, contacts, and email integrations",
+      "integrations": {
+        "google_calendar": {
+          "status": "wired",
+          "file": "integrations/calendar/google_calendar.py",
+          "env_vars": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_CALENDAR_ID"],
+          "scopes": [
+            "https://www.googleapis.com/auth/calendar",
+            "https://www.googleapis.com/auth/calendar.events"
+          ],
+          "oauth_config": "config/oauth/google_credentials.json"
+        },
+        "google_contacts": {
+          "status": "planned",
+          "env_vars": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
+          "scopes": ["https://www.googleapis.com/auth/contacts.readonly"],
+          "packages": ["google-api-python-client"]
+        },
+        "google_gmail": {
+          "status": "planned",
+          "env_vars": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
+          "scopes": [
+            "https://www.googleapis.com/auth/gmail.readonly",
+            "https://www.googleapis.com/auth/gmail.send"
+          ],
+          "packages": ["google-api-python-client"]
+        },
+        "outlook_calendar": {
+          "status": "wired",
+          "file": "integrations/calendar/outlook_calendar.py",
+          "env_vars": ["MICROSOFT_CLIENT_ID", "MICROSOFT_CLIENT_SECRET", "MICROSOFT_TENANT_ID"],
+          "scopes": ["Calendars.ReadWrite", "Calendars.Read"]
+        },
+        "outlook_contacts": {
+          "status": "planned",
+          "env_vars": ["MICROSOFT_CLIENT_ID", "MICROSOFT_CLIENT_SECRET"],
+          "scopes": ["Contacts.Read", "Contacts.ReadWrite"]
+        },
+        "outlook_email": {
+          "status": "planned",
+          "env_vars": ["MICROSOFT_CLIENT_ID", "MICROSOFT_CLIENT_SECRET"],
+          "scopes": ["Mail.Read", "Mail.Send"],
+          "packages": ["msal", "msgraph-sdk"]
+        }
+      }
+    },
+
+    "voice_audio": {
+      "description": "Speech-to-text and text-to-speech",
+      "integrations": {
+        "faster_whisper_stt": {
+          "status": "planned",
+          "description": "Speech-to-text with faster-whisper",
+          "packages": ["faster-whisper"],
+          "models": ["tiny", "base", "small", "medium", "large-v3"],
+          "config_file": "config/voice.json",
+          "features": ["Local inference", "CUDA acceleration", "Real-time streaming"]
+        },
+        "pyttsx3_tts": {
+          "status": "planned",
+          "description": "Text-to-speech with pyttsx3",
+          "packages": ["pyttsx3"],
+          "features": ["Offline TTS", "System voices", "Speed/pitch control"]
+        },
+        "elevenlabs_tts": {
+          "status": "planned",
+          "description": "High-quality TTS with ElevenLabs",
+          "env_vars": ["ELEVENLABS_API_KEY"],
+          "packages": ["elevenlabs"],
+          "features": ["Voice cloning", "Emotional speech"]
+        },
+        "coqui_tts": {
+          "status": "planned",
+          "description": "Open-source TTS with Coqui",
+          "packages": ["TTS"],
+          "features": ["Local inference", "Multiple voices", "Voice cloning"]
+        },
+        "azure_speech": {
+          "status": "planned",
+          "env_vars": ["AZURE_SPEECH_KEY", "AZURE_SPEECH_REGION"],
+          "packages": ["azure-cognitiveservices-speech"]
+        }
+      }
+    },
+
+    "media_entertainment": {
+      "description": "Media databases, subtitle tools, and entertainment",
+      "integrations": {
+        "tmdb_api": {
+          "status": "planned",
+          "description": "The Movie Database API",
+          "env_vars": ["TMDB_API_KEY"],
+          "packages": ["tmdbv3api"],
+          "features": ["Movie metadata", "TV show info", "Poster images", "Cast info"],
+          "api_url": "https://api.themoviedb.org/3"
+        },
+        "opensubtitles": {
+          "status": "planned",
+          "description": "Subtitle database access",
+          "env_vars": ["OPENSUBTITLES_API_KEY", "OPENSUBTITLES_USERNAME", "OPENSUBTITLES_PASSWORD"],
+          "packages": ["opensubtitlescom"],
+          "features": ["Subtitle search", "Download", "Upload"]
+        },
+        "subscene_scraper": {
+          "status": "planned",
+          "description": "Subscene subtitle scraper",
+          "packages": ["beautifulsoup4", "requests"]
+        },
+        "dvd_creator": {
+          "status": "research",
+          "description": "DVD authoring with menus for movies/TV",
+          "approaches": [
+            {
+              "name": "dvdauthor",
+              "platform": "WSL/Linux",
+              "packages": ["dvdauthor", "mjpegtools", "ffmpeg"],
+              "features": ["Menu creation", "Chapter markers", "DVD structure"]
+            },
+            {
+              "name": "dvdstyler",
+              "platform": "Windows",
+              "type": "GUI application",
+              "notes": "CLI automation possible via scripting"
+            },
+            {
+              "name": "imgburn",
+              "platform": "Windows",
+              "type": "Burning software",
+              "features": ["ISO creation", "DVD burning"]
+            }
+          ],
+          "implementation_notes": "Use FFmpeg for video processing, dvdauthor for structure, ImgBurn for burning"
+        },
+        "plex_integration": {
+          "status": "planned",
+          "env_vars": ["PLEX_TOKEN", "PLEX_URL"],
+          "packages": ["plexapi"],
+          "features": ["Library management", "Metadata sync"]
+        }
+      }
+    },
+
+    "creative_tools": {
+      "description": "Image generation, 3D modeling, and creative applications",
+      "integrations": {
+        "invoke_ai": {
+          "status": "wired",
+          "description": "InvokeAI for Stable Diffusion",
+          "url": "http://localhost:9090",
+          "env_vars": ["INVOKEAI_URL"],
+          "features": ["Image generation", "Inpainting", "ControlNet"]
+        },
+        "comfy_ui": {
+          "status": "planned",
+          "description": "ComfyUI node-based workflow",
+          "url": "http://localhost:8188",
+          "env_vars": ["COMFYUI_URL"],
+          "features": ["Node workflows", "Custom pipelines"]
+        },
+        "stable_diffusion_api": {
+          "status": "planned",
+          "description": "Stable Diffusion WebUI API",
+          "url": "http://localhost:7861",
+          "packages": ["webuiapi"],
+          "features": ["txt2img", "img2img", "ControlNet"]
+        },
+        "blender_3d": {
+          "status": "research",
+          "description": "Blender for 3D model generation",
+          "approaches": [
+            {
+              "name": "Blender Python API",
+              "method": "Direct scripting via bpy module",
+              "notes": "Can create STL files programmatically"
+            },
+            {
+              "name": "BlenderGPT",
+              "type": "Blender addon",
+              "github": "gd3kr/BlenderGPT",
+              "features": ["Natural language to 3D"]
+            },
+            {
+              "name": "Shap-E",
+              "type": "OpenAI 3D model",
+              "packages": ["shap-e"],
+              "features": ["Text-to-3D generation"]
+            },
+            {
+              "name": "Point-E",
+              "type": "OpenAI point cloud",
+              "packages": ["point-e"]
+            }
+          ],
+          "stl_export": "Blender can export to STL for 3D printing"
+        },
+        "text_to_3d": {
+          "status": "research",
+          "description": "Natural language to 3D models",
+          "approaches": [
+            {
+              "name": "Shap-E",
+              "provider": "OpenAI",
+              "packages": ["shap-e", "torch"],
+              "output": ["mesh", "point cloud"],
+              "notes": "Can export to OBJ, then convert to STL"
+            },
+            {
+              "name": "Meshy.ai",
+              "type": "API service",
+              "features": ["Text-to-3D", "Image-to-3D"],
+              "env_vars": ["MESHY_API_KEY"]
+            },
+            {
+              "name": "Tripo3D",
+              "type": "API service",
+              "features": ["Fast generation", "High quality"]
+            },
+            {
+              "name": "OpenAI 3D",
+              "type": "API",
+              "notes": "Check for updates on GPT-4 3D capabilities"
+            }
+          ],
+          "pipeline": "Generate mesh → Convert to STL → Slice for printer"
+        },
+        "clipchamp": {
+          "status": "planned",
+          "description": "Microsoft Clipchamp video editing",
+          "integration": "Windows app automation",
+          "packages": ["pywinauto", "pyautogui"],
+          "notes": "Limited API, may need UI automation"
+        },
+        "canva": {
+          "status": "planned",
+          "description": "Canva design automation",
+          "env_vars": ["CANVA_API_KEY"],
+          "api_url": "https://api.canva.com",
+          "features": ["Design creation", "Template access", "Export"]
+        }
+      }
+    },
+
+    "system_monitoring": {
+      "description": "Windows system monitoring and optimization",
+      "integrations": {
+        "task_scheduler_monitor": {
+          "status": "planned",
+          "description": "Monitor Windows Task Scheduler",
+          "packages": ["pywin32"],
+          "features": [
+            "List scheduled tasks",
+            "Monitor task execution",
+            "Alert on failures",
+            "Create/modify tasks"
+          ],
+          "implementation": {
+            "tool_name": "task_scheduler_monitor",
+            "category": "system",
+            "periodic_check": true,
+            "interval_minutes": 15
+          }
+        },
+        "startup_apps_monitor": {
+          "status": "planned",
+          "description": "Monitor startup applications",
+          "packages": ["pywin32", "winreg"],
+          "features": [
+            "Track startup entries",
+            "Alert on new additions",
+            "Disable suspicious entries"
+          ],
+          "registry_locations": [
+            "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+            "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+            "Shell:Startup folder"
+          ]
+        },
+        "resource_monitor": {
+          "status": "planned",
+          "description": "Monitor RAM, CPU, GPU allocation",
+          "packages": ["psutil", "pynvml", "GPUtil"],
+          "features": [
+            "Pre-designated RAM allocations",
+            "GPU VRAM monitoring",
+            "Process resource tracking",
+            "Alert on threshold breach"
+          ],
+          "implementation": {
+            "tool_name": "resource_monitor",
+            "category": "system",
+            "periodic_check": true,
+            "interval_seconds": 30
+          }
+        },
+        "copilot_windows": {
+          "status": "planned",
+          "description": "Windows Copilot integration",
+          "notes": "Limited programmatic access, may use UI automation"
+        },
+        "os_customizations": {
+          "status": "planned",
+          "description": "Windows OS customizations",
+          "features": [
+            "Registry modifications",
+            "System settings",
+            "Accessibility options",
+            "Performance tuning"
+          ],
+          "packages": ["pywin32", "winreg"]
+        }
+      }
+    },
+
+    "vscode_agents": {
+      "description": "VS Code agent files and configurations",
+      "integrations": {
+        "agent_files": {
+          "status": "wired",
+          "description": "VS Code agent mode files",
+          "location": ".github/",
+          "files": [
+            "manager.agent.md",
+            "copilot-instructions.md"
+          ]
+        },
+        "mcp_config": {
+          "status": "ready",
+          "description": "MCP server configuration",
+          "location": ".vscode/settings.json",
+          "features": ["Tool exposure", "Agent commands"]
+        },
+        "github_copilot": {
+          "status": "ready",
+          "description": "GitHub Copilot integration",
+          "features": ["Chat", "Code completion", "MCP tools"]
+        },
+        "continue_dev": {
+          "status": "planned",
+          "description": "Continue.dev AI assistant",
+          "config": "~/.continue/config.json",
+          "features": ["Local LLM support", "Custom models"]
+        }
+      }
+    },
+
+    "anti_gravity": {
+      "status": "research",
+      "description": "Google Anti-Gravity interface (clarification needed)",
+      "notes": "Need clarification on specific feature - possibly Google Lens, ARCore, or Maps AR?"
+    }
+  },
+
+  "node_templates": {
+    "description": "Pre-configured node templates for Langflow/n8n",
+    "templates": {
+      "llm_router": {
+        "description": "Route to appropriate LLM based on task",
+        "inputs": ["prompt", "task_type"],
+        "outputs": ["response", "provider_used"],
+        "config": {
+          "providers": ["ollama", "lm_studio", "openai"],
+          "routing_rules": {
+            "code": "lm_studio",
+            "quick": "ollama",
+            "complex": "openai"
+          }
+        }
+      },
+      "calendar_sync": {
+        "description": "Sync events across calendars",
+        "inputs": ["event_data", "source_calendar"],
+        "outputs": ["sync_status", "conflicts"],
+        "config": {
+          "calendars": ["google", "outlook"],
+          "conflict_resolution": "prompt_user"
+        }
+      },
+      "media_processor": {
+        "description": "Process media with TMDB metadata",
+        "inputs": ["file_path"],
+        "outputs": ["metadata", "subtitles", "artwork"],
+        "config": {
+          "tmdb_lookup": true,
+          "subtitle_download": true,
+          "artwork_download": true
+        }
+      },
+      "gpu_aware_task": {
+        "description": "Execute task with GPU monitoring",
+        "inputs": ["task", "vram_required"],
+        "outputs": ["result", "gpu_stats"],
+        "config": {
+          "check_vram_before": true,
+          "monitor_during": true,
+          "release_after": true
+        }
+      }
+    }
+  },
+
+  "env_template": {
+    "description": "Required environment variables",
+    "variables": {
+      "LLM Providers": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "OLLAMA_URL=http://localhost:11434",
+        "LM_STUDIO_URL=http://localhost:1234/v1"
+      ],
+      "Google APIs": [
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "GOOGLE_CALENDAR_ID"
+      ],
+      "Microsoft APIs": [
+        "MICROSOFT_CLIENT_ID",
+        "MICROSOFT_CLIENT_SECRET",
+        "MICROSOFT_TENANT_ID"
+      ],
+      "Media Services": [
+        "TMDB_API_KEY",
+        "OPENSUBTITLES_API_KEY",
+        "PLEX_TOKEN"
+      ],
+      "Creative Tools": [
+        "INVOKEAI_URL=http://localhost:9090",
+        "COMFYUI_URL=http://localhost:8188",
+        "CANVA_API_KEY",
+        "MESHY_API_KEY"
+      ],
+      "Voice Services": [
+        "ELEVENLABS_API_KEY",
+        "AZURE_SPEECH_KEY",
+        "AZURE_SPEECH_REGION"
+      ]
+    }
+  },
+
+  "implementation_priority": {
+    "phase1_immediate": [
+      "ollama",
+      "lm_studio",
+      "google_calendar",
+      "outlook_calendar",
+      "task_scheduler_monitor",
+      "resource_monitor"
+    ],
+    "phase2_short_term": [
+      "faster_whisper_stt",
+      "pyttsx3_tts",
+      "tmdb_api",
+      "opensubtitles",
+      "gpu_monitor"
+    ],
+    "phase3_medium_term": [
+      "outlook_email",
+      "google_gmail",
+      "invoke_ai",
+      "dvd_creator",
+      "text_to_3d"
+    ],
+    "phase4_research": [
+      "onnx_runtime",
+      "nvidia_gaia",
+      "blender_3d",
+      "clipchamp"
+    ]
+  }
+}

@@ -1,0 +1,666 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//OsMEN//Course Calendar//EN
+X-WR-CALNAME:HB411 Master Calendar
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:60335cd9c00501b4@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:🎯 HB411 DUE: Journal (10%)
+DTSTART:20251120T235900
+DTEND:20251121T002900
+DESCRIPTION:Weight: 10%\n\n5 journal entries (250-300 words each).\n\nRequired:\n• Aug 21: Boundary Image prompt\n\nPlus 4 of your choice from prompts in course.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 🎯 HB411 DUE: Journal (10%)
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:adc779444b184482@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:⚡ HB411 Due in 1 Week: Journal
+DTSTART:20251113T235900
+DTEND:20251114T005900
+DESCRIPTION:Journal due in one week!\n\nWeight: 10%\n\n5 journal entries (250-300 words each).\n\nRequired:\n• Aug 21: Boundary Image prompt\n\nPlus 4 of your choice from prompts in course.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: ⚡ HB411 Due in 1 Week: Journal
+TRIGGER:-PT60M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:dfba42b3ddfa337d@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:🎯 HB411 DUE: Guiding Document Paper (20%)
+DTSTART:20250925T235900
+DTEND:20250926T002900
+DESCRIPTION:Weight: 20%\n\n1250-1500 words analyzing how a community document addresses boundaries.\n\nAnalyze policies\, handbooks\, or codes of ethics from ministry contexts.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 🎯 HB411 DUE: Guiding Document Paper (20%)
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:b95269b9d1ccc441@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:⚡ HB411 Due in 1 Week: Guiding Document Paper
+DTSTART:20250918T235900
+DTEND:20250919T005900
+DESCRIPTION:Guiding Document Paper due in one week!\n\nWeight: 20%\n\n1250-1500 words analyzing how a community document addresses boundaries.\n\nAnalyze policies\, handbooks\, or codes of ethics from ministry contexts.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: ⚡ HB411 Due in 1 Week: Guiding Document Paper
+TRIGGER:-PT60M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:875f87dd368d0e3a@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:🎤 HB411 Presentation Day: Navigating Boundaries Presentation
+DTSTART:20251023T100000
+DTEND:20251023T120000
+DESCRIPTION:Presentation opportunity\n\nWeight: 15%\n\nSmall group presentation on assigned book.\n\nAlso complete a Reading Response for your presentation day.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 🎤 HB411 Presentation Day: Navigating Boundaries Presentation
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:8186760c823a63eb@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:🎤 HB411 Presentation Day: Navigating Boundaries Presentation
+DTSTART:20251030T100000
+DTEND:20251030T120000
+DESCRIPTION:Presentation opportunity\n\nWeight: 15%\n\nSmall group presentation on assigned book.\n\nAlso complete a Reading Response for your presentation day.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 🎤 HB411 Presentation Day: Navigating Boundaries Presentation
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:760d693ac2cb6ad6@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:🎤 HB411 Presentation Day: Navigating Boundaries Presentation
+DTSTART:20251106T100000
+DTEND:20251106T120000
+DESCRIPTION:Presentation opportunity\n\nWeight: 15%\n\nSmall group presentation on assigned book.\n\nAlso complete a Reading Response for your presentation day.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 🎤 HB411 Presentation Day: Navigating Boundaries Presentation
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:d1203f92e7bc65d4@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:🎯 HB411 DUE: Project Synopsis (5%)
+DTSTART:20251002T235900
+DTEND:20251003T002900
+DESCRIPTION:Weight: 5%\n\nBrief synopsis of your final project plan.\n\nPass/Fail grading - ensures you're on track.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 🎯 HB411 DUE: Project Synopsis (5%)
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:00f63dc5a6b8f9bb@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:⚡ HB411 Due in 1 Week: Project Synopsis
+DTSTART:20250925T235900
+DTEND:20250926T005900
+DESCRIPTION:Project Synopsis due in one week!\n\nWeight: 5%\n\nBrief synopsis of your final project plan.\n\nPass/Fail grading - ensures you're on track.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: ⚡ HB411 Due in 1 Week: Project Synopsis
+TRIGGER:-PT60M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:ca1b0a9a65a46286@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:🎤 HB411 Presentation Day: Final Project Presentation
+DTSTART:20251113T100000
+DTEND:20251113T120000
+DESCRIPTION:Presentation opportunity\n\nWeight: 5%\n\n3 slides maximum\, 12 minutes max.\n\nUpload to Populi by 11:59 PM on your presentation day.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 🎤 HB411 Presentation Day: Final Project Presentation
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:9f7364c8e4fe3302@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:🎤 HB411 Presentation Day: Final Project Presentation
+DTSTART:20251120T100000
+DTEND:20251120T120000
+DESCRIPTION:Presentation opportunity\n\nWeight: 5%\n\n3 slides maximum\, 12 minutes max.\n\nUpload to Populi by 11:59 PM on your presentation day.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 🎤 HB411 Presentation Day: Final Project Presentation
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:80748fe984c0e094@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:🎯 HB411 DUE: Final Integrative Project/Paper (25%)
+DTSTART:20251124T235900
+DTEND:20251125T002900
+DESCRIPTION:Weight: 25%\n\n2500-3000 words.\n\nOption A: Research paper on boundaries topic.\nOption B: Reflective project with creative element.\n\nUse at least 5 course sources plus additional research.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 🎯 HB411 DUE: Final Integrative Project/Paper (25%)
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:4c226a442fd169c2@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:⚡ HB411 Due in 1 Week: Final Integrative Project/Paper
+DTSTART:20251117T235900
+DTEND:20251118T005900
+DESCRIPTION:Final Integrative Project/Paper due in one week!\n\nWeight: 25%\n\n2500-3000 words.\n\nOption A: Research paper on boundaries topic.\nOption B: Reflective project with creative element.\n\nUse at least 5 course sources plus additional research.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: ⚡ HB411 Due in 1 Week: Final Integrative Project/Paper
+TRIGGER:-PT60M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:a5af94e0abb321be@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Introductions to the Course and One Another
+DTSTART:20250814T100000
+DTEND:20250814T120000
+DESCRIPTION:Week 1: Introductions to the Course and One Another\n\nReadings Due:\n  • Syllabus and Populi course\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Introductions to the Course and One Another
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:a5197d172c443e8e@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Frameworks for Healthy Boundaries
+DTSTART:20250821T100000
+DTEND:20250821T120000
+DESCRIPTION:Week 2: Frameworks for Healthy Boundaries\n\nReadings Due:\n  • Fortune\, Healthy Boundaries 201: 'Joy of Boundaries' p.5\, 'Boundary Basics' p.77-82\n  • Olsen and Devor\, Saying No to Say Yes: Ch. 1\n  • Stephens\, 'Fiduciary Duty and Sacred Trust' (PDF)\n  • Rogers\, 'What Color Is Your Ministry Traffic Light?'\n  • Tawwab\, Set Boundaries Find Peace: Ch. 1-4\n\nAssignments Due:\n  • Journal Prompt - Boundary Image (required)\n  • Reading Response 1 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Frameworks for Healthy Boundaries
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:70dd9908045100b6@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411 INTENSIVE: Grounding Values\, Ethical Commitments\, and Flourishing
+DTSTART:20250828T093000
+DTEND:20250828T163000
+DESCRIPTION:Week 3: Grounding Values\, Ethical Commitments\, and Flourishing\n\nReadings Due:\n  • Common Code of Ethics for Chaplains\n  • Captari and Sandage\, 'I Love This Work\, but It's Killing Me'\n  • Pope-Lance\, 'Whence We Come and How\, and Whither'\n  • UUMA Guidelines for the Conduct of Ministry\n  • Sawyer et al.\, Responding to Spiritual Leader Misconduct: Parts 1-2\n\nAssignments Due:\n  • Reading Response 2 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411 INTENSIVE: Grounding Values\, Ethical Commitments\, and Flourishing
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:f3cd61f650ee5bd0@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Integrating Boundaries
+DTSTART:20250904T100000
+DTEND:20250904T120000
+DESCRIPTION:Week 4: Integrating Boundaries\n\nReadings Due:\n  • Hemphill\, What It Takes to Heal (full book)\n\nAssignments Due:\n  • Reading Response 3 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Integrating Boundaries
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:42ff438c3ddea509@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Boundaries\, Self\, and Systems I
+DTSTART:20250911T100000
+DTEND:20250911T120000
+DESCRIPTION:Week 5: Boundaries\, Self\, and Systems I\n\nReadings Due:\n  • Buhuro and Hawley\, 'If They're Black\, Call 911 First: Self Care for Black Trauma'\n  • Coble and Springer\, 'Interpersonal Competence in Contextualizing Power Dynamics'\n  • Sharp\, 'Crossing Borders with Healthy Boundaries'\n\nAssignments Due:\n  • Reading Response 4 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Boundaries\, Self\, and Systems I
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:6497614d8b40a932@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Boundaries\, Self\, and Systems II
+DTSTART:20250918T100000
+DTEND:20250918T120000
+DESCRIPTION:Week 6: Boundaries\, Self\, and Systems II\n\nReadings Due:\n  • Cooper-White\, Shared Wisdom (full book)\n\nAssignments Due:\n  • Reading Response 5 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Boundaries\, Self\, and Systems II
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:bf2cb58aeec0cf69@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Sharing Guiding Documents Papers
+DTSTART:20250925T100000
+DTEND:20250925T120000
+DESCRIPTION:Week 7: Sharing Guiding Documents Papers\n\nAssignments Due:\n  • Guiding Document Paper (required)\n\nNote: Be prepared to share about your paper with colleagues\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Sharing Guiding Documents Papers
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:11729bc1258076a3@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Trauma-Informed Perspectives I: Religious and Spiritual Trauma
+DTSTART:20251002T100000
+DTEND:20251002T120000
+DESCRIPTION:Week 8: Trauma-Informed Perspectives I: Religious and Spiritual Trauma\n\nReadings Due:\n  • Pasquale\, Sacred Wounds (full book)\n\nAssignments Due:\n  • Project Synopsis (required)\n  • Reading Response 6 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Trauma-Informed Perspectives I: Religious and Spiritual Trauma
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:56d7b0b4f732e19f@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411 (Async): Asynchronous Work Week
+DTSTART;VALUE=DATE:20251009
+DTEND;VALUE=DATE:20251010
+DESCRIPTION:Week 9: Asynchronous Work Week\n\nAsync work week - no live session.\n\nNote: Use for group presentation planning and final project preparation
+END:VEVENT
+BEGIN:VEVENT
+UID:89b55aa991fefd47@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Navigating Boundaries I: Technology
+DTSTART:20251023T100000
+DTEND:20251023T120000
+DESCRIPTION:Week 11: Navigating Boundaries I: Technology\n\nReadings Due:\n  • Haidt\, The Anxious Generation (presenters)\n  • Haidt interview by Michelle Obama (non-presenters option)\n\nAssignments Due:\n  • Navigating Boundaries Presentation (presenters)\n  • Reading Response 7 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Navigating Boundaries I: Technology
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:98985066ed7d823c@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Navigating Boundaries II: Conflict
+DTSTART:20251030T100000
+DTEND:20251030T120000
+DESCRIPTION:Week 12: Navigating Boundaries II: Conflict\n\nReadings Due:\n  • Ross\, Calling In (presenters)\n  • Ross interview at Roosevelt House (non-presenters option)\n\nAssignments Due:\n  • Navigating Boundaries Presentation (presenters)\n  • Reading Response 8 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Navigating Boundaries II: Conflict
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:6d05c0a31cc0e344@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Navigating Boundaries III: Connection
+DTSTART:20251106T100000
+DTEND:20251106T120000
+DESCRIPTION:Week 13: Navigating Boundaries III: Connection\n\nReadings Due:\n  • Murthy\, Together (presenters)\n  • Murthy interview by Simon Sinek (non-presenters option)\n\nAssignments Due:\n  • Navigating Boundaries Presentation (presenters)\n  • Reading Response 9 (optional)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Navigating Boundaries III: Connection
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:50c781032f111567@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Celebrating and Sharing Learning: Presentations I
+DTSTART:20251113T100000
+DTEND:20251113T120000
+DESCRIPTION:Week 14: Celebrating and Sharing Learning: Presentations I\n\nAssignments Due:\n  • Final Project Presentation (optional date)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Celebrating and Sharing Learning: Presentations I
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:60f9d7e0567500a1@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:HB411: Celebrating and Sharing Learning: Presentations II
+DTSTART:20251120T100000
+DTEND:20251120T120000
+DESCRIPTION:Week 15: Celebrating and Sharing Learning: Presentations II\n\nAssignments Due:\n  • Journal (required)\n  • Final Project Presentation (optional date)\n\nZoom: https://meadville-edu.zoom.us/j/88914517875
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: HB411: Celebrating and Sharing Learning: Presentations II
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:daaf78d1892b3bbd@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📚 HB411 Readings Due: Week 1
+DTSTART:20250811T080000
+DTEND:20250811T090000
+DESCRIPTION:Readings for Week 1: Introductions to the Course and One Another\n\nComplete before Thursday class:\n\n• Syllabus and Populi course
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 📚 HB411 Readings Due: Week 1
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:1eb1e751eae237f9@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📖 HB411 Today: Introductions to the Course and One Another
+DTSTART:20250814T060000
+DTEND:20250814T063000
+DESCRIPTION:Today's topic: Introductions to the Course and One Another\n\nEnsure readings complete:\n• Syllabus and Populi course
+END:VEVENT
+BEGIN:VEVENT
+UID:2a6acdc502efb8da@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📚 HB411 Readings Due: Week 2
+DTSTART:20250818T080000
+DTEND:20250818T090000
+DESCRIPTION:Readings for Week 2: Frameworks for Healthy Boundaries\n\nComplete before Thursday class:\n\n• Fortune\, Healthy Boundaries 201: 'Joy of Boundaries' p.5\, 'Boundary Basics' p.77-82\n• Olsen and Devor\, Saying No to Say Yes: Ch. 1\n• Stephens\, 'Fiduciary Duty and Sacred Trust' (PDF)\n• Rogers\, 'What Color Is Your Ministry Traffic Light?'\n• Tawwab\, Set Boundaries Find Peace: Ch. 1-4\n\nSupplementary:\n• Safe Congregation Handbook
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 📚 HB411 Readings Due: Week 2
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:29923f25763da9c7@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📖 HB411 Today: Frameworks for Healthy Boundaries
+DTSTART:20250821T060000
+DTEND:20250821T063000
+DESCRIPTION:Today's topic: Frameworks for Healthy Boundaries\n\nEnsure readings complete:\n• Fortune\, Healthy Boundaries 201: 'Joy of Boundaries' p.5\, 'Boundary Basics' p.77-82\n• Olsen and Devor\, Saying No to Say Yes: Ch. 1\n• Stephens\, 'Fiduciary Duty and Sacred Trust' (PDF)\n• Rogers\, 'What Color Is Your Ministry Traffic Light?'\n• Tawwab\, Set Boundaries Find Peace: Ch. 1-4
+END:VEVENT
+BEGIN:VEVENT
+UID:fe53e07d4583d14b@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📚 HB411 Readings Due: Week 3
+DTSTART:20250825T080000
+DTEND:20250825T090000
+DESCRIPTION:Readings for Week 3: Grounding Values\, Ethical Commitments\, and Flourishing\n\nComplete before Thursday class:\n\n• Common Code of Ethics for Chaplains\n• Captari and Sandage\, 'I Love This Work\, but It's Killing Me'\n• Pope-Lance\, 'Whence We Come and How\, and Whither'\n• UUMA Guidelines for the Conduct of Ministry\n• Sawyer et al.\, Responding to Spiritual Leader Misconduct: Parts 1-2\n\nWatch/Listen:\n• Brown\, 'We Do This Until We Heal Us' (Dec 2024)\n• Sandage\, 'Clergy Well-being' (Apr 2025)
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 📚 HB411 Readings Due: Week 3
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:bb46f594d4d6750e@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📖 HB411 Today: Grounding Values\, Ethical Commitments\, and Flourishing
+DTSTART:20250828T060000
+DTEND:20250828T063000
+DESCRIPTION:Today's topic: Grounding Values\, Ethical Commitments\, and Flourishing\n\nEnsure readings complete:\n• Common Code of Ethics for Chaplains\n• Captari and Sandage\, 'I Love This Work\, but It's Killing Me'\n• Pope-Lance\, 'Whence We Come and How\, and Whither'\n• UUMA Guidelines for the Conduct of Ministry\n• Sawyer et al.\, Responding to Spiritual Leader Misconduct: Parts 1-2
+END:VEVENT
+BEGIN:VEVENT
+UID:fda04ac0b0f297cf@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📚 HB411 Readings Due: Week 4
+DTSTART:20250901T080000
+DTEND:20250901T090000
+DESCRIPTION:Readings for Week 4: Integrating Boundaries\n\nComplete before Thursday class:\n\n• Hemphill\, What It Takes to Heal (full book)\n\nWatch/Listen:\n• Hemphill interview by Oluo (Jul 2024)\, min 36-46 especially
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 📚 HB411 Readings Due: Week 4
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:32f649b55a6872ca@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📖 HB411 Today: Integrating Boundaries
+DTSTART:20250904T060000
+DTEND:20250904T063000
+DESCRIPTION:Today's topic: Integrating Boundaries\n\nEnsure readings complete:\n• Hemphill\, What It Takes to Heal (full book)
+END:VEVENT
+BEGIN:VEVENT
+UID:aa5b13d379c9e475@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📚 HB411 Readings Due: Week 5
+DTSTART:20250908T080000
+DTEND:20250908T090000
+DESCRIPTION:Readings for Week 5: Boundaries\, Self\, and Systems I\n\nComplete before Thursday class:\n\n• Buhuro and Hawley\, 'If They're Black\, Call 911 First: Self Care for Black Trauma'\n• Coble and Springer\, 'Interpersonal Competence in Contextualizing Power Dynamics'\n• Sharp\, 'Crossing Borders with Healthy Boundaries'
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 📚 HB411 Readings Due: Week 5
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:4299a7d33215110e@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📖 HB411 Today: Boundaries\, Self\, and Systems I
+DTSTART:20250911T060000
+DTEND:20250911T063000
+DESCRIPTION:Today's topic: Boundaries\, Self\, and Systems I\n\nEnsure readings complete:\n• Buhuro and Hawley\, 'If They're Black\, Call 911 First: Self Care for Black Trauma'\n• Coble and Springer\, 'Interpersonal Competence in Contextualizing Power Dynamics'\n• Sharp\, 'Crossing Borders with Healthy Boundaries'
+END:VEVENT
+BEGIN:VEVENT
+UID:1747822337bdb4cf@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📚 HB411 Readings Due: Week 6
+DTSTART:20250915T080000
+DTEND:20250915T090000
+DESCRIPTION:Readings for Week 6: Boundaries\, Self\, and Systems II\n\nComplete before Thursday class:\n\n• Cooper-White\, Shared Wisdom (full book)
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 📚 HB411 Readings Due: Week 6
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:8f21e21cf0e6a1b4@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📖 HB411 Today: Boundaries\, Self\, and Systems II
+DTSTART:20250918T060000
+DTEND:20250918T063000
+DESCRIPTION:Today's topic: Boundaries\, Self\, and Systems II\n\nEnsure readings complete:\n• Cooper-White\, Shared Wisdom (full book)
+END:VEVENT
+BEGIN:VEVENT
+UID:3d19b94383bf4da6@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📚 HB411 Readings Due: Week 8
+DTSTART:20250929T080000
+DTEND:20250929T090000
+DESCRIPTION:Readings for Week 8: Trauma-Informed Perspectives I: Religious and Spiritual Trauma\n\nComplete before Thursday class:\n\n• Pasquale\, Sacred Wounds (full book)\n\nSupplementary:\n• Tawwab\, Set Boundaries: Ch. 8 'Trauma and Boundaries'
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 📚 HB411 Readings Due: Week 8
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:f3d813db5804caa1@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📖 HB411 Today: Trauma-Informed Perspectives I: Religious and Spiritual Trauma
+DTSTART:20251002T060000
+DTEND:20251002T063000
+DESCRIPTION:Today's topic: Trauma-Informed Perspectives I: Religious and Spiritual Trauma\n\nEnsure readings complete:\n• Pasquale\, Sacred Wounds (full book)
+END:VEVENT
+BEGIN:VEVENT
+UID:b6849887092eff40@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📚 HB411 Readings Due: Week 11
+DTSTART:20251020T080000
+DTEND:20251020T090000
+DESCRIPTION:Readings for Week 11: Navigating Boundaries I: Technology\n\nComplete before Thursday class:\n\n• Haidt\, The Anxious Generation (presenters)\n• Haidt interview by Michelle Obama (non-presenters option)\n\nSupplementary:\n• Tawwab\, Set Boundaries: Part 2
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 📚 HB411 Readings Due: Week 11
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:2481830acb422d6b@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📖 HB411 Today: Navigating Boundaries I: Technology
+DTSTART:20251023T060000
+DTEND:20251023T063000
+DESCRIPTION:Today's topic: Navigating Boundaries I: Technology\n\nEnsure readings complete:\n• Haidt\, The Anxious Generation (presenters)\n• Haidt interview by Michelle Obama (non-presenters option)
+END:VEVENT
+BEGIN:VEVENT
+UID:bf1786bf46351c99@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📚 HB411 Readings Due: Week 12
+DTSTART:20251027T080000
+DTEND:20251027T090000
+DESCRIPTION:Readings for Week 12: Navigating Boundaries II: Conflict\n\nComplete before Thursday class:\n\n• Ross\, Calling In (presenters)\n• Ross interview at Roosevelt House (non-presenters option)\n\nSupplementary:\n• Tawwab\, Set Boundaries: Part 2
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 📚 HB411 Readings Due: Week 12
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:fb6b94a731ed3405@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📖 HB411 Today: Navigating Boundaries II: Conflict
+DTSTART:20251030T060000
+DTEND:20251030T063000
+DESCRIPTION:Today's topic: Navigating Boundaries II: Conflict\n\nEnsure readings complete:\n• Ross\, Calling In (presenters)\n• Ross interview at Roosevelt House (non-presenters option)
+END:VEVENT
+BEGIN:VEVENT
+UID:d129dbee5b6216a5@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📚 HB411 Readings Due: Week 13
+DTSTART:20251103T080000
+DTEND:20251103T090000
+DESCRIPTION:Readings for Week 13: Navigating Boundaries III: Connection\n\nComplete before Thursday class:\n\n• Murthy\, Together (presenters)\n• Murthy interview by Simon Sinek (non-presenters option)\n\nSupplementary:\n• Tawwab\, Set Boundaries: Part 2
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 📚 HB411 Readings Due: Week 13
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:40dd80d962dd86f7@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📖 HB411 Today: Navigating Boundaries III: Connection
+DTSTART:20251106T060000
+DTEND:20251106T063000
+DESCRIPTION:Today's topic: Navigating Boundaries III: Connection\n\nEnsure readings complete:\n• Murthy\, Together (presenters)\n• Murthy interview by Simon Sinek (non-presenters option)
+END:VEVENT
+BEGIN:VEVENT
+UID:bc0de95fccb73b82@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:🔥 HB411 INTENSIVE DAY
+DTSTART:20250828T093000
+DTEND:20250828T163000
+DESCRIPTION:Full-day intensive session!\n\n9:30 AM - 4:30 PM CT\n\nTopics:\n• Grounding Values\n• Ethical Commitments\n• Flourishing\n\nHeavy reading load - complete all readings beforehand.
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 🔥 HB411 INTENSIVE DAY
+TRIGGER:-PT1440M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:3b17c9081feef77c@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:⚠️ Prepare for HB411 Intensive
+DTSTART:20250827T180000
+DTEND:20250827T190000
+DESCRIPTION:Tomorrow is the full-day intensive!\n\nChecklist:\n✓ Complete all readings\n✓ Watch required videos\n✓ Prepare snacks/lunch\n✓ Clear schedule 9:30 AM - 4:30 PM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: ⚠️ Prepare for HB411 Intensive
+TRIGGER:-PT120M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:990d73ef51afd8bd@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:🍂 HB411 Fall Break - No Class
+DTSTART;VALUE=DATE:20251016
+DESCRIPTION:Fall Break - Enjoy the rest!\n\nNext class: Oct 23 - Navigating Boundaries I: Technology
+END:VEVENT
+BEGIN:VEVENT
+UID:72ff1473d6be9aed@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📝 HB411 Async Work Week
+DTSTART;VALUE=DATE:20251009
+DESCRIPTION:No live class this week.\n\nUse time for:\n• Group presentation planning\n• Final project preparation\n• Catching up on readings
+END:VEVENT
+BEGIN:VEVENT
+UID:8f0ef5b75b37eaa0@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:🎉 HB411 First Day of Class!
+DTSTART:20250814T100000
+DTEND:20250814T120000
+DESCRIPTION:Welcome to Healthy Boundaries for Leaders!\n\nIntroductions and course overview.\n\nMake sure you have:\n✓ Reviewed syllabus\n✓ Checked Populi\n✓ Zoom working
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 🎉 HB411 First Day of Class!
+TRIGGER:-PT60M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:1c3f5bf95df0828e@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:🎓 HB411 Final Class Session
+DTSTART:20251120T100000
+DTEND:20251120T120000
+DESCRIPTION:Final day of live sessions!\n\nPresentations Part II\nJournal Due by 11:59 PM\n\nFinal Paper due Nov 24.
+LOCATION:https://meadville-edu.zoom.us/j/88914517875
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 🎓 HB411 Final Class Session
+TRIGGER:-PT60M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:7f14898b3631bc97@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:🏁 HB411 FINAL PAPER DEADLINE
+DTSTART:20251124T235900
+DTEND:20251125T000000
+DESCRIPTION:Final Integrative Project/Paper due!\n\n2500-3000 words\n25% of grade\n\nSubmit to Populi by 11:59 PM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder: 🏁 HB411 FINAL PAPER DEADLINE
+TRIGGER:-PT720M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:77d4af5b12da3862@osmen.local
+DTSTAMP:20251210T043045
+SUMMARY:📞 Dr. House Office Hours Available
+DTSTART:20250818T130000
+DTEND:20250818T150000
+DESCRIPTION:Dr. Kathryn House's office hours\n\nMondays\, 1-3 PM CT\n\nEmail: khouse@meadville.edu\n\nGreat for questions about:\n• Paper topics\n• Course content\n• Final project planning
+END:VEVENT
+END:VCALENDAR

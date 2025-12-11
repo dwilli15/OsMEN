@@ -1,0 +1,16 @@
+{
+  "name": "assistant",
+  "description": "Helpful AI assistant voice. Clear, friendly, professional.",
+  "backends": {
+    "kokoro": {
+      "voice_id": "af_heart"
+    },
+    "parler": {
+      "prompt": "A helpful assistant voice. Clear, friendly, professional tone."
+    },
+    "openvoice": {
+      "style": "default"
+    }
+  },
+  "notes": "Default voice for AI interactions"
+}

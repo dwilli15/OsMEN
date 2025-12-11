@@ -1,5 +1,8 @@
 {
-  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+  "python.envFile": "${workspaceFolder}/.env",
+  "python.terminal.activateEnvironment": true,
+  "python.terminal.activateEnvInCurrentTerminal": true,
   "python.linting.enabled": true,
   "python.linting.pylintEnabled": true,
   "python.formatting.provider": "black",
@@ -29,5 +32,17 @@
   },
   "continue.telemetryEnabled": false,
   "continue.enableTabAutocomplete": true,
-  "chat.mcp.serverSampling": {}
+  "chat.mcp.serverSampling": {},
+  "github.copilot.chat.experimental.mcp.enabled": true,
+  "github.copilot.chat.experimental.mcp.servers": {
+    "osmen": {
+      "command": "python",
+      "args": ["-m", "gateway.mcp"],
+      "cwd": "D:\\OsMEN",
+      "env": {
+        "PYTHONPATH": "D:\\OsMEN"
+      }
+    }
+  },
+  "python.terminal.useEnvFile": true
 }

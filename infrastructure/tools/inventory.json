@@ -1,0 +1,216 @@
+{
+  "$schema": "./inventory.schema.json",
+  "version": "1.0.0",
+  "updated_at": null,
+  "verified_at": null,
+  "tools": {
+    "sysinternals": {
+      "name": "Sysinternals Suite",
+      "type": "system_tools",
+      "description": "Windows system utilities for security and diagnostics",
+      "path": "tools/sysinternals",
+      "integration": "tools/sysinternals/sysinternals_integration.py",
+      "status": "available",
+      "capabilities": {
+        "autoruns": {
+          "description": "Analyze startup entries for security",
+          "executable": "autorunsc.exe",
+          "requires_admin": false
+        },
+        "procmon": {
+          "description": "Process monitoring and event capture",
+          "executable": "Procmon.exe",
+          "requires_admin": true
+        },
+        "listdlls": {
+          "description": "List loaded DLLs for processes",
+          "executable": "Listdlls.exe",
+          "requires_admin": false
+        },
+        "handle": {
+          "description": "Display open handles",
+          "executable": "handle.exe",
+          "requires_admin": true
+        },
+        "sigcheck": {
+          "description": "Verify file signatures",
+          "executable": "sigcheck.exe",
+          "requires_admin": false
+        }
+      },
+      "health_check": "get_available_tools"
+    },
+    "simplewall": {
+      "name": "Simplewall/Windows Firewall",
+      "type": "firewall",
+      "description": "Application and domain blocking",
+      "path": "tools/simplewall",
+      "integration": "tools/simplewall/simplewall_integration.py",
+      "status": "available",
+      "capabilities": {
+        "block_application": {
+          "description": "Block application network access",
+          "requires_admin": true
+        },
+        "block_domain": {
+          "description": "Block domain via hosts file",
+          "requires_admin": true
+        },
+        "get_rules": {
+          "description": "List current firewall rules",
+          "requires_admin": false
+        }
+      },
+      "health_check": "get_status"
+    },
+    "ffmpeg": {
+      "name": "FFmpeg",
+      "type": "media_processing",
+      "description": "Video/audio processing and conversion",
+      "path": "tools/ffmpeg",
+      "integration": "tools/ffmpeg/ffmpeg_integration.py",
+      "status": "available",
+      "capabilities": {
+        "convert": {
+          "description": "Convert media formats",
+          "requires_admin": false
+        },
+        "extract_audio": {
+          "description": "Extract audio from video",
+          "requires_admin": false
+        },
+        "compress": {
+          "description": "Compress video files",
+          "requires_admin": false
+        },
+        "extract_subtitles": {
+          "description": "Extract subtitles from video",
+          "requires_admin": false
+        }
+      },
+      "health_check": "check_ffmpeg"
+    },
+    "copilot_cli": {
+      "name": "GitHub Copilot CLI",
+      "type": "ai_assistant",
+      "description": "Command-line AI assistance via GitHub Copilot",
+      "path": "tools/copilot_cli",
+      "integration": "tools/copilot_cli/copilot_integration.py",
+      "status": "available",
+      "capabilities": {
+        "suggest": {
+          "description": "Generate command suggestions",
+          "requires_admin": false
+        },
+        "explain": {
+          "description": "Explain commands or code",
+          "requires_admin": false
+        }
+      },
+      "health_check": "check_availability"
+    },
+    "codex_cli": {
+      "name": "Codex CLI",
+      "type": "ai_assistant",
+      "description": "OpenAI Codex command-line interface",
+      "path": "tools/codex_cli",
+      "integration": "tools/codex_cli/codex_integration.py",
+      "status": "available",
+      "capabilities": {
+        "generate": {
+          "description": "Generate code from description",
+          "requires_admin": false
+        },
+        "complete": {
+          "description": "Complete code snippets",
+          "requires_admin": false
+        }
+      },
+      "health_check": "check_availability"
+    },
+    "obsidian": {
+      "name": "Obsidian Integration",
+      "type": "knowledge_management",
+      "description": "Obsidian vault integration for notes and knowledge",
+      "path": "tools/obsidian",
+      "integration": "integrations/obsidian_enhanced.py",
+      "status": "available",
+      "capabilities": {
+        "read_notes": {
+          "description": "Read notes from vault",
+          "requires_admin": false
+        },
+        "create_note": {
+          "description": "Create new notes",
+          "requires_admin": false
+        },
+        "search": {
+          "description": "Search notes",
+          "requires_admin": false
+        },
+        "link_notes": {
+          "description": "Create links between notes",
+          "requires_admin": false
+        }
+      },
+      "health_check": "check_vault"
+    },
+    "convertx": {
+      "name": "ConvertX API",
+      "type": "file_converter",
+      "description": "Universal file format converter",
+      "path": "integrations/convertx",
+      "integration": "integrations/convertx/__init__.py",
+      "status": "available",
+      "capabilities": {
+        "convert_file": {
+          "description": "Convert file to target format",
+          "requires_admin": false
+        },
+        "batch_convert": {
+          "description": "Batch convert multiple files",
+          "requires_admin": false
+        },
+        "get_formats": {
+          "description": "List supported format conversions",
+          "requires_admin": false
+        }
+      },
+      "health_check": "check_service"
+    }
+  },
+  "parsers": {
+    "syllabus_pdf": {
+      "name": "PDF Syllabus Parser",
+      "type": "document_parser",
+      "description": "Extract events and dates from PDF syllabi",
+      "path": "parsers/syllabus/pdf_parser.py",
+      "status": "available",
+      "capabilities": [
+        "date_extraction",
+        "event_classification",
+        "assignment_detection"
+      ]
+    },
+    "syllabus_docx": {
+      "name": "DOCX Syllabus Parser",
+      "type": "document_parser",
+      "description": "Extract events and dates from Word syllabi",
+      "path": "parsers/syllabus/docx_parser.py",
+      "status": "available",
+      "capabilities": [
+        "date_extraction",
+        "event_classification",
+        "assignment_detection"
+      ]
+    }
+  },
+  "expected_tools": [
+    "sysinternals",
+    "simplewall",
+    "ffmpeg",
+    "copilot_cli",
+    "obsidian",
+    "convertx"
+  ]
+}

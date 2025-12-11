@@ -1,0 +1,153 @@
+{
+  "title": "The Set Boundaries Workbook",
+  "author": "Unknown",
+  "source_file": "D:\\semester_start\\The Set Boundaries Workbook_ Pr - Nedra Glover Tawwab.epub",
+  "format": "EPUB",
+  "total_chapters": 20,
+  "total_words": 20315,
+  "estimated_hours": 2.3,
+  "extraction_date": "2025-12-10T05:09:28.322219",
+  "chapters": [
+    {
+      "number": 1,
+      "title": "Chapter 1",
+      "word_count": 123,
+      "estimated_minutes": 0.8,
+      "text_file": "chapter_001.txt"
+    },
+    {
+      "number": 2,
+      "title": "Author\u2019s Note",
+      "word_count": 129,
+      "estimated_minutes": 0.9,
+      "text_file": "chapter_002.txt"
+    },
+    {
+      "number": 3,
+      "title": "Introduction",
+      "word_count": 1234,
+      "estimated_minutes": 8.2,
+      "text_file": "chapter_003.txt"
+    },
+    {
+      "number": 4,
+      "title": "What Does It Mean to Have Healthy Boundaries?",
+      "word_count": 1295,
+      "estimated_minutes": 8.6,
+      "text_file": "chapter_004.txt"
+    },
+    {
+      "number": 5,
+      "title": "What Happens When We Don\u2019t Have Healthy Boundaries?",
+      "word_count": 1584,
+      "estimated_minutes": 10.6,
+      "text_file": "chapter_005.txt"
+    },
+    {
+      "number": 6,
+      "title": "Learning to Set Boundaries",
+      "word_count": 743,
+      "estimated_minutes": 5.0,
+      "text_file": "chapter_006.txt"
+    },
+    {
+      "number": 7,
+      "title": "Managing the Discomfort of Setting Boundaries",
+      "word_count": 1794,
+      "estimated_minutes": 12.0,
+      "text_file": "chapter_007.txt"
+    },
+    {
+      "number": 8,
+      "title": "Knowing Your Boundaries",
+      "word_count": 1301,
+      "estimated_minutes": 8.7,
+      "text_file": "chapter_008.txt"
+    },
+    {
+      "number": 9,
+      "title": "How to Speak Your Boundaries (So People Can Hear You)",
+      "word_count": 2029,
+      "estimated_minutes": 13.5,
+      "text_file": "chapter_009.txt"
+    },
+    {
+      "number": 10,
+      "title": "Getting Better at Communicating Your Boundaries",
+      "word_count": 1314,
+      "estimated_minutes": 8.8,
+      "text_file": "chapter_010.txt"
+    },
+    {
+      "number": 11,
+      "title": "How Your Childhood Impacts Your Adult Boundaries",
+      "word_count": 934,
+      "estimated_minutes": 6.2,
+      "text_file": "chapter_011.txt"
+    },
+    {
+      "number": 12,
+      "title": "Holding Your Boundaries Is a Form of Self-Care",
+      "word_count": 1305,
+      "estimated_minutes": 8.7,
+      "text_file": "chapter_012.txt"
+    },
+    {
+      "number": 13,
+      "title": "All in the Family",
+      "word_count": 1430,
+      "estimated_minutes": 9.5,
+      "text_file": "chapter_013.txt"
+    },
+    {
+      "number": 14,
+      "title": "You Are Choosing Your Life When You Choose a Partner",
+      "word_count": 1076,
+      "estimated_minutes": 7.2,
+      "text_file": "chapter_014.txt"
+    },
+    {
+      "number": 15,
+      "title": "The Family We Choose (Friends)",
+      "word_count": 1579,
+      "estimated_minutes": 10.5,
+      "text_file": "chapter_015.txt"
+    },
+    {
+      "number": 16,
+      "title": "WORKing on Your Boundaries",
+      "word_count": 1134,
+      "estimated_minutes": 7.6,
+      "text_file": "chapter_016.txt"
+    },
+    {
+      "number": 17,
+      "title": "Social Media and Technology",
+      "word_count": 912,
+      "estimated_minutes": 6.1,
+      "text_file": "chapter_017.txt"
+    },
+    {
+      "number": 18,
+      "title": "Final Note",
+      "word_count": 154,
+      "estimated_minutes": 1.0,
+      "text_file": "chapter_018.txt"
+    },
+    {
+      "number": 19,
+      "title": "Additional Reading",
+      "word_count": 120,
+      "estimated_minutes": 0.8,
+      "text_file": "chapter_019.txt"
+    },
+    {
+      "number": 20,
+      "title": "About the Author",
+      "word_count": 125,
+      "estimated_minutes": 0.8,
+      "text_file": "chapter_020.txt"
+    }
+  ],
+  "output_dir": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries\\readings\\raw\\The_Set_Boundaries_Workbook"
+}

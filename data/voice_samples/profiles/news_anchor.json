@@ -1,0 +1,16 @@
+{
+  "name": "news_anchor",
+  "description": "Neutral, professional news anchor voice.",
+  "backends": {
+    "kokoro": {
+      "voice_id": "am_michael"
+    },
+    "parler": {
+      "prompt": "A neutral news anchor voice. Professional, clear, measured pace."
+    },
+    "openvoice": {
+      "style": "default"
+    }
+  },
+  "notes": "Formal tone suitable for news reading"
+}

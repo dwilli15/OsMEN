@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - OsMEN Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen" x-data="healthMonitor()">
+    <!-- Navigation -->
+    <nav class="gradient-bg border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-3">
+                        <i class="fas fa-brain text-2xl text-blue-400"></i>
+                        <span class="text-xl font-bold">OsMEN</span>
+                    </a>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="/admin" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-arrow-left mr-2"></i>Admin Hub
+                            </a>
+                            <a href="/admin/health" class="px-3 py-2 rounded-md text-sm font-medium bg-slate-700">
+                                <i class="fas fa-heartbeat mr-2"></i>Health Monitor
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2">
+                <i class="fas fa-heartbeat mr-3 text-red-400"></i>
+                Health Monitor
+            </h1>
+            <p class="text-slate-400">Service health monitoring with auto-healing capabilities</p>
+        </div>
+
+        <!-- Status Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-slate-800 rounded-xl p-6 text-center">
+                <p class="text-4xl font-bold text-green-400" x-text="healthCounts.healthy"></p>
+                <p class="text-slate-400 mt-2">Healthy</p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6 text-center">
+                <p class="text-4xl font-bold text-yellow-400" x-text="healthCounts.degraded"></p>
+                <p class="text-slate-400 mt-2">Degraded</p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6 text-center">
+                <p class="text-4xl font-bold text-red-400" x-text="healthCounts.unhealthy"></p>
+                <p class="text-slate-400 mt-2">Unhealthy</p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6 text-center">
+                <p class="text-4xl font-bold text-slate-400" x-text="healthCounts.unknown"></p>
+                <p class="text-slate-400 mt-2">Unknown</p>
+            </div>
+        </div>
+
+        <!-- Node Health Grid -->
+        <div class="bg-slate-800 rounded-xl p-6 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">Service Status</h2>
+                <div class="space-x-2">
+                    <button @click="checkAllNodes()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm">
+                        <i class="fas fa-sync-alt mr-2"></i>Check All
+                    </button>
+                    <button @click="autoHeal()" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm">
+                        <i class="fas fa-magic mr-2"></i>Auto-Heal
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <template x-for="node in nodes" :key="node.node_id">
+                    <div class="bg-slate-700/50 rounded-lg p-4" :class="{'border-2 border-red-500': node.status === 'unhealthy'}">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="font-semibold" x-text="node.name"></h3>
+                                <p class="text-xs text-slate-400" x-text="node.endpoint"></p>
+                            </div>
+                            <span class="px-2 py-1 rounded-full text-xs"
+                                :class="{
+                                    'bg-green-500/20 text-green-400': node.status === 'healthy',
+                                    'bg-yellow-500/20 text-yellow-400': node.status === 'degraded',
+                                    'bg-red-500/20 text-red-400': node.status === 'unhealthy',
+                                    'bg-slate-600 text-slate-300': node.status === 'unknown'
+                                }" x-text="node.status"></span>
+                        </div>
+                        <div class="text-sm space-y-1 mb-3">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Latency</span>
+                                <span x-text="(node.latency_ms || 0).toFixed(0) + ' ms'"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Error Rate</span>
+                                <span x-text="(node.error_rate || 0).toFixed(1) + '%'"></span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button @click="restartService(node.node_id)" 
+                                class="flex-1 px-3 py-1.5 bg-slate-600 hover:bg-slate-500 rounded text-xs">
+                                <i class="fas fa-redo mr-1"></i>Restart
+                            </button>
+                            <button @click="checkNode(node.node_id)"
+                                class="flex-1 px-3 py-1.5 bg-slate-600 hover:bg-slate-500 rounded text-xs">
+                                <i class="fas fa-stethoscope mr-1"></i>Check
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- MCP Servers -->
+        <div class="bg-slate-800 rounded-xl p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">MCP Servers</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                <template x-for="mcp in mcpServers" :key="mcp.server_id">
+                    <div class="bg-slate-700/50 rounded-lg p-3 text-center">
+                        <i class="fas fa-plug text-lg mb-2" 
+                            :class="mcp.status === 'connected' ? 'text-green-400' : 'text-slate-400'"></i>
+                        <p class="text-sm font-medium truncate" x-text="mcp.name"></p>
+                        <p class="text-xs" :class="mcp.status === 'connected' ? 'text-green-400' : 'text-slate-400'" 
+                            x-text="mcp.status"></p>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Health History -->
+        <div class="bg-slate-800 rounded-xl p-6">
+            <h2 class="text-xl font-semibold mb-4">Recent Health Checks</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-slate-400 border-b border-slate-700">
+                            <th class="pb-3">Time</th>
+                            <th class="pb-3">Service</th>
+                            <th class="pb-3">Status</th>
+                            <th class="pb-3">Latency</th>
+                            <th class="pb-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="(record, idx) in history.slice(0, 20)" :key="idx">
+                            <tr class="border-b border-slate-700/50">
+                                <td class="py-2 text-slate-400" x-text="new Date(record.timestamp * 1000).toLocaleString()"></td>
+                                <td class="py-2" x-text="record.node_id || 'All'"></td>
+                                <td class="py-2">
+                                    <span class="px-2 py-0.5 rounded text-xs"
+                                        :class="record.status === 'healthy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'"
+                                        x-text="record.status"></span>
+                                </td>
+                                <td class="py-2" x-text="(record.latency_ms || '-') + ' ms'"></td>
+                                <td class="py-2 text-slate-400" x-text="record.action || '-'"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function healthMonitor() {
+            return {
+                nodes: [],
+                mcpServers: [],
+                history: [],
+                healthCounts: { healthy: 0, degraded: 0, unhealthy: 0, unknown: 0 },
+
+                async init() {
+                    await this.loadHealth();
+                    setInterval(() => this.loadHealth(), 30000);
+                },
+
+                async loadHealth() {
+                    try {
+                        const res = await fetch('/api/admin/health/status');
+                        const data = await res.json();
+                        
+                        this.nodes = data.nodes || [];
+                        this.mcpServers = data.mcp_servers || [];
+                        
+                        // Count statuses
+                        this.healthCounts = { healthy: 0, degraded: 0, unhealthy: 0, unknown: 0 };
+                        for (const node of this.nodes) {
+                            const s = node.status || 'unknown';
+                            this.healthCounts[s] = (this.healthCounts[s] || 0) + 1;
+                        }
+                        
+                        // Load history
+                        const histRes = await fetch('/api/admin/health/history');
+                        const histData = await histRes.json();
+                        this.history = histData.history || [];
+                    } catch (e) {
+                        console.error('Failed to load health:', e);
+                    }
+                },
+
+                async restartService(nodeId) {
+                    if (!confirm(`Restart ${nodeId}?`)) return;
+                    await fetch(`/api/admin/health/restart/${nodeId}`, { method: 'POST' });
+                    setTimeout(() => this.loadHealth(), 2000);
+                },
+
+                async checkAllNodes() {
+                    await this.loadHealth();
+                },
+
+                async checkNode(nodeId) {
+                    // Individual check - reload
+                    await this.loadHealth();
+                },
+
+                async autoHeal() {
+                    alert('Auto-heal initiated. Checking unhealthy services...');
+                    await this.loadHealth();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

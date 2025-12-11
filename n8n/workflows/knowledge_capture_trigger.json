@@ -2,61 +2,93 @@
   "name": "Knowledge Capture Trigger",
   "nodes": [
     {
+      "id": "b2c3d4e5-2222-4bbb-cccc-000000000001",
       "parameters": {
         "httpMethod": "POST",
         "path": "capture-note",
         "responseMode": "responseNode",
-        "options": {}
+        "options": {
+          "allowedOrigins": "*"
+        }
       },
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [250, 300]
+      "typeVersion": 2,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "capture-note-webhook"
     },
     {
+      "id": "b2c3d4e5-2222-4bbb-cccc-000000000002",
       "parameters": {
-        "functionCode": "// Extract note data from webhook\nconst { title, content, tags, folder } = $input.first().json;\nreturn [{ json: { title, content, tags: tags || [], folder: folder || '' } }];"
+        "jsCode": "// Extract note data from webhook\nconst body = $input.first().json.body || $input.first().json;\nconst { title, content, tags, folder } = body;\n\nif (!title || !content) {\n  throw new Error('Missing required fields: title and content');\n}\n\nreturn [{ json: { \n  title, \n  content, \n  tags: tags || [], \n  folder: folder || 'inbox',\n  captured_at: new Date().toISOString()\n} }];"
       },
       "name": "Extract Note Data",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
-      "position": [450, 300]
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ]
     },
     {
+      "id": "b2c3d4e5-2222-4bbb-cccc-000000000003",
       "parameters": {
-        "url": "http://host.docker.internal:8081/tools/call",
+        "url": "http://localhost:8000/api/v1/collections/osmen_knowledge/add",
         "method": "POST",
-        "jsonParameters": true,
-        "options": {},
-        "bodyParametersJson": "={\n  \"tool\": \"obsidian_create_note\",\n  \"parameters\": {\n    \"title\": \"{{$json.title}}\",\n    \"content\": \"{{$json.content}}\",\n    \"tags\": {{$json.tags}},\n    \"folder\": \"{{$json.folder}}\"\n  }\n}"
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ids\": [\"note-{{ $now.toMillis() }}\"],\n  \"documents\": [\"{{ $json.content }}\"],\n  \"metadatas\": [{\n    \"title\": \"{{ $json.title }}\",\n    \"tags\": \"{{ $json.tags.join(',') }}\",\n    \"folder\": \"{{ $json.folder }}\",\n    \"captured_at\": \"{{ $json.captured_at }}\"\n  }]\n}",
+        "options": {
+          "timeout": 30000
+        }
       },
-      "name": "Call MCP Server",
+      "name": "Store in ChromaDB",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
-      "position": [650, 300]
+      "typeVersion": 4.2,
+      "position": [
+        650,
+        300
+      ]
     },
     {
+      "id": "b2c3d4e5-2222-4bbb-cccc-000000000004",
       "parameters": {
-        "url": "http://langflow:7860/api/v1/run/knowledge_management_specialist",
+        "url": "http://localhost:7860/api/v1/run/knowledge-management-specialist-v1",
         "method": "POST",
-        "jsonParameters": true,
-        "options": {},
-        "bodyParametersJson": "={\n  \"input\": \"Note captured: {{$json.title}}\",\n  \"tweaks\": {}\n}"
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"input_value\": \"New knowledge captured: {{ $json.title }}. Please acknowledge and index.\",\n  \"input_type\": \"chat\",\n  \"output_type\": \"chat\",\n  \"session_id\": \"knowledge-capture-{{ $now.format('yyyy-MM-dd') }}\"\n}",
+        "options": {
+          "timeout": 60000
+        }
       },
       "name": "Notify Knowledge Agent",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
-      "position": [850, 300]
+      "typeVersion": 4.2,
+      "position": [
+        850,
+        300
+      ]
     },
     {
+      "id": "b2c3d4e5-2222-4bbb-cccc-000000000005",
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}"
+        "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"Note captured and indexed\",\n  \"title\": \"{{ $json.title }}\",\n  \"folder\": \"{{ $json.folder }}\",\n  \"captured_at\": \"{{ $json.captured_at }}\"\n}",
+        "options": {
+          "responseCode": 200
+        }
       },
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [1050, 300]
+      "typeVersion": 1.1,
+      "position": [
+        1050,
+        300
+      ]
     }
   ],
   "connections": {
@@ -75,14 +107,14 @@
       "main": [
         [
           {
-            "node": "Call MCP Server",
+            "node": "Store in ChromaDB",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Call MCP Server": {
+    "Store in ChromaDB": {
       "main": [
         [
           {
@@ -106,6 +138,15 @@
     }
   },
   "active": true,
-  "settings": {},
-  "id": "knowledge_capture_trigger"
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "b2c3d4e5-0000-4bbb-cccc-222222222222",
+  "meta": {
+    "instanceId": "osmen-knowledge-capture"
+  },
+  "tags": [
+    "knowledge",
+    "webhook"
+  ]
 }

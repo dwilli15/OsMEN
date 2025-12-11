@@ -2,6 +2,7 @@
   "name": "Daily Brief Trigger",
   "nodes": [
     {
+      "id": "a1b2c3d4-1111-4aaa-bbbb-000000000001",
       "parameters": {
         "rule": {
           "interval": [
@@ -14,55 +15,89 @@
       },
       "name": "Morning Schedule",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1,
-      "position": [250, 300]
+      "typeVersion": 1.2,
+      "position": [
+        250,
+        300
+      ]
     },
     {
+      "id": "a1b2c3d4-1111-4aaa-bbbb-000000000002",
       "parameters": {
-        "functionCode": "// Check if daily brief is enabled\nconst enabled = $env('DAILY_BRIEF_ENABLED') === 'true';\nreturn [{ json: { enabled } }];"
+        "jsCode": "// Check if daily brief is enabled\nconst enabled = $env.DAILY_BRIEF_ENABLED === 'true' || true;\nreturn [{ json: { enabled, timestamp: new Date().toISOString() } }];"
       },
       "name": "Check If Enabled",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
-      "position": [450, 300]
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ]
     },
     {
+      "id": "a1b2c3d4-1111-4aaa-bbbb-000000000003",
       "parameters": {
         "conditions": {
-          "boolean": [
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
             {
-              "value1": "={{$json.enabled}}",
-              "value2": true
+              "id": "condition-1",
+              "leftValue": "={{ $json.enabled }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         }
       },
       "name": "If Enabled",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
-      "position": [650, 300]
+      "typeVersion": 2,
+      "position": [
+        650,
+        300
+      ]
     },
     {
+      "id": "a1b2c3d4-1111-4aaa-bbbb-000000000004",
       "parameters": {
-        "url": "http://langflow:7860/api/v1/run/daily_brief_specialist",
+        "url": "http://localhost:7860/api/v1/run/daily-brief-specialist-v1",
         "method": "POST",
-        "jsonParameters": true,
-        "options": {},
-        "bodyParametersJson": "={\n  \"input\": \"Generate daily brief\",\n  \"tweaks\": {}\n}"
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"input_value\": \"Generate my daily briefing for today\",\n  \"input_type\": \"chat\",\n  \"output_type\": \"chat\",\n  \"session_id\": \"daily-brief-{{ $now.format('yyyy-MM-dd') }}\"\n}",
+        "options": {
+          "timeout": 60000,
+          "allowUnauthorizedCerts": false
+        }
       },
       "name": "Call Daily Brief Agent",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
-      "position": [850, 300]
+      "typeVersion": 4.2,
+      "position": [
+        850,
+        300
+      ]
     },
     {
+      "id": "a1b2c3d4-1111-4aaa-bbbb-000000000005",
       "parameters": {
-        "functionCode": "// Format and log the daily brief\nconst result = $input.first().json;\nconst brief = result.output || 'No brief generated';\nconsole.log('Daily brief generated:', brief);\nreturn [{ json: { status: 'completed', brief } }];"
+        "jsCode": "// Format and log the daily brief\nconst result = $input.first().json;\nlet brief = 'No brief generated';\n\n// Handle Langflow response structure\nif (result && result.outputs && result.outputs[0]) {\n  const output = result.outputs[0];\n  if (output.outputs && output.outputs[0] && output.outputs[0].results) {\n    const message = output.outputs[0].results.message;\n    brief = message?.text || message || brief;\n  }\n}\n\nconsole.log('Daily brief generated at:', new Date().toISOString());\nconsole.log('Brief content:', brief.substring(0, 200) + '...');\n\nreturn [{ json: { \n  status: 'completed', \n  brief,\n  generated_at: new Date().toISOString()\n} }];"
       },
       "name": "Format Brief",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
-      "position": [1050, 300]
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1050,
+        300
+      ]
     }
   ],
   "connections": {
@@ -112,6 +147,12 @@
     }
   },
   "active": true,
-  "settings": {},
-  "id": "daily_brief_trigger"
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "a1b2c3d4-0000-4aaa-bbbb-111111111111",
+  "meta": {
+    "instanceId": "osmen-daily-brief"
+  },
+  "tags": []
 }

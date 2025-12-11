@@ -112,3 +112,6 @@ vulnerability_reports/
 .copilot/conversations.db
 .copilot/conversations.db-journal
 .copilot/daily_summaries/
+data/voice_samples/openvoice/
+content/courses/HB411_HealthyBoundaries/audiobooks/*.m4b
+content/courses/HB411_HealthyBoundaries/embeddings/chroma_db/

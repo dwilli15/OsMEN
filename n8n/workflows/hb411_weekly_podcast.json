@@ -1,0 +1,292 @@
+{
+  "name": "HB411 Weekly Podcast Generator",
+  "description": "Generates a 22-minute podcast summarizing each week's course content for HB411 Healthy Boundaries",
+  "nodes": [
+    {
+      "id": "podcast-trigger-001",
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 18 * * 0"
+            }
+          ]
+        }
+      },
+      "name": "Sunday Evening Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        100,
+        300
+      ],
+      "notes": "Triggers every Sunday at 6 PM to prepare for the week ahead"
+    },
+    {
+      "id": "podcast-webhook-001",
+      "parameters": {
+        "path": "hb411-podcast",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Manual Podcast Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        100,
+        500
+      ],
+      "webhookId": "hb411-podcast-manual"
+    },
+    {
+      "id": "podcast-merge-001",
+      "parameters": {
+        "mode": "passThrough"
+      },
+      "name": "Merge Triggers",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        300,
+        400
+      ]
+    },
+    {
+      "id": "podcast-week-calc-001",
+      "parameters": {
+        "jsCode": "// Calculate current course week\nconst semesterStart = new Date('2025-08-14');\nconst now = new Date();\nconst weekNum = Math.floor((now - semesterStart) / (7 * 24 * 60 * 60 * 1000)) + 1;\n\n// Course week data\nconst weekTopics = {\n  1: { topic: 'Introductions', readings: ['Tawwab Part 1'], focus: 'Course overview and boundary foundations' },\n  2: { topic: 'Frameworks for Healthy Boundaries', readings: ['Tawwab Chs 1-4', 'McBride Overview'], focus: 'Understanding boundary frameworks in ministry' },\n  3: { topic: 'Intensive Day', readings: ['McBride Chs 1-4', 'Navigating Boundaries Guidelines'], focus: 'Deep dive into professional boundaries' },\n  4: { topic: 'Integrating Boundaries', readings: ['Misunderstanding Stories', 'Spiritual Care BLM'], focus: 'Cultural and contextual boundary work' },\n  5: { topic: 'Boundaries & Self Systems I', readings: ['Anxious Generation', 'Tawwab Chs 5-6'], focus: 'Technology boundaries and self-systems' },\n  6: { topic: 'Boundaries & Self Systems II', readings: ['Tawwab Chs 7-8', 'McBride Chs 5-6'], focus: 'Advanced self-care and systems thinking' },\n  7: { topic: 'Guiding Documents', readings: ['Code of Ethics', 'Safe Congregation Handbook'], focus: 'Professional standards and accountability' },\n  8: { topic: 'Trauma-Informed Ministry', readings: ['What It Takes to Heal', 'Sacred Wounds'], focus: 'Trauma-informed approaches to boundaries' },\n  9: { topic: 'Async Week', readings: ['Catch-up readings'], focus: 'Integration and reflection' },\n  10: { topic: 'Fall Break', readings: [], focus: 'Rest and recharge' },\n  11: { topic: 'Technology Boundaries', readings: ['Anxious Generation Review'], focus: 'Digital wellness and ministry presence' },\n  12: { topic: 'Navigating Conflict', readings: ['Ross - Calling In'], focus: 'Boundaries in difficult conversations' },\n  13: { topic: 'Connection & Excellence', readings: ['Dyer - Call to Excellence'], focus: 'Sustainable ministry boundaries' },\n  14: { topic: 'Final Presentations I', readings: [], focus: 'Peer learning and integration' },\n  15: { topic: 'Final Presentations II', readings: [], focus: 'Course synthesis' }\n};\n\nconst weekData = weekTopics[Math.min(weekNum, 15)] || weekTopics[1];\n\nreturn [{ json: {\n  current_week: Math.min(weekNum, 15),\n  topic: weekData.topic,\n  readings: weekData.readings,\n  focus: weekData.focus,\n  generated_at: now.toISOString(),\n  podcast_duration_target: '22 minutes',\n  word_count_target: 3300\n}}];"
+      },
+      "name": "Calculate Current Week",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        400
+      ]
+    },
+    {
+      "id": "podcast-rag-query-001",
+      "parameters": {
+        "url": "http://localhost:8200/search",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ query: $json.topic + ' ' + $json.focus + ' ministry boundaries', collection: 'course_hb411', n_results: 15 }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Query RAG for Week Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        400
+      ]
+    },
+    {
+      "id": "podcast-langflow-001",
+      "parameters": {
+        "url": "http://localhost:7860/api/v1/run/hb411-podcast-specialist",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ input_value: 'Generate a 22-minute podcast script for Week ' + $('Calculate Current Week').item.json.current_week + ': ' + $('Calculate Current Week').item.json.topic + '. Focus: ' + $('Calculate Current Week').item.json.focus + '. Key readings: ' + $('Calculate Current Week').item.json.readings.join(', ') + '. RAG Context: ' + JSON.stringify($json).substring(0, 5000), input_type: 'chat', output_type: 'chat', session_id: 'podcast-week-' + $('Calculate Current Week').item.json.current_week }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "name": "Generate Podcast Script",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "id": "podcast-format-script-001",
+      "parameters": {
+        "jsCode": "// Format podcast script for TTS\nconst weekData = $('Calculate Current Week').item.json;\nconst langflowResult = $input.first().json;\n\nlet script = '';\n\n// Extract Langflow response\nif (langflowResult?.outputs?.[0]?.outputs?.[0]?.results?.message) {\n  script = langflowResult.outputs[0].outputs[0].results.message.text || langflowResult.outputs[0].outputs[0].results.message;\n}\n\n// Fallback template if Langflow fails\nif (!script || script.length < 500) {\n  script = `Welcome to the HB411 Weekly Podcast - Week ${weekData.current_week}: ${weekData.topic}.\n\n[INTRO MUSIC - 15 seconds]\n\nHello and welcome back to your weekly deep dive into Healthy Boundaries for Leaders. I'm your host, and this week we're exploring ${weekData.topic}.\n\n[SECTION 1: Context - 5 minutes]\n\nThis week's focus is ${weekData.focus}. As ministry leaders, understanding how to establish and maintain healthy boundaries is essential for sustainable service.\n\n${weekData.readings.length > 0 ? 'Our primary readings this week include ' + weekData.readings.join(', ') + '.' : ''}\n\n[SECTION 2: Key Concepts - 8 minutes]\n\nLet me walk you through the main themes...\n\n[SECTION 3: Application - 5 minutes]\n\nHow do we apply these concepts in real ministry settings?\n\n[SECTION 4: Reflection Questions - 3 minutes]\n\nAs you go through this week, consider:\n- How do these boundary principles apply to your current context?\n- What challenges do you anticipate in implementation?\n- Who might serve as an accountability partner?\n\n[OUTRO - 1 minute]\n\nThank you for joining me this week. Remember, healthy boundaries aren't walls - they're doors with locks that you control.\n\nSee you next week. Take care of yourself.\n\n[OUTRO MUSIC - 15 seconds]`;\n}\n\nreturn [{ json: {\n  week: weekData.current_week,\n  topic: weekData.topic,\n  script: script,\n  word_count: script.split(/\\s+/).length,\n  estimated_duration_min: Math.round(script.split(/\\s+/).length / 150),\n  generated_at: new Date().toISOString()\n}}];"
+      },
+      "name": "Format Podcast Script",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        400
+      ]
+    },
+    {
+      "id": "podcast-save-script-001",
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ 'D:/OsMEN/content/courses/HB411_HealthyBoundaries/podcasts/week_' + $json.week.toString().padStart(2, '0') + '_' + $json.topic.toLowerCase().replace(/[^a-z0-9]/g, '_') + '.txt' }}",
+        "fileContent": "={{ $json.script }}"
+      },
+      "name": "Save Script to File",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        300
+      ]
+    },
+    {
+      "id": "podcast-tts-trigger-001",
+      "parameters": {
+        "url": "http://localhost:8080/api/tts/generate",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $json.script, voice: 'af_bella', output_format: 'm4b', output_path: 'D:/OsMEN/content/courses/HB411_HealthyBoundaries/podcasts/week_' + $json.week.toString().padStart(2, '0') + '_podcast.m4b' }) }}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "name": "Generate Podcast Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1300,
+        500
+      ]
+    },
+    {
+      "id": "podcast-notify-001",
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst scriptData = $('Format Podcast Script').item.json;\n\nconsole.log(`\\n🎙️ HB411 Weekly Podcast Generated`);\nconsole.log(`   Week ${scriptData.week}: ${scriptData.topic}`);\nconsole.log(`   Word count: ${scriptData.word_count}`);\nconsole.log(`   Estimated duration: ${scriptData.estimated_duration_min} minutes`);\nconsole.log(`   Generated: ${new Date().toISOString()}`);\n\nreturn [{ json: {\n  status: 'completed',\n  week: scriptData.week,\n  topic: scriptData.topic,\n  word_count: scriptData.word_count,\n  duration_estimate: scriptData.estimated_duration_min + ' minutes',\n  message: `Week ${scriptData.week} podcast ready: ${scriptData.topic}`\n}}];"
+      },
+      "name": "Log Completion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Sunday Evening Trigger": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Podcast Trigger": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Triggers": {
+      "main": [
+        [
+          {
+            "node": "Calculate Current Week",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Current Week": {
+      "main": [
+        [
+          {
+            "node": "Query RAG for Week Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query RAG for Week Content": {
+      "main": [
+        [
+          {
+            "node": "Generate Podcast Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Podcast Script": {
+      "main": [
+        [
+          {
+            "node": "Format Podcast Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Podcast Script": {
+      "main": [
+        [
+          {
+            "node": "Save Script to File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Podcast Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Script to File": {
+      "main": [
+        [
+          {
+            "node": "Log Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Podcast Audio": {
+      "main": [
+        [
+          {
+            "node": "Log Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "hb411-weekly-podcast-001",
+  "meta": {
+    "instanceId": "osmen-hb411-podcast"
+  },
+  "tags": [
+    "hb411",
+    "podcast",
+    "course"
+  ]
+}

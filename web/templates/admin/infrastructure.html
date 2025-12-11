@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - OsMEN Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.6/standalone/umd/vis-network.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); }
+        #graph-container { height: 600px; background: #1e293b; border-radius: 0.75rem; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen" x-data="infrastructure()">
+    <!-- Navigation -->
+    <nav class="gradient-bg border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-3">
+                        <i class="fas fa-brain text-2xl text-blue-400"></i>
+                        <span class="text-xl font-bold">OsMEN</span>
+                    </a>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="/admin" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700">
+                                <i class="fas fa-arrow-left mr-2"></i>Admin Hub
+                            </a>
+                            <a href="/admin/infrastructure" class="px-3 py-2 rounded-md text-sm font-medium bg-slate-700">
+                                <i class="fas fa-project-diagram mr-2"></i>Infrastructure
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2">
+                <i class="fas fa-project-diagram mr-3 text-blue-400"></i>
+                Infrastructure Graph
+            </h1>
+            <p class="text-slate-400">Visual representation of nodes, agents, tools, and their connections</p>
+        </div>
+
+        <!-- Legend -->
+        <div class="bg-slate-800 rounded-xl p-4 mb-6">
+            <div class="flex flex-wrap gap-6">
+                <div class="flex items-center space-x-2">
+                    <span class="w-4 h-4 rounded-full bg-blue-500"></span>
+                    <span class="text-sm">Nodes/Services</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="w-4 h-4 rounded-full bg-green-500"></span>
+                    <span class="text-sm">Agents</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="w-4 h-4 rounded-full bg-purple-500"></span>
+                    <span class="text-sm">Tools</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="w-4 h-4 rounded-full bg-amber-500"></span>
+                    <span class="text-sm">Pipelines</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graph Container -->
+        <div id="graph-container" class="mb-8"></div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center space-x-3 mb-2">
+                    <i class="fas fa-server text-blue-400"></i>
+                    <span class="text-slate-400">Nodes</span>
+                </div>
+                <p class="text-3xl font-bold" x-text="graph.nodes?.length || 0"></p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center space-x-3 mb-2">
+                    <i class="fas fa-robot text-green-400"></i>
+                    <span class="text-slate-400">Agents</span>
+                </div>
+                <p class="text-3xl font-bold" x-text="graph.agents?.length || 0"></p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center space-x-3 mb-2">
+                    <i class="fas fa-tools text-purple-400"></i>
+                    <span class="text-slate-400">Tools</span>
+                </div>
+                <p class="text-3xl font-bold" x-text="graph.tools?.length || 0"></p>
+            </div>
+            <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center space-x-3 mb-2">
+                    <i class="fas fa-exchange-alt text-amber-400"></i>
+                    <span class="text-slate-400">Connections</span>
+                </div>
+                <p class="text-3xl font-bold" x-text="graph.connections?.length || 0"></p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function infrastructure() {
+            return {
+                graph: {},
+                network: null,
+
+                async init() {
+                    await this.loadGraph();
+                    this.renderGraph();
+                },
+
+                async loadGraph() {
+                    try {
+                        const res = await fetch('/api/admin/infrastructure/graph');
+                        this.graph = await res.json();
+                    } catch (e) {
+                        console.error('Failed to load graph:', e);
+                    }
+                },
+
+                renderGraph() {
+                    const container = document.getElementById('graph-container');
+                    
+                    // Build vis.js nodes and edges
+                    const visNodes = [];
+                    const visEdges = [];
+
+                    // Add service nodes
+                    for (const node of this.graph.nodes || []) {
+                        visNodes.push({
+                            id: `node:${node.node_id}`,
+                            label: node.name,
+                            color: { background: '#3b82f6', border: '#60a5fa' },
+                            shape: 'box',
+                            font: { color: '#fff' }
+                        });
+                    }
+
+                    // Add agents
+                    for (const agent of this.graph.agents || []) {
+                        visNodes.push({
+                            id: `agent:${agent.agent_id}`,
+                            label: agent.name || agent.agent_id,
+                            color: { background: '#22c55e', border: '#4ade80' },
+                            shape: 'ellipse',
+                            font: { color: '#fff' }
+                        });
+                    }
+
+                    // Add tools
+                    for (const tool of this.graph.tools || []) {
+                        visNodes.push({
+                            id: `tool:${tool.tool_id}`,
+                            label: tool.name,
+                            color: { background: '#a855f7', border: '#c084fc' },
+                            shape: 'diamond',
+                            font: { color: '#fff' }
+                        });
+                    }
+
+                    // Add connections
+                    for (const conn of this.graph.connections || []) {
+                        visEdges.push({
+                            from: conn.from,
+                            to: conn.to,
+                            arrows: 'to',
+                            color: { color: '#64748b', opacity: 0.8 },
+                            title: conn.type
+                        });
+                    }
+
+                    const data = { nodes: visNodes, edges: visEdges };
+                    const options = {
+                        physics: {
+                            enabled: true,
+                            solver: 'forceAtlas2Based',
+                            stabilization: { iterations: 100 }
+                        },
+                        nodes: {
+                            borderWidth: 2,
+                            shadow: true
+                        },
+                        edges: {
+                            width: 1.5,
+                            smooth: { type: 'continuous' }
+                        },
+                        interaction: {
+                            hover: true,
+                            tooltipDelay: 200
+                        }
+                    };
+
+                    this.network = new vis.Network(container, data, options);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

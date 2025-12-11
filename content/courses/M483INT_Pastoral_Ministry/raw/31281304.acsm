@@ -1,0 +1,39 @@
+<fulfillmentToken fulfillmentType="loan" auth="user" xmlns="http://ns.adobe.com/adept">
+  <distributor>urn:uuid:9cb786e8-586a-4950-8901-fff8d2ee6025</distributor>
+  <operatorURL>https://acs.ebookcentral.proquest.com/fulfillment</operatorURL>
+  <transaction>31281304_638297496</transaction>
+  <purchase>2025-12-16T08:44:06+00:00</purchase>
+  <expiration>2025-12-16T14:44:06+00:00</expiration>
+  <resourceItemInfo>
+    <resource>urn:uuid:e0000000-0000-0000-0000-000031281304</resource>
+    <resourceItem>0</resourceItem>
+    <metadata>
+      <dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">Blessing It All</dc:title>
+      <dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Concannon, Heather;Palm, Allison;</dc:creator>
+      <dc:publisher xmlns:dc="http://purl.org/dc/elements/1.1/">Unitarian Universalist Association</dc:publisher>
+      <dc:identifier xmlns:dc="http://purl.org/dc/elements/1.1/">31281304</dc:identifier>
+      <dc:format xmlns:dc="http://purl.org/dc/elements/1.1/">application/epub+zip</dc:format>
+      <dc:language xmlns:dc="http://purl.org/dc/elements/1.1/">en</dc:language>
+    </metadata>
+    <licenseToken>
+      <resource>urn:uuid:e0000000-0000-0000-0000-000031281304</resource>
+      <permissions>
+        <display>
+          <duration>604799</duration>
+        </display>
+        <excerpt>
+          <duration>604799</duration>
+          <count initial="69" max="69" incrementInterval="8765"/>
+        </excerpt>
+        <print>
+          <duration>604799</duration>
+          <count initial="138" max="138" incrementInterval="4382"/>
+        </print>
+        <play>
+          <duration>604799</duration>
+        </play>
+      </permissions>
+    </licenseToken>
+  </resourceItemInfo>
+  <hmac>PraUsG5960kM3mIKdNKtjzCwQGQ=</hmac>
+</fulfillmentToken>

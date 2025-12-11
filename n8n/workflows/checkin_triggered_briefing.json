@@ -1,0 +1,238 @@
+{
+  "name": "Check-In Triggered Daily Briefing",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "checkin-complete",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Check-In Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.period }}",
+              "operation": "equals",
+              "value2": "am"
+            }
+          ]
+        }
+      },
+      "id": "is-am-checkin",
+      "name": "Is AM Check-In?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse check-in data and prepare context\nconst checkinData = $input.first().json;\n\nconst context = {\n  date: checkinData.date || new Date().toISOString().split('T')[0],\n  energy: checkinData.energy || 5,\n  focus: checkinData.focus || 'medium',\n  priorities: checkinData.priorities || [],\n  adhd_strategy: checkinData.adhd_strategy || '',\n  meditation_planned: checkinData.meditation_planned || false,\n  meditation_type: checkinData.meditation_type || 'Trekchö',\n  mood: checkinData.mood || 'stable',\n  course_week: checkinData.course_week || 1,\n  readings_behind: checkinData.readings_behind || 0\n};\n\n// Generate ADHD tip based on energy\nlet adhd_tip = '';\nif (context.energy <= 4) {\n  const tips = [\n    'Start with a 10-minute walk. Movement activates focus.',\n    'Use body doubling or a virtual co-working session.',\n    'Break first task into 5-minute chunks.'\n  ];\n  adhd_tip = tips[Math.floor(Math.random() * tips.length)];\n} else if (context.energy <= 7) {\n  const tips = [\n    'Use a visual timer for 25-minute blocks.',\n    'Do hardest task in the next 2 hours.',\n    'Keep phone in another room during deep work.'\n  ];\n  adhd_tip = tips[Math.floor(Math.random() * tips.length)];\n} else {\n  adhd_tip = 'High energy - tackle your most challenging task now!';\n}\n\ncontext.adhd_tip = adhd_tip;\n\n// Boundary reminders by week\nconst reminders = {\n  1: 'Boundaries define where you end and others begin.',\n  2: 'Your boundaries were shaped in childhood. Understanding is the first step.',\n  3: 'Which boundary problem shows up for you today?',\n  4: 'You are responsible TO others, not FOR others.',\n  5: 'What belief about boundaries might be limiting you?',\n  6: 'Self-boundaries are about self-control, not controlling others.',\n  7: 'Healing from narcissistic patterns takes time. Be patient.',\n  8: 'Family boundaries require courage. Small steps count.',\n  9: 'Ministry boundaries protect your calling.',\n  10: 'Recovery is not linear. Some days are harder.',\n  11: 'The damage was real, but so is healing.',\n  12: 'Integration means living boundaries, not just knowing them.',\n  13: 'Your spiritual boundaries matter too.',\n  14: 'Digital boundaries are boundaries too.',\n  15: 'Trust your growth. You know what you need.'\n};\n\ncontext.boundary_reminder = reminders[context.course_week] || reminders[1];\n\nreturn { json: context };"
+      },
+      "id": "prepare-context",
+      "name": "Prepare Briefing Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        650,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const ctx = $input.first().json;\nconst dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });\nconst dateFormatted = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });\n\nconst p1 = ctx.priorities[0] || 'your top priority';\nconst p2 = ctx.priorities[1] || null;\n\nlet energySection = '';\nif (ctx.energy <= 4) {\n  energySection = `Your energy is at ${ctx.energy} today. Start with something energizing—movement, music, or a quick win.`;\n} else {\n  energySection = `You're at ${ctx.energy} energy today. Good foundation. Channel it into your top priority early.`;\n}\n\nlet courseSection = '';\nif (ctx.readings_behind > 0) {\n  courseSection = `You're ${ctx.readings_behind} readings behind for Week ${ctx.course_week}. Consider audiobook during commute.`;\n} else {\n  courseSection = `On track with Week ${ctx.course_week}. Nice work.`;\n}\n\nlet meditationSection = '';\nif (ctx.meditation_planned) {\n  meditationSection = `${ctx.meditation_type} practice is planned. Protect that time.`;\n} else {\n  meditationSection = 'Remember your practice commitments. Even 10 minutes shifts the day.';\n}\n\nconst script = [\n  `Good morning. It's ${dayName}, ${dateFormatted}. Here's your 90-second focus briefing.`,\n  energySection,\n  `Your number one today: ${p1}.${p2 ? ` Second: ${p2}.` : ''} Block focused time for these.`,\n  ctx.adhd_tip,\n  courseSection,\n  meditationSection,\n  ctx.boundary_reminder,\n  `You've got this. Check in tonight. Have a focused day.`\n].join(' ');\n\nreturn { \n  json: { \n    script: script,\n    word_count: script.split(' ').length,\n    estimated_duration_sec: Math.round(script.split(' ').length * 0.4),\n    context: ctx\n  } \n};"
+      },
+      "id": "generate-script",
+      "name": "Generate Script",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        850,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8080/tts/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.script }}"
+            },
+            {
+              "name": "voice",
+              "value": "af_nicole"
+            },
+            {
+              "name": "speed",
+              "value": "1.1"
+            },
+            {
+              "name": "output_format",
+              "value": "mp3"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "tts-request",
+      "name": "Generate Audio (TTS)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1050,
+        200
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "const scriptData = $('Generate Script').first().json;\nconst ttsResult = $input.first().json;\n\nconst today = new Date().toISOString().split('T')[0];\n\n// Log the generation\nconst logEntry = {\n  timestamp: new Date().toISOString(),\n  type: 'daily_briefing',\n  date: today,\n  script_word_count: scriptData.word_count,\n  estimated_duration: scriptData.estimated_duration_sec,\n  tts_status: ttsResult.error ? 'failed' : 'success',\n  context_summary: {\n    energy: scriptData.context.energy,\n    priorities_count: scriptData.context.priorities.length,\n    course_week: scriptData.context.course_week\n  }\n};\n\nreturn {\n  json: {\n    status: 'completed',\n    date: today,\n    script: scriptData.script,\n    word_count: scriptData.word_count,\n    log: logEntry\n  }\n};"
+      },
+      "id": "finalize",
+      "name": "Finalize & Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1250,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"status\": \"skipped\", \"reason\": \"Only AM check-ins trigger briefing generation\"}"
+      },
+      "id": "respond-skip",
+      "name": "Skip Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        650,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Check-In Webhook": {
+      "main": [
+        [
+          {
+            "node": "Is AM Check-In?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is AM Check-In?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Briefing Context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skip Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Briefing Context": {
+      "main": [
+        [
+          {
+            "node": "Generate Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Script": {
+      "main": [
+        [
+          {
+            "node": "Generate Audio (TTS)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Audio (TTS)": {
+      "main": [
+        [
+          {
+            "node": "Finalize & Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finalize & Log": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "HB411"
+    },
+    {
+      "name": "Daily"
+    },
+    {
+      "name": "Briefing"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "narrator_female",
+  "description": "Professional female narrator voice. Warm, engaging.",
+  "backends": {
+    "kokoro": {
+      "voice_id": "af_heart"
+    },
+    "parler": {
+      "prompt": "A professional female narrator voice. Warm and engaging, clear enunciation."
+    },
+    "openvoice": {
+      "style": "default"
+    }
+  },
+  "notes": "Ideal for audiobooks and presentations"
+}

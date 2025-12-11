@@ -1,0 +1,16 @@
+{
+  "name": "podcast_host",
+  "description": "Casual, friendly podcast host voice.",
+  "backends": {
+    "kokoro": {
+      "voice_id": "af_bella"
+    },
+    "parler": {
+      "prompt": "A casual, friendly voice. Conversational tone, natural pace, slight warmth."
+    },
+    "openvoice": {
+      "style": "friendly"
+    }
+  },
+  "notes": "Good for casual content and podcasts"
+}

@@ -1,0 +1,18 @@
+{
+  "courses": [
+    {
+      "id": "a5fffc24",
+      "code": "CS 401",
+      "name": "Advanced Algorithms",
+      "instructor": "Dr. Sarah Chen",
+      "semester": "Fall",
+      "year": 2025,
+      "credits": 3,
+      "schedule": null,
+      "syllabus_path": "content/courses/CS401_Advanced_Algorithms_Syllabus.md",
+      "obsidian_folder": "Courses/2025/Fall/CS 401",
+      "created_at": "2025-12-04T03:27:30.522275"
+    }
+  ],
+  "updated_at": "2025-12-04T03:27:30.523275"
+}

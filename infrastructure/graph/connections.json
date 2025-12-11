@@ -1,0 +1,1127 @@
+{
+  "$schema": "./connections.schema.json",
+  "version": "1.0.0",
+  "updated_at": null,
+  "agents": {
+    "librarian": {
+      "name": "Librarian Agent",
+      "path": "agents/librarian/librarian_agent.py",
+      "uses_tools": [
+        "obsidian"
+      ],
+      "uses_nodes": [
+        "chromadb",
+        "ollama",
+        "librarian"
+      ],
+      "provides": [
+        "rag_retrieval",
+        "fact_checking",
+        "lateral_search"
+      ],
+      "consumes": [
+        "embeddings",
+        "documents"
+      ],
+      "context_requirements": {
+        "window_size": "large",
+        "memory_types": [
+          "semantic",
+          "episodic"
+        ],
+        "latency": "interactive"
+      }
+    },
+    "research_intel": {
+      "name": "Research Intelligence Agent",
+      "path": "agents/research_intel/research_intel_agent.py",
+      "uses_tools": [
+        "obsidian"
+      ],
+      "uses_nodes": [
+        "chromadb",
+        "ollama",
+        "librarian"
+      ],
+      "provides": [
+        "research_synthesis",
+        "document_analysis",
+        "report_generation"
+      ],
+      "consumes": [
+        "documents",
+        "embeddings",
+        "memories"
+      ],
+      "context_requirements": {
+        "window_size": "large",
+        "memory_types": [
+          "semantic",
+          "episodic",
+          "working"
+        ],
+        "latency": "batch"
+      }
+    },
+    "daily_brief": {
+      "name": "Daily Brief Agent",
+      "path": "agents/daily_brief/daily_brief_agent.py",
+      "uses_tools": [],
+      "uses_nodes": [
+        "ollama",
+        "n8n"
+      ],
+      "provides": [
+        "daily_summary",
+        "recommendations"
+      ],
+      "consumes": [
+        "calendar",
+        "tasks",
+        "emails"
+      ],
+      "context_requirements": {
+        "window_size": "medium",
+        "memory_types": [
+          "working"
+        ],
+        "latency": "batch"
+      }
+    },
+    "personal_assistant": {
+      "name": "Personal Assistant Agent",
+      "path": "agents/personal_assistant/personal_assistant_agent.py",
+      "uses_tools": [],
+      "uses_nodes": [
+        "ollama"
+      ],
+      "provides": [
+        "task_management",
+        "reminders",
+        "intent_parsing"
+      ],
+      "consumes": [
+        "user_input"
+      ],
+      "context_requirements": {
+        "window_size": "small",
+        "memory_types": [
+          "conversation",
+          "working"
+        ],
+        "latency": "realtime"
+      }
+    },
+    "intake_agent": {
+      "name": "Intake Agent",
+      "path": "agents/intake_agent/intake_agent.py",
+      "uses_tools": [],
+      "uses_nodes": [
+        "ollama",
+        "agent_gateway"
+      ],
+      "provides": [
+        "requirement_analysis",
+        "team_design",
+        "clarification"
+      ],
+      "consumes": [
+        "user_input"
+      ],
+      "context_requirements": {
+        "window_size": "medium",
+        "memory_types": [
+          "conversation"
+        ],
+        "latency": "interactive"
+      }
+    },
+    "content_creator": {
+      "name": "Content Creator Agent",
+      "path": "agents/content_creator/content_creator_agent.py",
+      "uses_tools": [
+        "ffmpeg"
+      ],
+      "uses_nodes": [
+        "ollama",
+        "convertx"
+      ],
+      "provides": [
+        "prompt_enhancement",
+        "content_generation"
+      ],
+      "consumes": [
+        "user_prompts"
+      ],
+      "context_requirements": {
+        "window_size": "small",
+        "memory_types": [
+          "working"
+        ],
+        "latency": "interactive"
+      }
+    },
+    "audiobook_creator": {
+      "name": "Audiobook Creator Agent",
+      "path": "agents/audiobook_creator/audiobook_creator_agent.py",
+      "uses_tools": [
+        "ffmpeg"
+      ],
+      "uses_nodes": [
+        "convertx"
+      ],
+      "provides": [
+        "audiobook_generation",
+        "voice_synthesis"
+      ],
+      "consumes": [
+        "text_content",
+        "voice_profiles"
+      ],
+      "context_requirements": {
+        "window_size": "large",
+        "memory_types": [
+          "working"
+        ],
+        "latency": "batch"
+      }
+    },
+    "podcast_creator": {
+      "name": "Podcast Creator Agent",
+      "path": "agents/podcast_creator/podcast_creator_agent.py",
+      "uses_tools": [
+        "ffmpeg"
+      ],
+      "uses_nodes": [
+        "convertx"
+      ],
+      "provides": [
+        "script_generation",
+        "episode_creation"
+      ],
+      "consumes": [
+        "notes",
+        "topics"
+      ],
+      "context_requirements": {
+        "window_size": "medium",
+        "memory_types": [
+          "working"
+        ],
+        "latency": "batch"
+      }
+    },
+    "boot_hardening": {
+      "name": "Boot Hardening Agent",
+      "path": "agents/boot_hardening/boot_hardening_agent.py",
+      "uses_tools": [
+        "sysinternals",
+        "simplewall"
+      ],
+      "uses_nodes": [],
+      "provides": [
+        "security_analysis",
+        "boot_verification"
+      ],
+      "consumes": [
+        "system_state"
+      ],
+      "context_requirements": {
+        "window_size": "small",
+        "memory_types": [],
+        "latency": "batch"
+      }
+    },
+    "focus_guardrails": {
+      "name": "Focus Guardrails Agent",
+      "path": "agents/focus_guardrails/focus_guardrails_agent.py",
+      "uses_tools": [
+        "simplewall"
+      ],
+      "uses_nodes": [],
+      "provides": [
+        "focus_sessions",
+        "distraction_blocking"
+      ],
+      "consumes": [
+        "user_preferences"
+      ],
+      "context_requirements": {
+        "window_size": "small",
+        "memory_types": [
+          "procedural"
+        ],
+        "latency": "realtime"
+      }
+    },
+    "os_optimizer": {
+      "name": "OS Optimizer Agent",
+      "path": "agents/os_optimizer/os_optimizer_agent.py",
+      "uses_tools": [
+        "sysinternals"
+      ],
+      "uses_nodes": [],
+      "provides": [
+        "performance_analysis",
+        "cleanup"
+      ],
+      "consumes": [
+        "system_metrics"
+      ],
+      "context_requirements": {
+        "window_size": "small",
+        "memory_types": [],
+        "latency": "batch"
+      }
+    },
+    "security_ops": {
+      "name": "Security Operations Agent",
+      "path": "agents/security_ops/security_ops_agent.py",
+      "uses_tools": [
+        "sysinternals",
+        "simplewall"
+      ],
+      "uses_nodes": [],
+      "provides": [
+        "port_scanning",
+        "security_posture"
+      ],
+      "consumes": [
+        "network_state"
+      ],
+      "context_requirements": {
+        "window_size": "small",
+        "memory_types": [],
+        "latency": "interactive"
+      }
+    },
+    "email_manager": {
+      "name": "Email Manager Agent",
+      "path": "agents/email_manager/email_manager_agent.py",
+      "uses_tools": [],
+      "uses_nodes": [
+        "ollama"
+      ],
+      "provides": [
+        "email_drafting",
+        "contact_management"
+      ],
+      "consumes": [
+        "contacts",
+        "email_templates"
+      ],
+      "context_requirements": {
+        "window_size": "medium",
+        "memory_types": [
+          "working"
+        ],
+        "latency": "interactive"
+      }
+    },
+    "live_caption": {
+      "name": "Live Caption Agent",
+      "path": "agents/live_caption/live_caption_agent.py",
+      "uses_tools": [
+        "ffmpeg"
+      ],
+      "uses_nodes": [],
+      "provides": [
+        "transcription",
+        "captioning"
+      ],
+      "consumes": [
+        "audio_stream"
+      ],
+      "context_requirements": {
+        "window_size": "small",
+        "memory_types": [
+          "working"
+        ],
+        "latency": "realtime"
+      }
+    },
+    "knowledge_management": {
+      "name": "Knowledge Management Agent",
+      "path": "agents/knowledge_management/knowledge_management_agent.py",
+      "uses_tools": [
+        "obsidian"
+      ],
+      "uses_nodes": [],
+      "provides": [
+        "note_management",
+        "vault_operations"
+      ],
+      "consumes": [
+        "vault_content"
+      ],
+      "context_requirements": {
+        "window_size": "medium",
+        "memory_types": [
+          "semantic"
+        ],
+        "latency": "interactive"
+      }
+    },
+    "drm_liberation": {
+      "name": "DRM Liberation Agent",
+      "path": "agents/drm_liberation/drm_liberation_agent.py",
+      "uses_tools": [],
+      "uses_nodes": [
+        "convertx"
+      ],
+      "provides": [
+        "drm_analysis",
+        "format_liberation"
+      ],
+      "consumes": [
+        "protected_content"
+      ],
+      "context_requirements": {
+        "window_size": "small",
+        "memory_types": [],
+        "latency": "batch"
+      }
+    },
+    "workspace_scanner": {
+      "name": "Workspace Scanner Agent",
+      "path": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "uses_tools": [],
+      "uses_nodes": [],
+      "provides": [
+        "workspace_map",
+        "capability_detection",
+        "agent_discovery",
+        "file_monitoring",
+        "infrastructure_awareness"
+      ],
+      "consumes": [
+        "file_system",
+        "agent_instructions"
+      ],
+      "context_requirements": {
+        "window_size": "large",
+        "memory_types": [
+          "semantic"
+        ],
+        "latency": "batch"
+      }
+    }
+  },
+  "pipelines": {
+    "syllabus_to_calendar": {
+      "name": "Syllabus to Calendar Pipeline",
+      "description": "Parse syllabus, extract events, create calendar entries",
+      "stages": [
+        {
+          "name": "parse",
+          "handler": "parsers/syllabus",
+          "input": "pdf/docx",
+          "output": "events_json"
+        },
+        {
+          "name": "normalize",
+          "handler": "scheduling/schedule_optimizer",
+          "input": "events_json",
+          "output": "normalized_events"
+        },
+        {
+          "name": "calendar_sync",
+          "handler": "integrations/calendars",
+          "input": "normalized_events",
+          "output": "calendar_entries"
+        }
+      ],
+      "triggers": [
+        "manual",
+        "file_upload"
+      ]
+    },
+    "media_processing": {
+      "name": "Media Processing Pipeline",
+      "description": "Convert, compress, extract subtitles from media",
+      "stages": [
+        {
+          "name": "analyze",
+          "handler": "tools/ffmpeg",
+          "input": "media_file",
+          "output": "media_info"
+        },
+        {
+          "name": "convert",
+          "handler": "convertx",
+          "input": "media_file",
+          "output": "converted_file"
+        },
+        {
+          "name": "extract_subs",
+          "handler": "tools/ffmpeg",
+          "input": "media_file",
+          "output": "subtitle_file"
+        },
+        {
+          "name": "transcribe",
+          "handler": "agents/live_caption",
+          "input": "audio",
+          "output": "transcript_md"
+        }
+      ],
+      "triggers": [
+        "file_upload",
+        "manual"
+      ]
+    },
+    "research_workflow": {
+      "name": "Research Workflow Pipeline",
+      "description": "Ingest documents, create embeddings, enable RAG",
+      "stages": [
+        {
+          "name": "ingest",
+          "handler": "workspace/incoming",
+          "input": "documents",
+          "output": "staged_docs"
+        },
+        {
+          "name": "chunk",
+          "handler": "integrations/rag_pipeline",
+          "input": "staged_docs",
+          "output": "chunks"
+        },
+        {
+          "name": "embed",
+          "handler": "chromadb",
+          "input": "chunks",
+          "output": "embeddings"
+        },
+        {
+          "name": "index",
+          "handler": "librarian",
+          "input": "embeddings",
+          "output": "searchable_index"
+        }
+      ],
+      "triggers": [
+        "file_upload",
+        "scheduled"
+      ]
+    },
+    "daily_brief_workflow": {
+      "name": "Daily Brief Pipeline",
+      "description": "Aggregate data and generate morning brief",
+      "stages": [
+        {
+          "name": "collect_calendar",
+          "handler": "integrations/calendars",
+          "input": "date_range",
+          "output": "events"
+        },
+        {
+          "name": "collect_tasks",
+          "handler": "agents/personal_assistant",
+          "input": "filters",
+          "output": "tasks"
+        },
+        {
+          "name": "generate_brief",
+          "handler": "agents/daily_brief",
+          "input": "aggregated_data",
+          "output": "brief_md"
+        }
+      ],
+      "triggers": [
+        "scheduled:daily:0700"
+      ]
+    },
+    "note_integration": {
+      "name": "Note Integration Pipeline",
+      "description": "Process class notes, link to references, integrate into knowledge",
+      "stages": [
+        {
+          "name": "analyze",
+          "handler": "agents/research_intel",
+          "input": "raw_notes",
+          "output": "analyzed_notes"
+        },
+        {
+          "name": "link_refs",
+          "handler": "agents/librarian",
+          "input": "analyzed_notes",
+          "output": "linked_notes"
+        },
+        {
+          "name": "embed",
+          "handler": "chromadb",
+          "input": "linked_notes",
+          "output": "note_embeddings"
+        },
+        {
+          "name": "integrate",
+          "handler": "agents/knowledge_management",
+          "input": "linked_notes",
+          "output": "obsidian_note"
+        }
+      ],
+      "triggers": [
+        "manual",
+        "file_upload"
+      ],
+      "requires_approval": true
+    },
+    "_comment_langflow": "========== LANGFLOW FLOWS ==========",
+    "langflow_coordinator": {
+      "name": "Langflow Coordinator",
+      "type": "langflow",
+      "description": "Central coordinator flow that routes requests to specialist agents",
+      "path": "langflow/flows/coordinator.json",
+      "stages": [
+        {
+          "name": "intent_classification",
+          "handler": "langflow/coordinator",
+          "input": "user_request",
+          "output": "classified_intent"
+        },
+        {
+          "name": "route_to_specialist",
+          "handler": "langflow/coordinator",
+          "input": "classified_intent",
+          "output": "specialist_response"
+        }
+      ],
+      "triggers": [
+        "api",
+        "gateway"
+      ],
+      "port": 7860
+    },
+    "langflow_boot_hardening_specialist": {
+      "name": "Boot Hardening Specialist Flow",
+      "type": "langflow",
+      "description": "Visual reasoning flow for system security and boot integrity checks",
+      "path": "langflow/flows/boot_hardening_specialist.json",
+      "stages": [
+        {
+          "name": "security_scan",
+          "handler": "langflow/boot_hardening",
+          "input": "system_state",
+          "output": "security_report"
+        }
+      ],
+      "triggers": [
+        "scheduled:daily:0600",
+        "coordinator"
+      ],
+      "connected_agent": "boot_hardening",
+      "port": 7860
+    },
+    "langflow_daily_brief_specialist": {
+      "name": "Daily Brief Specialist Flow",
+      "type": "langflow",
+      "description": "Visual reasoning flow for generating daily briefings",
+      "path": "langflow/flows/daily_brief_specialist.json",
+      "stages": [
+        {
+          "name": "aggregate_data",
+          "handler": "langflow/daily_brief",
+          "input": "data_sources",
+          "output": "aggregated_data"
+        },
+        {
+          "name": "generate_brief",
+          "handler": "langflow/daily_brief",
+          "input": "aggregated_data",
+          "output": "brief_markdown"
+        }
+      ],
+      "triggers": [
+        "scheduled:daily:0700",
+        "coordinator"
+      ],
+      "connected_agent": "daily_brief",
+      "port": 7860
+    },
+    "langflow_focus_guardrails_specialist": {
+      "name": "Focus Guardrails Specialist Flow",
+      "type": "langflow",
+      "description": "Visual reasoning flow for productivity management and distraction blocking",
+      "path": "langflow/flows/focus_guardrails_specialist.json",
+      "stages": [
+        {
+          "name": "session_management",
+          "handler": "langflow/focus_guardrails",
+          "input": "session_config",
+          "output": "session_state"
+        }
+      ],
+      "triggers": [
+        "manual",
+        "coordinator"
+      ],
+      "connected_agent": "focus_guardrails",
+      "port": 7860
+    },
+    "langflow_knowledge_management_specialist": {
+      "name": "Knowledge Management Specialist Flow",
+      "type": "langflow",
+      "description": "Visual reasoning flow for Obsidian integration and note management",
+      "path": "langflow/flows/knowledge_management_specialist.json",
+      "stages": [
+        {
+          "name": "note_processing",
+          "handler": "langflow/knowledge_management",
+          "input": "raw_content",
+          "output": "processed_note"
+        },
+        {
+          "name": "vault_sync",
+          "handler": "langflow/knowledge_management",
+          "input": "processed_note",
+          "output": "vault_entry"
+        }
+      ],
+      "triggers": [
+        "file_upload",
+        "coordinator"
+      ],
+      "connected_agent": "knowledge_management",
+      "port": 7860
+    },
+    "langflow_knowledge_specialist": {
+      "name": "Knowledge Specialist Flow",
+      "type": "langflow",
+      "description": "Visual reasoning flow for knowledge retrieval and RAG queries",
+      "path": "langflow/flows/knowledge_specialist.json",
+      "stages": [
+        {
+          "name": "query_processing",
+          "handler": "langflow/knowledge_specialist",
+          "input": "user_query",
+          "output": "search_results"
+        }
+      ],
+      "triggers": [
+        "api",
+        "coordinator"
+      ],
+      "port": 7860
+    },
+    "langflow_code_assistant_oauth": {
+      "name": "Code Assistant OAuth Flow",
+      "type": "langflow",
+      "description": "OAuth-enabled code assistance flow for development tasks",
+      "path": "langflow/flows/code_assistant_oauth.json",
+      "stages": [
+        {
+          "name": "auth_check",
+          "handler": "langflow/code_assistant_oauth",
+          "input": "oauth_token",
+          "output": "auth_state"
+        },
+        {
+          "name": "code_assist",
+          "handler": "langflow/code_assistant_oauth",
+          "input": "code_request",
+          "output": "code_response"
+        }
+      ],
+      "triggers": [
+        "api",
+        "manual"
+      ],
+      "requires_auth": true,
+      "port": 7860
+    },
+    "langflow_yolo_coordinator": {
+      "name": "YOLO Coordinator Flow",
+      "type": "langflow",
+      "description": "Autonomous task coordinator for rapid execution without restrictions",
+      "path": "langflow/flows/langflow_yolo_coordinator.json",
+      "stages": [
+        {
+          "name": "task_analysis",
+          "handler": "langflow/yolo_coordinator",
+          "input": "task_request",
+          "output": "execution_plan"
+        },
+        {
+          "name": "execute",
+          "handler": "langflow/yolo_coordinator",
+          "input": "execution_plan",
+          "output": "result"
+        }
+      ],
+      "triggers": [
+        "api",
+        "manual"
+      ],
+      "autonomous": true,
+      "port": 7860
+    },
+    "_comment_n8n": "========== N8N WORKFLOWS ==========",
+    "n8n_boot_hardening_trigger": {
+      "name": "Boot Hardening Trigger Workflow",
+      "type": "n8n",
+      "description": "Scheduled trigger for boot hardening security checks",
+      "path": "n8n/workflows/boot_hardening_trigger.json",
+      "stages": [
+        {
+          "name": "schedule_trigger",
+          "handler": "n8n/cron",
+          "input": "schedule",
+          "output": "trigger_event"
+        },
+        {
+          "name": "invoke_agent",
+          "handler": "n8n/http_request",
+          "input": "trigger_event",
+          "output": "agent_response"
+        }
+      ],
+      "triggers": [
+        "scheduled:daily:0600"
+      ],
+      "connected_langflow": "langflow_boot_hardening_specialist",
+      "port": 5678
+    },
+    "n8n_daily_brief_trigger": {
+      "name": "Daily Brief Trigger Workflow",
+      "type": "n8n",
+      "description": "Scheduled trigger for morning briefing generation",
+      "path": "n8n/workflows/daily_brief_trigger.json",
+      "stages": [
+        {
+          "name": "morning_trigger",
+          "handler": "n8n/cron",
+          "input": "schedule",
+          "output": "trigger_event"
+        },
+        {
+          "name": "invoke_brief",
+          "handler": "n8n/http_request",
+          "input": "trigger_event",
+          "output": "brief_response"
+        }
+      ],
+      "triggers": [
+        "scheduled:daily:0700"
+      ],
+      "connected_langflow": "langflow_daily_brief_specialist",
+      "port": 5678
+    },
+    "n8n_focus_guardrails_monitor": {
+      "name": "Focus Guardrails Monitor Workflow",
+      "type": "n8n",
+      "description": "Monitors and enforces focus session rules",
+      "path": "n8n/workflows/focus_guardrails_monitor.json",
+      "stages": [
+        {
+          "name": "session_monitor",
+          "handler": "n8n/interval",
+          "input": "interval_config",
+          "output": "check_event"
+        },
+        {
+          "name": "enforce_rules",
+          "handler": "n8n/code",
+          "input": "check_event",
+          "output": "enforcement_action"
+        }
+      ],
+      "triggers": [
+        "interval:5m",
+        "manual"
+      ],
+      "connected_langflow": "langflow_focus_guardrails_specialist",
+      "port": 5678
+    },
+    "n8n_knowledge_capture_trigger": {
+      "name": "Knowledge Capture Trigger Workflow",
+      "type": "n8n",
+      "description": "Triggers knowledge capture from various sources",
+      "path": "n8n/workflows/knowledge_capture_trigger.json",
+      "stages": [
+        {
+          "name": "watch_sources",
+          "handler": "n8n/file_trigger",
+          "input": "watched_paths",
+          "output": "new_content"
+        },
+        {
+          "name": "process_content",
+          "handler": "n8n/http_request",
+          "input": "new_content",
+          "output": "processed_content"
+        }
+      ],
+      "triggers": [
+        "file_watch",
+        "webhook"
+      ],
+      "connected_langflow": "langflow_knowledge_management_specialist",
+      "port": 5678
+    },
+    "n8n_convertx_file_converter": {
+      "name": "ConvertX File Converter Workflow",
+      "type": "n8n",
+      "description": "Universal file format conversion using ConvertX service",
+      "path": "n8n/workflows/convertx_file_converter.json",
+      "stages": [
+        {
+          "name": "receive_file",
+          "handler": "n8n/webhook",
+          "input": "file_upload",
+          "output": "file_metadata"
+        },
+        {
+          "name": "convert",
+          "handler": "n8n/http_request",
+          "input": "file_metadata",
+          "output": "converted_file"
+        }
+      ],
+      "triggers": [
+        "webhook",
+        "manual"
+      ],
+      "connected_service": "convertx",
+      "port": 5678
+    },
+    "n8n_course_semester_setup": {
+      "name": "Course Semester Setup Workflow",
+      "type": "n8n",
+      "description": "Automates semester course setup from syllabus uploads",
+      "path": "n8n/workflows/course_semester_setup.json",
+      "stages": [
+        {
+          "name": "syllabus_upload",
+          "handler": "n8n/webhook",
+          "input": "syllabus_file",
+          "output": "syllabus_data"
+        },
+        {
+          "name": "parse_syllabus",
+          "handler": "n8n/code",
+          "input": "syllabus_data",
+          "output": "course_events"
+        },
+        {
+          "name": "create_calendar",
+          "handler": "n8n/google_calendar",
+          "input": "course_events",
+          "output": "calendar_entries"
+        }
+      ],
+      "triggers": [
+        "webhook",
+        "manual"
+      ],
+      "connected_pipeline": "syllabus_to_calendar",
+      "port": 5678
+    },
+    "n8n_librarian_ingest_trigger": {
+      "name": "Librarian Ingest Trigger Workflow",
+      "type": "n8n",
+      "description": "Triggers document ingestion into librarian RAG system",
+      "path": "n8n/workflows/librarian_ingest_trigger.json",
+      "stages": [
+        {
+          "name": "document_watch",
+          "handler": "n8n/file_trigger",
+          "input": "watched_paths",
+          "output": "new_documents"
+        },
+        {
+          "name": "ingest",
+          "handler": "n8n/http_request",
+          "input": "new_documents",
+          "output": "ingested_docs"
+        }
+      ],
+      "triggers": [
+        "file_watch",
+        "webhook"
+      ],
+      "connected_agent": "librarian",
+      "port": 5678
+    },
+    "n8n_librarian_query_webhook": {
+      "name": "Librarian Query Webhook Workflow",
+      "type": "n8n",
+      "description": "Webhook endpoint for librarian knowledge queries",
+      "path": "n8n/workflows/librarian_query_webhook.json",
+      "stages": [
+        {
+          "name": "receive_query",
+          "handler": "n8n/webhook",
+          "input": "query_request",
+          "output": "query_data"
+        },
+        {
+          "name": "search",
+          "handler": "n8n/http_request",
+          "input": "query_data",
+          "output": "search_results"
+        },
+        {
+          "name": "respond",
+          "handler": "n8n/respond_to_webhook",
+          "input": "search_results",
+          "output": "response"
+        }
+      ],
+      "triggers": [
+        "webhook"
+      ],
+      "connected_agent": "librarian",
+      "port": 5678
+    },
+    "n8n_yolo_workflow": {
+      "name": "YOLO Autonomous Workflow",
+      "type": "n8n",
+      "description": "Autonomous workflow execution without restrictions",
+      "path": "n8n/workflows/n8n_yolo_workflow.json",
+      "stages": [
+        {
+          "name": "task_receive",
+          "handler": "n8n/webhook",
+          "input": "task_request",
+          "output": "task_data"
+        },
+        {
+          "name": "execute_autonomous",
+          "handler": "n8n/code",
+          "input": "task_data",
+          "output": "execution_result"
+        }
+      ],
+      "triggers": [
+        "webhook",
+        "manual"
+      ],
+      "autonomous": true,
+      "connected_langflow": "langflow_yolo_coordinator",
+      "port": 5678
+    },
+    "_comment_infrastructure": "========== INFRASTRUCTURE PIPELINES ==========",
+    "langflow_workspace_scanner_specialist": {
+      "name": "Workspace Scanner Specialist Flow",
+      "type": "langflow",
+      "description": "Visual reasoning flow for workspace analysis and capability detection",
+      "path": "langflow/flows/workspace_scanner_specialist.json",
+      "stages": [
+        {
+          "name": "load_workspace_map",
+          "handler": "langflow/workspace_scanner",
+          "input": "workspace_path",
+          "output": "workspace_map"
+        },
+        {
+          "name": "analyze_capabilities",
+          "handler": "langflow/workspace_scanner",
+          "input": "workspace_map",
+          "output": "capability_analysis"
+        },
+        {
+          "name": "analyze_agents",
+          "handler": "langflow/workspace_scanner",
+          "input": "workspace_map",
+          "output": "agent_analysis"
+        },
+        {
+          "name": "analyze_pipelines",
+          "handler": "langflow/workspace_scanner",
+          "input": "workspace_map",
+          "output": "pipeline_analysis"
+        }
+      ],
+      "triggers": [
+        "api",
+        "manual",
+        "file_watch"
+      ],
+      "connected_agent": "workspace_scanner",
+      "port": 7860
+    },
+    "n8n_workspace_map_updater": {
+      "name": "Workspace Map Auto-Update Workflow",
+      "type": "n8n",
+      "description": "Automatically updates workspace map on file changes",
+      "path": "n8n/workflows/workspace_map_updater.json",
+      "stages": [
+        {
+          "name": "file_watch",
+          "handler": "n8n/localFileTrigger",
+          "input": "workspace_path",
+          "output": "file_events"
+        },
+        {
+          "name": "debounce",
+          "handler": "n8n/code",
+          "input": "file_events",
+          "output": "debounced_events"
+        },
+        {
+          "name": "run_scanner",
+          "handler": "n8n/executeCommand",
+          "input": "debounced_events",
+          "output": "scan_result"
+        },
+        {
+          "name": "notify_gateway",
+          "handler": "n8n/httpRequest",
+          "input": "scan_result",
+          "output": "notification"
+        }
+      ],
+      "triggers": [
+        "file_watch",
+        "scheduled:30m",
+        "webhook:/workspace-scan"
+      ],
+      "connected_langflow": "langflow_workspace_scanner_specialist",
+      "port": 5678
+    }
+  },
+  "data_flows": {
+    "embeddings": {
+      "producers": [
+        "chromadb",
+        "qdrant"
+      ],
+      "consumers": [
+        "librarian",
+        "research_intel"
+      ],
+      "storage": "knowledge/embeddings"
+    },
+    "memories": {
+      "producers": [
+        "agents/*"
+      ],
+      "consumers": [
+        "agents/*"
+      ],
+      "storage": "knowledge/memories",
+      "requires_approval": true
+    },
+    "rag_corpus": {
+      "producers": [
+        "research_workflow"
+      ],
+      "consumers": [
+        "librarian",
+        "research_intel"
+      ],
+      "storage": "knowledge/rag"
+    },
+    "working_files": {
+      "producers": [
+        "user",
+        "pipelines"
+      ],
+      "consumers": [
+        "pipelines",
+        "agents"
+      ],
+      "storage": "workspace/*"
+    }
+  }
+}
