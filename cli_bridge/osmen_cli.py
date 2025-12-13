@@ -59,7 +59,7 @@ def cmd_nl(args):
     # Lazy import to avoid extra deps for users not using nl.
     from cli_bridge.copilot_bridge import CopilotBridge
 
-    bridge = CopilotBridge(github_token=os.getenv("GITHUB_TOKEN"))
+    bridge = CopilotBridge(github_token=os.getenv("OSMEN_GITHUB_TOKEN"))
     if not bridge.cli_available:
         print("❌ GitHub Copilot CLI is not available.")
         print("   Install GitHub CLI + Copilot extension:")
@@ -78,11 +78,98 @@ def cmd_nl(args):
     )
     full_prompt = f"{context}\nTask: {prompt}".strip()
 
-    suggestion = bridge.suggest_command(full_prompt)
+    suggestion = bridge.suggest_command(
+        full_prompt,
+        retries=args.retries,
+        retry_sleep_s=args.retry_sleep,
+    )
     cmd = (suggestion.get("command") or suggestion.get("suggestion") or "").strip()
 
     if not cmd:
-        print("❌ Copilot returned an empty command")
+        if args.fallback in {"auto", "ollama"}:
+            try:
+                import asyncio
+
+                from integrations.llm_providers import get_llm_provider
+
+                async def _ollama_once() -> str:
+                    def _looks_placeholder(value: str) -> bool:
+                        v = (value or "").strip().lower()
+                        return (
+                            not v
+                            or v.startswith("your_")
+                            or v.startswith("change")
+                            or v.startswith("replace")
+                            or "example" in v
+                        )
+
+                    providers: list[str] = []
+
+                    if args.fallback == "ollama":
+                        providers = ["ollama"]
+                    else:
+                        # Auto mode: local-first, then cloud.
+                        providers = ["ollama", "anthropic", "openai"]
+
+                        # Skip obvious placeholder keys to avoid slow retries.
+                        openai_key = os.getenv("OPENAI_API_KEY", "")
+                        anthropic_key = os.getenv("ANTHROPIC_API_KEY", "")
+                        if _looks_placeholder(anthropic_key):
+                            providers = [p for p in providers if p != "anthropic"]
+                        if _looks_placeholder(openai_key):
+                            providers = [p for p in providers if p != "openai"]
+
+                    last_error: Exception | None = None
+                    for provider in providers:
+                        try:
+                            llm = await get_llm_provider(provider)
+                        except Exception as e:
+                            last_error = e
+                            continue
+
+                        try:
+                            kwargs = {"temperature": 0.1, "max_tokens": 256}
+                            if provider == "ollama":
+                                kwargs["model"] = args.ollama_model
+                            resp = await llm.generate(full_prompt, **kwargs)
+                            text = (resp.content or "").strip()
+                            lines = [
+                                ln.strip() for ln in text.splitlines() if ln.strip()
+                            ]
+                            return lines[-1] if lines else ""
+                        except Exception as e:
+                            last_error = e
+                            continue
+                        finally:
+                            await llm.close()
+
+                    if last_error is not None:
+                        raise last_error
+                    return ""
+
+                fallback_cmd = asyncio.run(_ollama_once())
+                if fallback_cmd:
+                    cmd = fallback_cmd
+                    suggestion = {
+                        "success": True,
+                        "command": cmd,
+                        "description": full_prompt,
+                        "method": "ollama_fallback",
+                    }
+            except Exception as e:
+                print(f"⚠️ Ollama fallback failed: {e}")
+
+    if not cmd:
+        print("❌ Copilot did not return a usable command.")
+        err = (suggestion.get("stderr") or suggestion.get("error") or "").strip()
+        if err:
+            print(f"   Details: {err}")
+        print("\nQuick checks:")
+        print("  - `gh auth status -h github.com`")
+        print("  - `gh auth refresh -h github.com -s copilot`")
+        print(
+            "  - Ensure `GITHUB_TOKEN`/`GH_TOKEN` are not set (they can override keyring auth)"
+        )
         return 4
 
     print(f"\n🧠 NL prompt: {prompt}")
@@ -609,6 +696,29 @@ Examples:
         "--no-capture",
         action="store_true",
         help="Do not capture stdout/stderr (stream to console)",
+    )
+    nl_parser.add_argument(
+        "--retries",
+        type=int,
+        default=2,
+        help="Retry Copilot suggest on transient errors",
+    )
+    nl_parser.add_argument(
+        "--retry-sleep",
+        type=float,
+        default=1.0,
+        help="Base seconds to sleep between retries (exponential backoff)",
+    )
+    nl_parser.add_argument(
+        "--fallback",
+        choices=["none", "auto", "ollama"],
+        default="auto",
+        help="Fallback engine when Copilot CLI fails",
+    )
+    nl_parser.add_argument(
+        "--ollama-model",
+        default="llama3.2",
+        help="Ollama model to use for fallback",
     )
 
     args = parser.parse_args()

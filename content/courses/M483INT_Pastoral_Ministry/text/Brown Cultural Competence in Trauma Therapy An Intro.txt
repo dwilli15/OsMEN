@@ -1,0 +1,953 @@
+--- Page 1 ---
+Cultural Competence in
+Trauma Therapy
+Beyond the Flashback
+Laura S. Brown
+American Psychological Association
+Washington, DC
+
+--- Page 2 ---
+Copyright © 2008 by the American Psychological Association. All rights reserved. Except
+as permitted under the United States Copyright Act of 1976, no part of this publication
+may be reproduced or distributed in any form or by any means, including, but not limited
+to, the process of scanning and digitization, or stored in a database or retrieval system,
+without the prior written permission of the publisher.
+Published by
+American Psychological Association
+750 First Street, NE
+Washington, DC 20002
+www.apa.org
+To order
+APA Order Department
+P.O. Box 92984
+Washington, DC 20090-2984
+Tel: (800) 374-2721; Direct: (202) 336-5510
+Fax: (202) 336-5502; TDD/TTY: (202) 336-6123
+Online: www.apa.org/books/
+E-mail: order@apa.org
+In the U.K., Europe, Africa, and the Middle East, copies may be ordered from
+American Psychological Association
+3 Henrietta Street
+Covent Garden, London
+WC2E 8LU England
+Typeset in Goudy by Stephen McDougal, Mechanicsville, MD
+Printer: United Book Press, Inc., Baltimore, MD
+Cover Designer: Naylor Design, Washington, DC
+Technical/Production Editor: Marian Haggard
+The opinions and statements published are the responsibility of the authors, and such
+opinions and statements do not necessarily represent the policies of the American
+Psychological Association.
+Library of Congress Cataloging-in-Publication Data
+Brown, Laura S.
+Cultural competence in trauma therapy : beyond the flashback / Laura S. Brown.—1st ed.
+p. ; cm.
+Includes bibliographical references and index.
+ISBN-13: 978-1-4338-0337-6 (hardcover : alk. paper)
+ISBN-10: 1-4338-0337-2 (hardcover : alk. paper)
+1. Post-traumatic stress disorder—Treatment—Cross-cultural studies. 2. Psychic
+trauma—Treatment—Cross-cultural studies. I. American Psychological Association.
+II. Title.
+[DNLM: 1. Stress Disorders, Post-Traumatic—therapy. 2. Cultural Diversity.
+3. Psychotherapy—methods. WM 170 B878c 2008]
+RC552.P67B764 2008
+362.196'8521—dc22 2007043650
+British Library Cataloguing-in-Publication Data
+A CIP record is available from the British Library.
+Printed in the United States of America
+First Edition
+
+--- Page 3 ---
+CONTENTS
+Acknowledgments vii
+Introduction: Trauma, a Multicultural Reality 3
+I. Culturally Competent Models of Trauma Treatment 21
+Chapter 1. Knowing Difference or We're All Diverse
+Here 23
+Chapter 2. Living in Multiple Identities in the
+Context of Trauma 49
+Chapter 3. Entering the Healing Process 61
+Chapter 4. Diversifying the Definition of Trauma 95
+II. Contextual Paradigms for Understanding the Nature of
+Trauma 113
+Chapter 5. Trauma, Age, and Ageism 115
+Chapter 6. Trauma, Sex, and Gender 131
+Chapter 7. Trauma, Culture, Phenotype, and Ethnicity.. . 153
+Chapter 8. Trauma and Sexual Orientation 169
+Chapter 9. Living With Disabilities in the Context of
+Trauma 181
+Chapter 10. The Great Divide: Trauma and Social Class .. 197
+Chapter 11. Migration and Dislocation 215
+
+--- Page 4 ---
+Chapter 12. Trauma and Systems of Meaning Making 227
+III. Interpersonal and Psychotherapist Variables 243
+Chapter 13. Weaving the Web of Support: Working
+With Families and Communities and Caring
+for Oneself 245
+Conclusion: Looking Forward 255
+Appendix: Guidelines to Inform Cultural Competence
+in Practice 259
+References 261
+Index 277
+About the Author 291
+vi CONTENTS
+
+--- Page 5 ---
+ACKNOWLEDGMENTS
+This book owes large debts of gratitude to my colleagues who have
+thought long and hard about trauma and identity. I particularly wish to thank
+Pamela Hays and Maria Root, whose paradigms for understanding identity
+have deeply influenced my own thinking and work as a psychotherapist,
+teacher, and writer. Special thanks are also due to my friends and colleagues
+Judith Alpert, Lillian Comas-Diaz, Christine Courtois, Jennifer Freyd, Steve
+Gold, Beverly Greene, Ken Pope, and Melba Vasquez, all of whom have
+personally and professionally enriched me with their writing, thinking, and
+friendship. There are many other colleagues whose work informs and edu-
+cates me, but to attempt to remember and list all of them would take up an
+entire volume. Among them are the leadership and workshop presenters at
+the annual meetings of the International Society for Traumatic Stress Stud-
+ies and the authors publishing in the Journal of Traumatic Stress, Dissociation,
+Journal of Trauma and Dissociation, and Journal of Trauma Psychology. My as-
+sociates in the Society for the Psychology of Women; the Society for the
+Psychological Study of Ethnic Minority Issues; the Society for the Psycho-
+logical Study of Lesbian, Gay, and Bisexual Issues of the American Psycho-
+logical Association (APA); and the Division of Trauma Psychology of APA
+as well as the many colleagues who have consulted with me in the last 3
+decades are all influences on my writing and thinking.
+My research assistant, Tracy Bryan, was an invaluable contributor to
+this process. Her diligent search for the scholarly literature on culture and
+trauma was eye-opening for us both (in large part because of how hard it was
+to find anything that I hadn't read already on this topic, although I'm sure
+that publishing this book will bring those whose work we didn't find yet in
+touch with us). Tracy is a gifted writer whose work psychotherapists will all
+be seeing in a few years, including an article coauthored with me in 2007 on
+feminist therapy and self-inflicted violence (Brown & Bryan, 2007).
+vn
+
+--- Page 6 ---
+None of this would have been written without the privilege of having
+known and met many survivors of trauma in my roles as psychotherapist and
+forensic psychologist. These people have been willing to tell me their stories,
+have allowed me to be witness and participant in their healing processes, and
+have taught me everything I know about being a psychotherapist. The people
+I work with are amazing human beings. Despite confusion, pain, and terror,
+they have struggled to have lives of dignity and decency, practicing compas-
+sion for others, although initially they struggle to do this for themselves.
+They are my heroes because in the face of endless invitations from life to
+become violent and abusive or simply callous and nihilistic, they are instead
+kind and loving. I can name none of them because to all of them I owe a debt
+of confidentiality, but I thank each one of them; they know who they are.
+Finally, no writer exists in a vacuum. My partner, Lynn, has been un-
+failingly supportive of the activities that made this book happen, including
+those that temporarily took me away from home or from her while I holed up
+in my study or on the couch and wrote for hours. My beloved dog, Schmulik,
+who has worked as my copsychotherapist since he arrived in my life 12 years
+ago, has shown me repeatedly that what trauma survivors benefit from most
+is hope and the desire to connect, something he offers to clients every work-
+ing day. Finally, my thanks to APA's Books Department, especially Susan
+Reynolds, who solicited this manuscript and was patient with my somewhat
+delayed production of it.
+viii ACKNOWLEDGMENTS
+
+--- Page 7 ---
+Cultural Competence in
+Trauma Therapy
+
+--- Page 8 ---
+INTRODUCTION: TRAUMA,
+A MULTICULTURAL REALITY
+Trauma and its psychic aftereffects have a texture. The experience con-
+veys meanings that derive from personal histories; cultural heritages; and the
+social, political, and spiritual contexts in which the painful event happens.
+Even such an apparently neutral trauma as a natural disaster or a car accident
+can have a complex and multidetermined meaning structure, because the
+emotional impact of trauma is not merely about what happened in the mo-
+ment but also reflects what occurred before and what transpires next. A
+psychotherapist's ability to understand how a trauma survivor's multiple iden-
+tities and social contexts lend meaning to the experience of a trauma and the
+process of recovery comprises the central factor of culturally competent trauma
+practice. This volume is an extended discussion of how psychotherapists can
+develop such understandings that are sophisticated, thoughtful, and reflec-
+tive of the current paradigms of identity and culture.
+At the core, trauma is simply trauma. An assault, an earthquake, and
+combat are all recognizable as events that threaten safety and shatter as-
+sumptions about the nature of the world and one's relationship to it. Trauma
+of some sort is extraordinarily common even in a supposedly safe place, with
+research on the U.S. population suggesting that as many as one half of all
+
+--- Page 9 ---
+residents have experienced exposure to a major traumatic stressor, most com-
+monly some kind of interpersonal violence (Briere & Scott, 2006).
+Trauma, no matter how endemic, is never generic and never the same
+for any 2 people. Each experience of an encounter with a traumatic stressor is
+unique and is given unique meaning by the life history of the person to whom
+it occurs. Some of that unique meaning arises from the cultural and group
+memberships in which a person participates and from the multiple, inter-
+secting identities defining each person's individual sense of selfhood. When
+the trauma is of human design, the most common type, some of the meaning
+ascribed to the trauma by its targets will arise from the cultural and group
+memberships and identities of the perpetrators. The relationships of those
+reference groups, both in the present day and historically, will also give color,
+texture, and specificity to the trauma; those social and contextual factors can
+make a wound deeper, extend suffering, become obstacles to healing, or al-
+low even the worst of psychic wounds to heal quickly.
+RESPONDING TO TRAUMA COMPETENTLY
+Responding to trauma in a culturally competent manner requires the
+psychotherapist to understand how those added meanings that derive from
+context and identity make each instance of trauma unique. It also requires
+the psychotherapist's awareness of her or his own identities, biases, and par-
+ticipations in cultural hierarchies of power and privilege, powerlessness and
+disadvantage, as well as personal experiences of trauma. Failure to bring cul-
+tural competence to the table can lead to missteps in genuinely helping trauma
+survivors or worse can result in deepening the wounds of trauma, creating
+secondary and tertiary traumas that are more painful than the original be-
+cause they are correctly appraised by victims and survivors as unnecessary
+wounds.
+This volume reflects my long interest in two topics and their conver-
+gence in my own work. I have worked since the beginning of my career as a
+psychologist with survivors of trauma. At first I did so accidentally, not real-
+izing how common trauma was in the lives of people in emotional distress.
+By the early 1980s I was intentionally engaging with trauma survivors, with a
+deepening focus on what Judith Lewis Herman (1992) called "complex
+trauma." Complex trauma represents the inter- and intrapersonal effects of
+multiple and repeated exposures to varieties of interpersonal violence and
+violation, an experience that is becoming recognized as far more common in
+the United States than the one-episode traumatic stressor initially envisioned
+by diagnostic manuals.
+As a psychologist trained in the early 1970s, a period in which trauma
+was virtually never considered a component of distress, I had to learn to
+uncover and listen to the hidden and silenced stories of trauma that my cli-
+4 CULTURAL COMPETENCE IN TRAUMA THERAPY
+
+--- Page 10 ---
+ents carried to me. I frequently did not know what I was seeing and hearing
+when people told me about trauma. I did not yet know the ways in which
+people communicated their traumatic experiences before they could name
+them and use language to talk about them. My training as a psychologist had
+taught me to ignore or trivialize experiences of trauma or to interpret the
+distress that people shared with me as evidence of something entirely other
+than the aftermath of trauma exposure, thus the accidental nature of my
+specialization. It was only because 1 had the good fortune to be able to hear
+those stories that I was then willing to intentionally pursue trauma as a topic.
+Additionally, since the beginning of my career I have been involved
+with the development of feminist practice, which in turn has led me to an
+interest in broader visions of cultural competence in psychology. Feminist
+psychology has been uniquely situated within the realm of clinical practice
+as a result of its attention to issues of power and social location and to how
+people's experiences of gender, culture, social class, sexuality, and other ex-
+periences that denote inter- and intrapersonal power or powerlessness might
+affect both distress and resilience in response to traumatic stress. Because
+one core aspect of how trauma functions as a source of psychic wounding
+is that trauma induces powerlessness and loss both of real control and self-
+protective illusions of control, a theory of therapy that centers its attention
+on power is likely to have much useful to say to its practitioners and others
+about trauma.
+Like other similar critical psychologies, including multicultural psycholo-
+gies, queer psychologies, and liberation psychologies, feminist psychology and
+the psychotherapists informed by it have also been more likely than psycho-
+therapists of other orientations to knowingly and intentionally encounter
+the survivors of traumas. This is because feminist psychotherapists' theories
+exposed narratives of trauma even in eras when such stories were forbidden
+or hidden in the larger psychological discourse (Comas-Diaz & Jacobsen,
+2001; Fox & Prilleltensky, 1997). As psychotherapists open to telling truths
+about the human experience of powerlessness, critical psychologists created
+the psychological spaces where trauma survivors could speak their truths.
+This is what happened for me and many of my feminist psychotherapist friends
+and colleagues; we communicated our willingness to hear truths, and people
+told us about their hidden experiences of terror and violation. It is not sur-
+prising that almost all of the authors who first wrote about the traumas of
+interpersonal violence, the most hidden yet pervasive of human traumatic
+stressors, were pioneers of feminist therapy such as Judith Lewis Herman,
+Florence Rush, and Lenore E. Walker.
+In the wake of Hurricane Katrina (which blew through the U.S. Gulf
+Coast a month after I proposed this book to the American Psychological
+Association [APA], making my work more urgent and, sadly, timely), the
+intersection of culture and trauma has become increasingly visible to every-
+one in the mental health field as well as to anyone who could turn on a
+INTRODUCTION 5
+
+--- Page 11 ---
+television or open a newspaper in the United States since the fall of 2005.
+One of APA's many humanitarian responses to that disaster was promotion
+of the awareness that the mostly poor, mostly African American and Acadian
+victims of that storm would need not simply posttrauma support from mental
+health professionals but specifically required culturally competent posttrauma
+support that avoided reenacting wounds rooted in racist and classist assump-
+tions about the world (Dass-Brailford, 2006). Even the apparently neutral
+trauma of a hurricane does not have neutral meaning for its victims; nor do
+the outcomes of such a trauma fail to aggravate old wounds of oppression and
+discrimination or underscore and enhance old histories of privilege.
+THE SECONDARY TRAUMA OF CONTEXT AND CULTURE
+Additionally, as the entire culture gained access to Katrina survivors'
+stories through such media presentations as Spike Lee's (2006) post-Katrina
+documentary When the Levees Broke: A Requiem in Four Acts, people also got
+to see how an already devastating yet apparently morally neutral act of na-
+ture can be more traumatizing when it is disruptive to culturally based coping
+and resiliency strategies that were dependent on the presence of coeval com-
+munities now scattered to every part of the continent. There is no accident
+in the fact that this event, experienced by all who lived on the Gulf Coast,
+has had differential impact on survivors based almost solely on interlocking
+issues of ethnicity and social class.
+Speaking of the impoverished Katrina evacuees sheltering in Houston
+who had suffered grievous losses of home, family, culture, and connection,
+former First Lady Barbara Bush commented to a news reporter during her
+visit to the Houston Astrodome,
+What I'm hearing, which is sort of scary, is that they all want to stay in
+Texas. Everyone is so overwhelmed by the hospitality. And so many of
+the people in the area here, you know, were underprivileged anyway, so
+this [is] working very well for them. ("Barbara Bush Calls Evacuees Bet-
+ter Off," 2005)
+Perhaps intending well, she wounded the evacuees and many of those simply
+hearing her words on TV in a way that the hurricane alone could not have.
+She seemed to be implying that the lives and experiences of the poor and
+disenfranchised survivors of the storm were lacking in value. Imagine being
+told that living as a displaced person in makeshift accommodations is an
+upgrade for your life. The presence of this secondary, tertiary, and additional
+trauma connected to the trauma of the flood was revealed to the entire Ameri-
+can public. Mrs. Bush appeared to be delivering a clear message to Katrina
+survivors that what was important about their lives—their unique cultures
+and communities; their rich traditions; the homes, no matter how small, that
+6 CULTURAL COMPETENCE IN TRAUMA THERAPY
+
+--- Page 12 ---
+they had struggled to own and to build—were of little value in an American
+society that regards lives in poverty as lives lacking in worth. The destruc-
+tion of those communities by the floodwaters was apparently seen by her as a
+good thing, rather than as the heartbreaking drowning of a culture as rich in
+traditions as it was poor in cash.
+What is striking about this episode was not that it happened nor that
+secondary institutionalized trauma was heaped on the pain of another trau-
+matic stressor as a result of cultural insensitivity, but rather that it was done
+publicly and so was visible to all. Secondary trauma inflicted by agencies,
+researchers, and mental health providers as a result of absence of cultural
+competence has been painfully common but rarely is committed and broad-
+cast on the national news; it usually happens in private, behind the doors of
+therapy offices and social service agencies, in shelters that define families to
+exclude family members not related by blood or law, in funding for posttrauma
+care that has arbitrary end dates reflecting some generic sense of how long
+trauma recovery should take, in research that fails to ask about identity while
+inquiring into symptom frequency and then interprets those numbers out of
+context. How trauma survivors are responded to by their helpers and the
+biases held by those who purport to assist them make a difference in whether
+and how those survivors will heal. When a psychotherapist lacks cultural
+competence, the capacity to understand the complex human identities that
+inform each survivor's relationship to trauma, that psychotherapist is at greater
+risk to unintentionally inflict secondary traumas on clients; cultural compe-
+tence, conversely, may speed healing by connecting trauma survivors to their
+own resources and honoring the inner and outer realities informing trauma
+and its meanings.
+The Katrina disaster thus also made more generally visible, but did not
+invent, the necessity for thinking about trauma within a framework of cul-
+tural competence. Human beings are entirely human and share a universal
+DNA, brain structure, and capacity for language and meaning making, each
+of which is implicated in the trauma response. Humans, trauma survivors
+and not, are also entirely the individual, unique, infinite intersections of
+their cultures, their genders, their ethnicities and phenotypes, and all of the
+other many factors that contribute to multiple and overlapping identities
+held by each and every person. Trauma does not happen to a generic human
+being any more than it is generic itself, and the ways in which humans trans-
+late their inner biological states of posttraumatic disequilibrium into out-
+ward expressions of distress are strongly affected by culture and context.
+To date, few of the excellent psychotherapeutic models that have been
+developed for working with trauma survivors have intentionally taken into
+account this diversity and complexity of human identity and experience as it
+informs the encounter with trauma. Although the list in the Diagnostic and
+Statistical Manual of Mental Disorders (4th ed., text rev.; DSM-IV-TR; Ameri-
+can Psychiatric Association, 2000) of so-called "culture-bound syndromes"
+INTRODUCTION 7
+
+--- Page 13 ---
+is replete with posttraumatic responses framed in culturally specific manners,
+no editor of that important volume has connected the dots in writing. A
+trauma-savvy or culture-savvy reader may do so; but in the absence of those
+intellectual frameworks, the relationship of trauma to such phenomena as
+ataque de nervios is submerged, requiring skills at uncovering and
+contextualizing to be correctly understood as a form of posttrauma response.
+Additionally, although psychotherapists working with specific target group
+populations have occasionally proposed culturally specific paradigms for work-
+ing with trauma in those settings (e.g., Marsella, Friedman, Gerrity, &
+Scurfield, 1996), few of those interventions have been mainstreamed into
+the work of trauma experts in North America; they are special treatments for
+special populations.
+THE DISCONNECTION BETWEEN TRAUMA STUDIES
+AND CULTURAL COMPETENCE
+It is surprising and ironic that this disconnection between the fields of
+trauma studies and cultural competence exists. Although the mental health
+disciplines have had at best an uneasy and ambivalent relationship with trauma
+as a topic, the modern field of traumatic stress studies in psychology and
+related disciplines was founded largely by social justice activists like me who
+cut their teeth in the 1960s and 1970s in movements against the Vietnamese
+War and for women's equality and by European and Israeli colleagues living
+in the aftermath of World War II and the Nazi Holocaust. The very diagno-
+sis of posttraumatic stress disorder (PTSD) was lobbied into the Diagnostic
+and Statistical Manual of Mental Disorders (3rd ed.; American Psychiatric As-
+sociation, 1980) by a somewhat uneasy coalition of antiwar Veterans Ad-
+ministration staff, some of them veterans of Vietnam themselves, and femi-
+nist psychotherapists from the front lines of the rape trauma and domestic
+violence movements. It might have been reasonable to assume that these
+socially conscious professionals, already deeply attuned to some forms of so-
+cial injustice, would have looked next to issues of racism, classism,
+heterosexism, and other forms of oppressive inequality as they tried to en-
+hance their comprehension of how trauma affected human lives; but that
+never occurred.
+Why this next step did not happen has been a puzzle that writing this
+book has forced me to explore. As is true for most group phenomena, I be-
+lieve that there are many reasons for this neglect of intentional multicul-
+turalism, most of them benign and stemming from the same source as more
+general problems of modern aversive racism, classism, and heterosexism in
+progressive social movements as well as within the discipline of psychology
+(Bowes, 2007). Interrogating race, class, culture, and sexuality, by which I
+mean thinking critically and asking difficult questions about assumptions
+8 CULTURAL COMPETENCE IN TRAUMA THERAPY
+
+--- Page 14 ---
+that are taken as truth in dominant culture, is threatening and induces shame
+in members of dominant groups, a category including the majority of psycho-
+therapists. The critical analysis of systemic forms of oppression requires those
+in positions of dominance and privilege, such as psychologists and other psy-
+chotherapists, to acknowledge the social locations of greater power stem-
+ming from their professional training and status and to see themselves as
+benefiting from oppression through the privilege inherent in those roles,
+whether or not they actively oppress others.
+This stance of admitting to privilege is not a comfortable position for
+any psychotherapist whose biases, such as they are, are mostly covert and
+well hidden from her- or himself, taking the form of what Gaertner and
+Dovidio (1977,1986, 2005) have called "modern" or "aversive" bias, a form
+of bias that is denied by and invisible to its practitioners. Aversive bias has
+rarely been seen as the sort of very problematic countertransferential prob-
+lem that it is because so much shame attaches to bias despite its nearly
+universal persistence. It is much easier for mental health professionals to
+be in the cultural role of supposedly neutral yet caring bystanders, to see
+themselves as good people who, because they are not intentionally perpe-
+trating oppression, are thus not involved in it nor necessarily responsible
+for its alleviation through the mechanism of their work. To tell oneself the
+truth about how bias lurks in one's all-too-human nonconscious affective
+responses and one's personal symbologies can be a painful exercise in hon-
+esty and self-scrutiny.
+Interrogating trauma and asking oneself to look closely at what its en-
+demic nature means about the human condition are equally threatening.
+When people stare trauma in the face, it becomes impossible to engage in
+defenses against the reality that horrifying, unpredictable, disruptive things
+happen routinely in the lives of innocent human beings, and worse, that
+those things can happen to us, a phenomenon of painful awareness that
+Pearlman and Saakvitne (1995) have called "vicarious traumatization."
+Working with trauma requires psychotherapists to get up close and personal
+with stigma, which can and sometimes does rub off. Trauma therapy is not
+mainstream to training in any mental health discipline, even though some
+form of trauma is implicated as a psychosocial risk factor for most Axis I and
+many Axis II diagnoses (Briere &. Scott, 2006). As Alpert (2006) noted in
+her comments in the inaugural issue of The Trauma Psychologist, scientists
+and clinicians in psychology do not generally familiarize themselves with the
+literature on trauma; those who do risk being seen as strange or suspect and
+are perhaps themselves secretly trauma survivors (which reads professionally
+as somehow less qualified to treat trauma because of bias or unhealed psychic
+wounds).
+Each of these intellectual and clinical enterprises on the margins of
+society and psychology requires its practitioners to tell uncomfortable and
+often painful truths about aspects of the social status quo. Trauma and op-
+INTRODUCTION 9
+
+--- Page 15 ---
+pressive biases are close to the top of the list of what therapists generally do
+not like to talk about (Pope, Sonne, & Greene, 2006). If therapists do talk
+about trauma, they wish to speak of these painful and frightening topics from
+a safe intellectual distance, which is a stance antithetical to that necessary to
+work psychotherapeutically with traumatized people. From my professional
+location inside the circle of trauma psychotherapists and researchers who
+have taken the leadership in the field, most of whom appear to be of Euro-
+pean descent whether living in North America, Australia, Israel, or Europe
+itself, it is apparent that many of us believed by that working with trauma
+survivors we were already doing social justice work and that trauma was suf-
+ficiently generic so as to not necessitate delving deeply into questions of
+cultural difference.
+CULTURALLY COMPETENT TRAUMA THERAPISTS
+It has also been true that for many well-intentioned Euro-American
+clinicians, diversity has been a topic reserved for those who work with spe-
+cial populations and for the clinicians who are themselves members of those
+very groups. Etic approaches to working with groups, which prescribed cer-
+tain psychotherapeutic strategies for Asian Americans and certain others for
+African Americans and so on, although initially revolutionary because of
+simply raising consciousness about race and culture, eventually had the ef-
+fect of ghettoizing discourse about ethnicity into the special populations class
+that was and still frequently is an optional course in the training of mental
+health professionals. Diversity came to be quite narrowly defined in mental
+health contexts; it was the study of the other, with each group placed in its
+own box. Race and culture were almost the only forms of human diversity
+addressed in the mental health realms for many years, and culture was de-
+fined in terms of those variables. Although feminist psychologists and other
+feminist psychotherapists have foregrounded gender, and lesbian, gay, and
+bisexual-affirmative practitioners began to make sexuality core to some com-
+ponents of the psychotherapy conversation, social class was and remains deeply
+neglected as a psychological topic (Lott & Bullock, 2007). Disability, immi-
+gration status, experiences of colonization, and other social locations have
+informed people's experiences of identity, and thus of trauma, and they have
+also largely gone unaddressed within the mental health discourse. Genocide
+perpetrated against Europeans has been of interest in the trauma field; geno-
+cide perpetrated by Europeans against indigenous people as colonial forces
+invaded the Western Hemisphere and the Global South has for the most
+part not been a subject of the field's attentions if one simply adds up the
+number of publications and conference presentations. The descendants and
+beneficiaries of the colonizers are among those controlling the professional
+discourse far more often than are the descendants of the colonized.
+J 0 CULTURAL COMPETENCE IN TRAUMA THERAPY
+
+--- Page 16 ---
+Trauma psychotherapists and specialists have not been an exception to
+this norm of disengagement from issues of human diversity within the con-
+text of U.S. culture. Ironically, the field of trauma studies has been interna-
+tional from its inception, owing largely to European and Middle Eastern heri-
+tages of war, the Holocaust, and ethnic strife of a longevity unknowable in a
+country as young as the United States. The journals and conferences of the
+traumatic stress studies field are well populated with materials about trauma
+from earthquakes in Armenia, wars in Kuwait or firestorms in Australia. In-
+ternationalism has been the trauma field's multiculturalism. In the largest
+published volume currently available on the topic of cultural diversity in
+trauma studies, the most frequent focus was on cultures outside of the United
+States or on individuals who refuged to the United States from other cul-
+tures. I can find more information about disaster survivors in the developing
+Spanish-speaking world than on the systemic trauma exposures experienced
+by persons of the many and diverse Spanish-speaking heritages living in the
+United States. This focus, although valuable in and of itself, has contributed
+to a neglect of multicultural competencies as regards issues of diversity in
+U.S. trauma survivors.
+Whatever the causes, the dearth of formal commentary on what consti-
+tutes culturally competent trauma practice is not sustainable if trauma prac-
+tice is to respond to the realities of trauma survivors who seek professional
+care. In this book I attempt to take one step in the direction of filling that
+lacuna by interweaving a paradigm for thinking about human diversity with
+knowledge from the field of trauma therapy to yield a framework for cultur-
+ally competent practice with trauma survivors. The goal of this book is not
+to produce psychotherapists with etic knowledge, that is, specific knowl-
+edge about how to work with a specific population or their particular trauma
+histories. Instead, I invite my readers to an epistemology of diversity for
+understanding trauma and its intersections with humans' multiple and di-
+verse identities.
+EMIC VERSUS ETIC DISCOURSE OF CULTURAL COMPETENCE
+There are numerous reasons for my decision to frame this volume within
+an emic discourse of cultural competence. First, etic models are themselves
+plagued by inattention to within-group diversities. To say "Here's how to
+work with a Bajoran trauma survivor" (Bajorans being a Star Trek ethnic
+group with a cultural history of trauma) ignores questions such as, is this a
+male, female, or intersexed Bajoran? Did this person live through the intern-
+ment camps or is she or he the child of someone who did so? Did she or he
+participate in the resistance against the Cardassians (yet another Star Trek
+ethnic group who serve as a placeholder for perpetrators of oppression) ? Did
+she or he see friends die? Spend time in prison? Refuge to another planet to
+INTRODUCTION 11
+
+--- Page 17 ---
+seek physical safety? Is this Bajoran lesbian, gay, bisexual, or a transgendered
+person? Is she or he a strong adherent of the dominant Bajoran faith? As the
+list of questions grows, so does the complexity of issues facing psychothera-
+pist and client. Yet these complexities are always present whether or not
+they are acknowledged, and the interplay and interaction between them and
+the trauma experience will have deep and lasting impact on how a person
+relates to what has happened and approaches the recovery process.
+Etic models reduce people to one dimension of their identity and not
+always the dimension most strongly felt by trauma survivors themselves. My
+Bajoran client's trauma may have everything to do with being Bajoran or
+very little; her or his resources for responding to the trauma may also be
+affected or not by ethnicity and culture. If I only see the large dangling earring
+and the red clothing and immediately call up the "how to treat Bajorans" chap-
+ter from my inner database, I may miss what is important for me to know about
+this particular Bajoran's experiences of trauma. And I have not even begun to
+consider what it means that I am a human of this planet offering my services
+to this ethnically different human of another planet or to ask what we might
+represent to one another in symbolic nonconscious layers of our encounter.
+Representation, both individual and cultural/historical, constitutes two other
+vitally important dimensions of culturally competent practice.
+Consequently, in this book I offer an epistemology of culturally aware
+and sensitive trauma competence of an emic variety. This strategy for ad-
+dressing diversity teaches psychotherapists how to think about human differ-
+ence, to develop algorithms for solving conundrums about diversity, and to
+consider themselves and their own diverse identities as they populate the
+social ecology of psychotherapy with trauma survivors. These models do at-
+tend to the various components of identity but with the goal of understand-
+ing how they merge within each person. The epistemology I use in this vol-
+ume owes a large debt to the work of Pamela Hays (2001, 2008). Hays's model
+for understanding diversity in clinical context, which she calls ADDRESS-
+ING, is one that intentionally engages with multiple and intersecting identi-
+ties in client and psychotherapist—age, acquired and developmental disabil-
+ity, religion, ethnicity, social class, sexual orientation, indigenous heritage,
+national origin, and gender. I draw on the ADDRESSING paradigm as an
+algorithm for thinking about human diversity and about how psychothera-
+pists working with trauma survivors can understand their clients and them-
+selves in terms of the intersection of trauma and multiple locations of social
+and personal identity.
+TRAUMA IN THE LIVES OF PSYCHOTHERAPISTS
+It is important to note that I refer to understanding diversity in both
+clients and psychotherapists. An assumption about what constitutes cultur-
+J 2 CULTURAL COMPETENCE IN TRAUMA THERAPY
+
+--- Page 18 ---
+ally competent practice, which recurs in this book, is that such practice in-
+volves knowledge of one's own multiple identities and their meanings. Along
+with one's sex; gender; and various ethnic, sexual orientation, cultural, and
+social class identities, there is also the question of how trauma is a part of
+one's identity. Some readers are trauma survivors. Research by Pope and
+Feldman-Summers (1992) has shown that approximately 30% of practicing
+psychologists admit to a history of childhood abuse. When I teach about
+trauma, I urge those in the audience to begin to speak of trauma survivors as
+we rather than they, given the ubiquity of this experience in psychothera-
+pists' lives. Add in other common experiences of trauma such as combat,
+natural disaster, assault and sexual assault in adulthood, and traumatic loss,
+and the numbers of trauma survivors reading these lines grow.
+Some readers will not have had a personal experience of trauma yet; yet
+because trauma is potential as well as actual. My colleagues living in New
+Orleans who reeled shell-shocked in the wake of Katrina, their homes, of-
+fices, and schools swept away by the floodwaters, were not trauma survivors
+(that I knew of, although there is a strong unspoken ban among psychothera-
+pists and academicians about speaking of their own personal trauma histo-
+ries) on the day that I agreed to write this book in early August 2005. When
+1 saw them at APA's annual conference in New Orleans 1 year later they
+were trauma survivors, and for some of these people that change was visible
+and palpable. Katrina survivor had become an indelible component of their
+identities in that short timeframe.
+Other readers are the children of trauma survivors, living with legacies
+of intergenerational transmission of trauma experiences (Danieli, 1998).
+Readers who are American Indian, African American, Jewish, Khmer, Na-
+tive Hawaiian, or Armenian, to name but a few groups that have been on the
+receiving end of genocidal violence, are descendants of trauma survivors and
+of cultures marked by trauma. Readers who are South Asian may come from
+families that have been affected by the social upheaval and death attendant
+on the establishment of India and Pakistan. There is a plethora of additional
+examples; trauma has been pervasive in human experience.
+They are we when speaking of trauma and its survivors. To work in a
+culturally competent manner with trauma each psychotherapist must be will-
+ing to understand her or his own participation, directly or historically, in the
+realities of trauma. Human beings evolved in terribly dangerous environ-
+ments, surrounded by predators, and were likely to die before they reached
+age 40. The capacity for a response to trauma is built into the evolution of
+the species Homo sapiens; one's specific personal heritage is what creates the
+texture of one's trauma response.
+Each individual is also diverse and possessed of multiple identities. Ev-
+ery person has a sex, a gender, a spiritual or meaning-making system (which
+need not include a divine being), and a culture with which she or he identi-
+fies, however loosely. If one's ancestors came from Europe or Asia to North
+INTRODUCTION 13
+
+--- Page 19 ---
+America, one is most likely a descendant of immigrants or refugees who ar-
+rived here to the chilly welcome that has greeted everyone from the Irish of
+the 1800s to the Eastern European Jews of the early 1900s to today's South
+Asian computer engineers and undocumented Guatemalans. Some came as
+indentured servants, sold into labor. If one's family came from South and
+Central America, one's ancestors may have crawled under the barbed wire
+fence at the border. Some ancestors came in steerage; others flew first class
+on a 747; but all experienced the loss of culture and language that is trauma
+for some.
+Many individuals are also perpetrators. Some are the descendants of
+slaveholders, of soldiers who shot women and children in this country's geno-
+cidal wars against its indigenous people, or of those who imprisoned or tor-
+tured others in the countries from which they came. Many people have an-
+cestors who suffered what Shay (1995) has called the "moral injury" of being
+trauma perpetrators, and in many cases that was traumatic to them and to
+the family cultures that they created and of which later generations are the
+inheritors. Some families served in the governments of Batista's Cuba, Stalin's
+Union of Soviet Socialist Republics, Hitler's Germany, or in South Africa
+under apartheid. Some individuals' ancestors have been beaten; some indi-
+viduals' ancestors administered those beatings. Some people's ancestors in-
+clude both; many African Americans carry the genes of a slaveholder great-
+great-grandfather who raped their enslaved great-great-grandmother. And
+people from positions of dominance and privilege can perpetrate oppression
+on others every day in their current lives without knowing or thinking of it
+(Vasquez, 2007). Perpetrator and victim consciousness live within people's
+cultures, families, and psychological realities. They are a component of our
+constructions of identity
+If a psychotherapist does not understand her or his own diverse identi-
+ties and the ways in which those identities include experiences of trauma,
+then no training in the application of eye-movement desensitization and
+reprocessing or prolonged exposure therapy or cognitive reprocessing will
+allow that psychotherapist to be culturally competent. The absence of cul-
+tural competence will detract from a psychotherapist's effectiveness as she or
+he applies these empirically supported modalities for reducing the distressing
+symptoms caused by trauma exposure because that lack will affect the quality
+of the therapy relationship. Research on common factors in psychotherapy
+has shown that for any intervention, a large percentage of the outcome vari-
+ance is accounted for by the therapeutic alliance (Norcross & Lambert, 2006).
+Cultural competence enhances a psychotherapist's capacity to build alliances
+and enact the common factors of good psychotherapy even with those cli-
+ents who appear to resemble their therapists in every way. I urge readers to
+think about trauma's meanings for psychotherapists as well as for the clients.
+As noted previously, the field of trauma studies is a place in which it is
+disingenuous to speak of us, the psychotherapists, and them, the clients. We
+14 CULTURAL COMPETENCE IN TRAUMA THERAPY
+
+--- Page 20 ---
+are they more often than psychotherapists like to think, and if psychothera-
+pists tell themselves this truth, they come one step closer to cultural compe-
+tence by acknowledging the ubiquity of trauma in human personal histories.
+This is a difficult task with which to engage. At a large international
+meeting of trauma specialists that I attended in the midst of this writing, I
+never once heard trauma survivors referred to by other than the distancing
+third person, except for one distinguished presenter who, already full of gravitas
+and thus unassailable in his professional credentials, set aside his prepared
+remarks to speak about his own personal trauma history living in a country
+perpetually at war. Everyone who knows of this man and his work knows that
+he was born and raised in Jerusalem. As a Jewish Israeli, his trauma history is
+implicit in his citizenship. But for him to speak of it directly and explicitly
+was a violation of unspoken norms.
+THE IMPORTANCE OF BEING IGNORANT
+In her classic science fiction novel The Left Hand of Darkness, Ursula
+Kroeber LeGuin (1969) has taken her readers to the planet Gethen where all
+of the humans are intersexed and capable of being both male and female at
+different times in their lives and of being both and neither most of the time.
+Through the eyes of her protagonist Genly Ai, a middle-years adult male
+who is an apparently heterosexual, highly educated human of African de-
+scent from the reader's own third rock from a star, she has offered readers the
+opportunity to imagine how meanings are changed when variables that seem
+important and essential to their identities and understandings of one an-
+other become important and essential in entirely different and almost un-
+fathomable ways.
+On Gethen, sex is such a variable. Genly Ai cannot tolerate being un-
+able to know which sex a person is, even though each Gethenian is usually
+neuter outside of a monthly estrous phase. Sex, and knowing a person's sex, is
+central to Genly's ways of relating; not trained as a psychotherapist, but rather
+as an anthropologist and diplomat, he is unable to set this strategy for orga-
+nizing human experience aside. As a consequence of his insistence on put-
+ting Gethenians into boxes that do not reflect their lived realities, he makes
+continuous and dangerous errors of judgment, which form the themes of the
+book's drama and tragedy.
+Psychotherapists are often like Genly Ai; they struggle with the ambi-
+guity of their clients' identities and attempt to put them into the categories
+that they know and with which they are familiar. Trauma frequently has the
+effect of creating new and difficult-to-comprehend identities for clients, the
+identity of being broken, spoiled, dirty, and damaged. Sometimes those iden-
+tities appear to make no sense to psychotherapists' preconceived notions of
+how humans organize identity, but they not only make sense for clients but
+INTRODUCTION 15
+
+--- Page 21 ---
+also convey important information about the meaning of a trauma experi-
+ence in someone's life. Culturally competent trauma practice requires that
+psychotherapists stretch their minds and let go of their categories so that
+they can open themselves to those parameters of identity experienced by the
+people with whom they work.
+Another theme to be sounded here as 1 discuss how trauma intersects
+with identity is that no person has one identity. Drawing on models of iden-
+tity development created by theorists observing the lives of people with mul-
+tiple racial identities (Root, 2000, 2004a, 2004b), in this volume 1 encourage
+psychotherapists to understand trauma as it impacts each person's multiple
+identities, both additively and interactively. Each individual has a gender,
+and each individual has a gender as expressed through social class, age co-
+hort, culture, and so on. When trauma intersects those multiple, overlap-
+ping, and sometimes apparently conflicting facets of selfhood, culturally com-
+petent practice requires psychotherapists to think not only of the easiest to
+see or most prominent aspect of identity but also about the intersection with
+the intersections, a sort of three-dimensional Venn diagram.
+This leads me to another important point made by LeGuin. At one
+juncture in her narrative, LeGuin sends Genly Ai on a visit to a Gethenian
+religious sanctuary where practitioners of the art of Foretelling live. He ap-
+proaches a member of the group and proclaims, "I am very ignorant." The
+Foreteller gently suggests to Ai that he is boasting, for in the philosophy of the
+Foretellers, ignorance is wisdom. So too with culturally competent trauma treat-
+ment; great ignorance, the stance of knowing that one does not know and thus
+openness to being informed, is a core capacity of the emotional competence
+informing culturally sensitive work. This is likely equally as difficult as being
+willing to interrogate one's own identities in relationship to trauma. The cul-
+ture of modem mental health professions, with its reliance on a stance of em-
+pirical logical positivism, assumes that the psychotherapist is the expert who
+knows how to decode and explain a client's reality. Claiming ignorance is
+profoundly countercultural for people with doctorates, psychologists like me,
+or other professionals with advanced degrees and years of training.
+Consequently another important goal of this book is to help each reader
+to become more ignorant, and thus wiser, about working with trauma survi-
+vors. After 3 decades of working intentionally with trauma I can say with
+utter certainty that 1 know that I have no idea of how any particular person
+will have experienced and made sense, or not, of her or his traumatic experi-
+ences. The clients I have worked with have taught me a great deal about
+what they have done to survive and thrive, and I have been able to amalgam-
+ate that knowledge into forms that function as useful heuristics, but no more
+than that. I have learned that my capacities as a psychotherapist and my
+ability to apply one or the other intervention effectively or to use my heuris-
+tics on behalf of any specific person are slightly less important than my will-
+ingness to stand in a position of ignorance in relationship to my client's suf-
+16 CULTURAL COMPETENCE IN TRAUMA THERAPY
+
+--- Page 22 ---
+fering as well as her or his resilience, capacities, and struggles to make mean-
+ing in the wake of trauma. In that position of ignorance I am able both to
+join my client in intersubjective experience of ambiguity and noncontrol
+and also to relinquish my needs to act as if I, the psychotherapist, am im-
+mune to the vicissitudes of human existence of which trauma is only one.
+AN OVERVIEW OF THIS VOLUME
+This book's purpose is to generate in the reader the capacity to deliver
+culturally competent treatment to survivors of trauma. This book should not
+be read as a comprehensive text about trauma treatment or a comprehensive
+text about cultural competence. It is an introduction and an invitation. In
+attempting to adequately introduce readers to this topic in sufficient depth
+to be useful, I have chosen to omit large territories in both intellectual are-
+nas. Everything written here presupposes that the reader has a basic familiar-
+ity with the diagnosis of PTSD and the ways in which the full range of post-
+traumatic symptoms can mimic a range of other diagnoses, including
+depressive disorders, anxiety disorders, and dissociative phenomena.
+In chapters 1 and 2,1 bring readers into the world of culturally compe-
+tent models of psychotherapy. Here I go more deeply into Hays's (2001, 2007)
+ADDRESSING model and offer an extended version of that model that may
+be particularly useful in working with survivors of trauma. I explore how
+identity develops in the context of multiple, intersecting, and sometimes
+conflicting social locations and how trauma occurring at any point of iden-
+tity development itself intersects with those other identity variables. In these
+chapters I invite readers to consider how the response to trauma emerges
+within the context of identity.
+In chapter 3,1 briefly review some common approaches to working with
+trauma in psychotherapy and discuss how cultural competence might inform
+their applications, emphasizing the process of therapy intake and
+transtheoretical paradigms of working with trauma survivors. I strongly en-
+courage readers who wish to become more familiar with the topic of trauma
+treatment in general to delve further into sources referenced in chapter 3
+regarding general paradigms and published guidelines for treatment of trauma
+sequelae. Working with trauma is a labor of both head and heart; specific,
+focused training in working with trauma within either a formal educational
+setting or through postgraduate continuing education is necessary for effec-
+tive, ethical, and competent psychotherapy practice with trauma survivors.
+Ongoing consultation and supervision and copious applications of self-care,
+all of which are core to competent practice in the realities of trauma, cannot
+be acquired through reading. Doing culturally competent psychotherapy with
+any client is similarly not something acquired simply intellectually; this book
+should be a starting point, something that provokes the reader to think.
+INTRODUCTION 17
+
+--- Page 23 ---
+An additional goal of chapter 3 is to invite the reader to a compe-
+tency-based view of trauma survivors. As I say to my clients who are casti-
+gating themselves for being symptomatic, "You arrived here alive." It can
+be difficult for psychotherapist and client alike to see a person who is pro-
+foundly impaired by flashbacks, numbness, and hyperreactivity as compe-
+tent. Many survivors of interpersonal violence believe themselves to have
+been weak because they did not escape or they succumbed to posttrauma
+distress. Nonetheless, a competency-based viewpoint about clients consti-
+tutes a foundation of culturally competent trauma practice, in part because
+some of the apparent symptoms of posttrauma response are actually indi-
+vidually and/or culturally informed coping strategies. As psychotherapists
+know from the behavior change literature, people are more likely to feel
+hopeful about the possibility of their own transformation when they realize
+that what therapy is asking of them is not the acquisition of some new and
+entirely foreign skill but rather the expansion of a skill already in the be-
+havioral repertoire.
+In chapter 4, I expose readers to a diversity of paradigms for under-
+standing what constitutes a trauma. I discuss trauma as a biopsychosocial/
+spiritual-existential phenomenon. I also look at multiple conceptual frame-
+works for understanding what might constitute a traumatic stressor and how
+experiences that appear to be normative or the background noise of daily life
+are potentially components of trauma. Feminist and multicultural models of
+trauma will be explored as additive to the DSM-IV-TR Criterion A defini-
+tion of what constitutes a traumatic stressor. One of the many critiques of
+the DSM-IV-TR definition of trauma has been that it ignores the norma-
+tive, quotidian aspects of trauma in the lives of many oppressed and
+disempowered persons (Brown, 2004), leading psychotherapists to an inabil-
+ity to grasp how a particular presentation of client distress is in fact posttrau-
+matic. In chapter 4, I encourage readers to think beyond PTSD when they
+conceptualize the range of posttrauma responses, with particular attention to
+the ways in which various identity factors mediate how distress is experi-
+enced internally and expressed interpersonally.
+In Part II of this book I look at particular social locations as they inter-
+sect with trauma. I examine age, gender, ethnicity, social class, sexual orien-
+tation, disability, displacement, health, and spirituality as factors in the ex-
+perience of and recovery from trauma exposure. Each of these social location
+variables constitutes a source both of enhanced risk for exposure to trauma
+for some individuals and importantly a source of enhanced resources and
+resilience in the face of trauma. Each of these variables can also lend particu-
+lar meanings to a trauma. I explore some of those meanings and ways to
+think about how social location can lend excess negative value to a trauma.
+Each of these variables can also influence how trauma is responded to, and
+thus in these chapters I explore in greater depth how to think in a diverse
+and complex manner diagnostically about the ways in which each survivor
+18 CULTURAL COMPETENCE IN TRAUMA THERAPY
+
+--- Page 24 ---
+communicates about her or his distress. I also revisit the importance of look-
+ing at these variables as they intersect in the life of each trauma survivor.
+In Part III of this book, I discuss interpersonal and psychotherapist vari-
+ables. Working with the family, friends, and communities of trauma survi-
+vors is an important component of trauma therapy, but one that is frequently
+neglected in the focus on trauma survivors themselves. For many trauma
+survivors, these interpersonal contexts are the ones in which healing may
+occur if psychotherapists notice their importance and bring them, actually or
+symbolically, into the therapy room. Finally, the person of the psychothera-
+pist working with trauma survivors requires attention. I discuss multicultural
+considerations arising from Pearlman and Saakvitne's (1995) construct of
+vicarious traumatization, with particular emphasis on how a psychotherapist's
+own social locations and multiple and intersecting identities affect the expe-
+rience of working with survivors of trauma. I conclude with a discussion of
+future directions for deepening culturally competent trauma treatment, rais-
+ing questions of where future research might be directed.
+As always, my own social locations and identities form the standpoint
+from which I write. A component of that standpoint is the belief that ethics
+of authorship require a disclosure of those perspectives, because they create
+my biases and inform my understandings. I am an upper-middle-class
+Ashkenazic Jewish lesbian born in the last week of 1952, the granddaughter of
+immigrants who, arriving in the United States in the early 1920s as adoles-
+cents and young adults, never went beyond the seventh grade themselves but
+who sent all of their children to college. I am an inheritor of a rich intellectual
+tradition of critical thought; I am also an inheritor of a two-millennium-long
+history of cultural trauma, the descendant of those who survived. I was trained
+in the Boulder scientist-practitioner model of clinical psychology and have
+been a psychotherapist in independent practice since 1979. Most of the trauma
+survivors with whom I have worked have been individuals with histories of
+severe, repeated trauma exposure in childhood at the hands of parents and
+other caregivers, although I have also worked with persons who have survived
+combat and accidents. Most of the people with whom I have worked clinically
+are biologically female. In the mid 1990s I was deeply involved in the heated
+debate about trauma and memory, and some of my interests and allegiances in
+the field of trauma have been shaped by that experience.
+As a long-time practitioner and theorist of feminist psychotherapy, I
+am deeply informed by that orientation and its emphasis on the role of power
+and powerlessness in the etiology of distress and dysfunction. I am also, be-
+cause of that orientation, quite pragmatic about what I do in the office be-
+cause I am mostly interested in the question of what helps and what works for
+the person sitting across the room from me. That pragmatism is reflected in
+my discussion of what works with trauma survivors and can also be seen in
+my general tendency toward a transtheoretical paradigm for good trauma
+treatment.
+INTRODUCTION 19
+
+--- Page 25 ---
+As a psychotherapist writing a book primarily for other psychothera-
+pists I do not try to provide an in-depth review of every possible scholarly
+source on a topic. Rather, my interest is in inviting the reader to engage in a
+virtual conversation with me through these pages about how to become aware
+of opportunities for deepening cultural competence at all points in one's work
+with trauma survivors. I use clinical case examples as my primary instruc-
+tional strategy because my own experience as both a learner and an instruc-
+tor is that ideas stay with me when flesh and blood and emotion are hung on
+the bones of theory, something that I find is done best through clinical tales.
+This is a book about working with adult clients. I am not skilled or experi-
+enced in working with people younger than age 16. An entire separate book
+deserves to be written about cultural competence in work with children and
+younger adolescent trauma survivors.
+The clinical case examples in this book represent, for the most part,
+disguised and merged stories derived from the lives of people who have sat
+across from me over the last 3 decades. Some examples also reflect and in
+some instances derive from the published biographical and autobiographical
+literatures on trauma and on human difference. My goal in including these
+examples is to give life and breath to the dry bones of theory and to illustrate
+how aspects of identity intersect, collide, and merge with the experience of
+trauma.
+As McFarlane (2006) recently noted, the field of trauma studies began
+by attending to the literature created by trauma survivors from ancient times
+to the present to bear witness to their own lives. That literature, fictional
+and biographical, has been a source of knowledge for me and for the people
+with whom I have worked as a psychotherapist. In a few specific instances I
+have permission from a given individual to tell her or his story more fully. In
+those cases the client in question has read earlier versions of my discussion of
+our work together and agreed to my narrative of her or his life and the spe-
+cific disguises given. However, most of the people discussed here are amal-
+gams of two or more people I know. Having my clients read what I write
+about them has been another important stage in my process of learning about
+culturally competent trauma treatment, simply because their review of my
+manuscripts prior to publication afforded them opportunities to foreground
+aspects of their identities whose importance I had previously downplayed.
+These individuals have been my best teachers about trauma and its mean-
+ings, about what hurts, and what helps; they have also been my most power-
+ful instructors about competence and resilience in the aftermath of trauma.
+This book would not exist without those lessons, and although none of them
+can be named, all of these people have my profound gratitude. They are the
+real authors of everything written by and about trauma by the "experts."
+20 CULTURAL COMPETENCE IN TRAUMA THERAPY
+
+--- Page 26 ---
+I
+CULTURALLY COMPETENT
+MODELS OF TRAUMA
+TREATMENT
