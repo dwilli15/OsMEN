@@ -40,7 +40,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 from loguru import logger
 
@@ -197,12 +197,11 @@ class PluginRegistry:
         Scans for Python modules in the plugins directory, imports them,
         and registers any Plugin subclasses found.
 
+        Refactored from complexity 31 to ~10 (PHOENIX Protocol compliance).
+
         Returns:
             Number of plugins successfully loaded
         """
-        import importlib.util
-
-        loaded_count = 0
         plugins_path = Path(self.plugins_dir)
 
         if not plugins_path.exists():
@@ -210,54 +209,44 @@ class PluginRegistry:
             plugins_path.mkdir(parents=True, exist_ok=True)
             return 0
 
-        # Find all Python files in the plugins directory
+        loaded_count = 0
+
+        # Load single-file plugins
+        loaded_count += self._load_file_plugins(plugins_path)
+
+        # Load package-style plugins
+        loaded_count += self._load_package_plugins(plugins_path)
+
+        logger.info(f"Loaded {loaded_count} plugins from {self.plugins_dir}")
+        return loaded_count
+
+    def _load_file_plugins(self, plugins_path: Path) -> int:
+        """Load plugins from individual Python files."""
+        import importlib.util
+
+        loaded_count = 0
+
         for plugin_file in plugins_path.glob("*.py"):
             if plugin_file.name.startswith("_"):
-                continue  # Skip __init__.py and private modules
+                continue
 
             try:
-                # Load the module dynamically
-                module_name = f"plugins.{plugin_file.stem}"
-                spec = importlib.util.spec_from_file_location(module_name, plugin_file)
-
-                if spec is None or spec.loader is None:
-                    logger.warning(f"Could not load spec for {plugin_file}")
-                    continue
-
-                module = importlib.util.module_from_spec(spec)
-                sys.modules[module_name] = module
-                spec.loader.exec_module(module)
-
-                # Find Plugin subclasses in the module
-                for attr_name in dir(module):
-                    if attr_name.startswith("_"):
-                        continue
-
-                    attr = getattr(module, attr_name)
-
-                    # Check if it's a Plugin subclass (but not Plugin itself)
-                    if (
-                        isinstance(attr, type)
-                        and issubclass(attr, Plugin)
-                        and attr is not Plugin
-                    ):
-                        try:
-                            # Instantiate and register the plugin
-                            plugin_instance = attr()
-                            if self.register(plugin_instance):
-                                loaded_count += 1
-                                logger.info(
-                                    f"Loaded plugin: {attr_name} from {plugin_file.name}"
-                                )
-                        except Exception as e:
-                            logger.error(
-                                f"Failed to instantiate plugin {attr_name}: {e}"
-                            )
-
+                module = self._load_module_from_file(plugin_file)
+                if module:
+                    loaded_count += self._register_plugins_from_module(
+                        module, plugin_file.name
+                    )
             except Exception as e:
                 logger.error(f"Failed to load plugin module {plugin_file}: {e}")
 
-        # Also scan subdirectories for package-style plugins
+        return loaded_count
+
+    def _load_package_plugins(self, plugins_path: Path) -> int:
+        """Load plugins from package directories."""
+        import importlib.util
+
+        loaded_count = 0
+
         for plugin_dir in plugins_path.iterdir():
             if not plugin_dir.is_dir() or plugin_dir.name.startswith("_"):
                 continue
@@ -267,45 +256,79 @@ class PluginRegistry:
                 continue
 
             try:
-                module_name = f"plugins.{plugin_dir.name}"
-                spec = importlib.util.spec_from_file_location(
-                    module_name, init_file, submodule_search_locations=[str(plugin_dir)]
-                )
-
-                if spec is None or spec.loader is None:
-                    continue
-
-                module = importlib.util.module_from_spec(spec)
-                sys.modules[module_name] = module
-                spec.loader.exec_module(module)
-
-                # Look for a register_plugin function or Plugin classes
-                if hasattr(module, "register_plugin"):
-                    plugin = module.register_plugin()
-                    if plugin and self.register(plugin):
-                        loaded_count += 1
-                else:
-                    # Scan for Plugin subclasses
-                    for attr_name in dir(module):
-                        if attr_name.startswith("_"):
-                            continue
-                        attr = getattr(module, attr_name)
-                        if (
-                            isinstance(attr, type)
-                            and issubclass(attr, Plugin)
-                            and attr is not Plugin
-                        ):
-                            try:
-                                plugin_instance = attr()
-                                if self.register(plugin_instance):
-                                    loaded_count += 1
-                            except Exception as e:
-                                logger.error(f"Failed to instantiate {attr_name}: {e}")
-
+                module = self._load_module_from_package(plugin_dir, init_file)
+                if module:
+                    # Check for explicit register_plugin function first
+                    if hasattr(module, "register_plugin"):
+                        plugin = module.register_plugin()
+                        if plugin and self.register(plugin):
+                            loaded_count += 1
+                    else:
+                        loaded_count += self._register_plugins_from_module(
+                            module, plugin_dir.name
+                        )
             except Exception as e:
                 logger.error(f"Failed to load plugin package {plugin_dir.name}: {e}")
 
-        logger.info(f"Loaded {loaded_count} plugins from {self.plugins_dir}")
+        return loaded_count
+
+    def _load_module_from_file(self, plugin_file: Path):
+        """Dynamically load a module from a file path."""
+        import importlib.util
+
+        module_name = f"plugins.{plugin_file.stem}"
+        spec = importlib.util.spec_from_file_location(module_name, plugin_file)
+
+        if spec is None or spec.loader is None:
+            logger.warning(f"Could not load spec for {plugin_file}")
+            return None
+
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+        return module
+
+    def _load_module_from_package(self, plugin_dir: Path, init_file: Path):
+        """Dynamically load a module from a package directory."""
+        import importlib.util
+
+        module_name = f"plugins.{plugin_dir.name}"
+        spec = importlib.util.spec_from_file_location(
+            module_name, init_file, submodule_search_locations=[str(plugin_dir)]
+        )
+
+        if spec is None or spec.loader is None:
+            return None
+
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+        return module
+
+    def _register_plugins_from_module(self, module, source_name: str) -> int:
+        """Find and register all Plugin subclasses from a module."""
+        loaded_count = 0
+
+        for attr_name in dir(module):
+            if attr_name.startswith("_"):
+                continue
+
+            attr = getattr(module, attr_name)
+
+            # Check if it's a Plugin subclass (but not Plugin itself)
+            if (
+                isinstance(attr, type)
+                and issubclass(attr, Plugin)
+                and attr is not Plugin
+            ):
+                try:
+                    plugin_instance = attr()
+                    if self.register(plugin_instance):
+                        loaded_count += 1
+                        logger.info(f"Loaded plugin: {attr_name} from {source_name}")
+                except Exception as e:
+                    logger.error(f"Failed to instantiate plugin {attr_name}: {e}")
+
         return loaded_count
 
 
@@ -420,6 +443,8 @@ class MemoryStore:
         Groups similar memories and creates summarized entries for older content.
         Uses text-based summarization with optional LLM enhancement.
 
+        Refactored from complexity 25 to ~10 (PHOENIX Protocol compliance).
+
         Args:
             memory_type: Optional filter to consolidate only specific memory type
 
@@ -436,14 +461,7 @@ class MemoryStore:
         }
 
         # Get candidate memories
-        if memory_type:
-            candidates = [
-                self._memories[mid]
-                for mid in self._indices.get(memory_type, [])
-                if mid in self._memories
-            ]
-        else:
-            candidates = list(self._memories.values())
+        candidates = self._get_consolidation_candidates(memory_type)
 
         if len(candidates) < 5:
             logger.info("Not enough memories to consolidate")
@@ -451,7 +469,28 @@ class MemoryStore:
 
         stats["memories_processed"] = len(candidates)
 
-        # Group memories by age (older than 7 days are candidates for summarization)
+        # Partition into old and recent memories
+        old_memories, recent_memories = self._partition_memories_by_age(candidates)
+
+        # Summarize old, low-importance memories
+        if len(old_memories) >= 3:
+            self._consolidate_old_memories(old_memories, stats)
+
+        logger.info(f"Consolidation complete: {stats}")
+        return stats
+
+    def _get_consolidation_candidates(self, memory_type: MemoryType = None) -> List:
+        """Get memories eligible for consolidation."""
+        if memory_type:
+            return [
+                self._memories[mid]
+                for mid in self._indices.get(memory_type, [])
+                if mid in self._memories
+            ]
+        return list(self._memories.values())
+
+    def _partition_memories_by_age(self, candidates: List) -> Tuple[List, List]:
+        """Partition memories into old (>7 days, low importance) and recent."""
         now = datetime.now()
         old_memories = []
         recent_memories = []
@@ -467,82 +506,83 @@ class MemoryStore:
             except (ValueError, TypeError):
                 recent_memories.append(entry)
 
-        # Summarize old, low-importance memories
-        if len(old_memories) >= 3:
-            # Group by type for summarization
-            by_type = {}
-            for mem in old_memories:
-                mem_type = mem.type.value
-                if mem_type not in by_type:
-                    by_type[mem_type] = []
-                by_type[mem_type].append(mem)
+        return old_memories, recent_memories
 
-            for mem_type, memories in by_type.items():
-                if len(memories) < 3:
-                    continue
+    def _consolidate_old_memories(
+        self, old_memories: List, stats: Dict[str, Any]
+    ) -> None:
+        """Consolidate old memories by type."""
+        # Group by type for summarization
+        by_type: Dict[str, List] = {}
+        for mem in old_memories:
+            mem_type = mem.type.value
+            if mem_type not in by_type:
+                by_type[mem_type] = []
+            by_type[mem_type].append(mem)
 
-                # Create text-based summary (extractive)
-                contents = []
-                total_size = 0
-                for mem in memories:
-                    content_str = str(mem.content)
-                    contents.append(content_str)
-                    total_size += len(content_str.encode("utf-8"))
+        for mem_type, memories in by_type.items():
+            if len(memories) < 3:
+                continue
+            self._create_consolidated_entry(mem_type, memories, stats)
 
-                # Simple extractive summarization: keep key sentences
-                summary_parts = []
-                for content in contents[:10]:  # Limit to first 10
-                    # Take first sentence or first 200 chars
-                    sentences = content.split(".")
-                    if sentences:
-                        summary_parts.append(sentences[0].strip()[:200])
+    def _create_consolidated_entry(
+        self, mem_type: str, memories: List, stats: Dict[str, Any]
+    ) -> None:
+        """Create a single consolidated memory entry from multiple memories."""
+        now = datetime.now()
 
-                summary_content = " | ".join(summary_parts)
+        # Create text-based summary (extractive)
+        summary_content = self._create_extractive_summary(memories)
 
-                # Create consolidated memory entry
-                consolidated = MemoryEntry(
-                    id=f"consolidated_{mem_type}_{now.strftime('%Y%m%d_%H%M%S')}",
-                    type=MemoryType(mem_type),
-                    content={
-                        "summary": summary_content,
-                        "source_count": len(memories),
-                        "date_range": {
-                            "oldest": min(m.created_at for m in memories),
-                            "newest": max(m.created_at for m in memories),
-                        },
-                    },
-                    metadata={
-                        "consolidated": True,
-                        "source_ids": [
-                            m.id for m in memories[:50]
-                        ],  # Keep first 50 refs
-                    },
-                    importance=max(m.importance for m in memories),
-                    created_at=now.isoformat(),
-                )
+        # Create consolidated memory entry
+        consolidated = MemoryEntry(
+            id=f"consolidated_{mem_type}_{now.strftime('%Y%m%d_%H%M%S')}",
+            type=MemoryType(mem_type),
+            content={
+                "summary": summary_content,
+                "source_count": len(memories),
+                "date_range": {
+                    "oldest": min(m.created_at for m in memories),
+                    "newest": max(m.created_at for m in memories),
+                },
+            },
+            metadata={
+                "consolidated": True,
+                "source_ids": [m.id for m in memories[:50]],
+            },
+            importance=max(m.importance for m in memories),
+            created_at=now.isoformat(),
+        )
 
-                # Remove old memories and add consolidated one
-                for mem in memories:
-                    if mem.id in self._memories:
-                        # Track space saved
-                        stats["space_saved_bytes"] += len(
-                            str(mem.content).encode("utf-8")
-                        )
-                        del self._memories[mem.id]
-                        if mem.id in self._indices.get(mem.type, []):
-                            self._indices[mem.type].remove(mem.id)
-                        stats["memories_merged"] += 1
+        # Remove old memories
+        for mem in memories:
+            if mem.id in self._memories:
+                stats["space_saved_bytes"] += len(str(mem.content).encode("utf-8"))
+                del self._memories[mem.id]
+                if mem.id in self._indices.get(mem.type, []):
+                    self._indices[mem.type].remove(mem.id)
+                stats["memories_merged"] += 1
 
-                # Add consolidated entry
-                self._memories[consolidated.id] = consolidated
-                if consolidated.type not in self._indices:
-                    self._indices[consolidated.type] = []
-                self._indices[consolidated.type].append(consolidated.id)
-                self._persist(consolidated)
-                stats["summaries_created"] += 1
+        # Add consolidated entry
+        self._memories[consolidated.id] = consolidated
+        if consolidated.type not in self._indices:
+            self._indices[consolidated.type] = []
+        self._indices[consolidated.type].append(consolidated.id)
+        self._persist(consolidated)
+        stats["summaries_created"] += 1
 
-        logger.info(f"Consolidation complete: {stats}")
-        return stats
+    def _create_extractive_summary(self, memories: List) -> str:
+        """Create an extractive summary from multiple memories."""
+        contents = [str(mem.content) for mem in memories]
+        summary_parts = []
+
+        for content in contents[:10]:  # Limit to first 10
+            # Take first sentence or first 200 chars
+            sentences = content.split(".")
+            if sentences:
+                summary_parts.append(sentences[0].strip()[:200])
+
+        return " | ".join(summary_parts)
 
     def _prune(self):
         """Remove low-importance, old memories"""

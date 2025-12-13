@@ -1,27 +1,34 @@
 """
-Daily Briefing Generator - Production Ready
-============================================
+Daily Briefing Generator - Production Ready with Intelligent Context
+=====================================================================
 
-Generates 90-second personalized audio briefings with FULL CONTEXT:
+Generates 90-second personalized audio briefings with FULL INTELLIGENT CONTEXT.
 
-Context Sources:
+Context Sources (via IntelligentContextEngine):
 1. Today's AM check-in (energy, priorities, ADHD state, meditation)
-2. Previous 3 days of check-ins (AM + PM) for continuity
-3. Previous 3 days of briefing scripts (what was emphasized)
+2. Previous 7 days of check-ins (AM + PM) for pattern detection
+3. Previous briefing scripts (what was emphasized)
 4. Current week's syllabus (readings, assignments, class schedule)
 5. Course progress tracker (readings behind, next deadline)
 6. ADHD patterns (energy trends, working strategies)
 7. Carryover tasks from yesterday's PM check-in
 8. Pending to-do items aggregated from all sources
 
+INTELLIGENT FEATURES (NEW):
+- HybridMemory: Stores check-ins for semantic retrieval of similar past days
+- RAG Pipeline: BM25 + semantic search with cross-encoder re-ranking
+- Sequential Reasoning: Explainable decisions with confidence scores
+- Lateral Thinking: Context7 dimensions + synchronicity detection
+- Pattern Learning: Recalls what worked on similar days
+
 Briefing Structure (90 seconds):
 - Opening: Day, date, greeting
-- Energy check: Today's energy + 3-day trend context
-- Priority focus: Top priorities with carryover awareness
-- ADHD strategy: Contextual tip based on patterns
-- Course update: Readings, deadlines, class status
+- Energy check: Today's energy + 3-day trend + memory-based insight
+- Priority focus: Top priorities with reasoning trace
+- ADHD strategy: Contextual tip based on patterns and past success
+- Course update: Readings, deadlines, with lateral theme connections
 - Meditation reminder: Practice continuity
-- Boundary reflection: Week-appropriate reminder
+- Boundary reflection: Week-appropriate reminder with course integration
 - Closing: Encouragement + evening check-in reminder
 
 Integration:
@@ -32,6 +39,7 @@ Integration:
 """
 
 import json
+import logging
 import os
 import random
 import re
@@ -39,11 +47,41 @@ import subprocess
 import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 # Add OsMEN root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+# Import both the basic and intelligent context systems
+from agents.daily_brief.context_aggregator import (
+    AggregatedContext,
+    ContextAggregator,
+    gather_context_for_briefing,
+)
+
+# Import the intelligent context system (graceful fallback if unavailable)
+try:
+    from agents.daily_brief.intelligent_context import (
+        LATERAL_AVAILABLE,
+        MEMORY_AVAILABLE,
+        RAG_AVAILABLE,
+        REASONING_AVAILABLE,
+        IntelligentContext,
+        IntelligentContextEngine,
+        LateralConnection,
+        MemoryInsight,
+        ReasoningTrace,
+    )
+
+    INTELLIGENT_CONTEXT_AVAILABLE = True
+except ImportError:
+    INTELLIGENT_CONTEXT_AVAILABLE = False
+    MEMORY_AVAILABLE = False
+    RAG_AVAILABLE = False
+    REASONING_AVAILABLE = False
+    LATERAL_AVAILABLE = False
+
+logger = logging.getLogger("osmen.briefing.generator")
 from integrations.logging_system import (
     AgentLogger,
     AudioGenerationLog,
@@ -53,13 +91,6 @@ from integrations.logging_system import (
 
 # Import from unified orchestration layer (SOURCE OF TRUTH)
 from integrations.orchestration import OsMEN, Paths, Pipelines
-
-# Import the production context aggregator
-from agents.daily_brief.context_aggregator import (
-    AggregatedContext,
-    ContextAggregator,
-    gather_context_for_briefing,
-)
 
 # Use paths from orchestration layer (NEVER hardcode)
 OBSIDIAN_ROOT = Paths.HB411_OBSIDIAN
@@ -75,44 +106,122 @@ Paths.ensure_all()
 
 
 class DailyBriefingGenerator:
-    """Generate personalized 90-second daily briefings with full context"""
+    """
+    Generate personalized 90-second daily briefings with full intelligent context.
 
-    def __init__(self):
+    When intelligent systems are available:
+    - Uses HybridMemory to recall similar past days
+    - Applies Sequential Reasoning for explainable decisions
+    - Discovers Lateral Connections to course themes
+    - Learns from patterns in what worked before
+
+    Gracefully degrades to basic context if systems unavailable.
+    """
+
+    def __init__(self, use_intelligent_context: bool = True):
         self.logger, self.prompt = agent_startup_check("daily-briefing-generator")
         self.today = date.today()
         self.today_str = self.today.isoformat()
         self.yesterday = (self.today - timedelta(days=1)).isoformat()
-        
-        # Use production context aggregator
-        self.aggregator = ContextAggregator()
 
-    def gather_context(self) -> AggregatedContext:
-        """Gather comprehensive context using the production aggregator"""
-        context = self.aggregator.gather_full_context()
-        
-        self.logger.log(
-            action="gather_context",
-            inputs={"date": self.today_str},
-            outputs={
-                "checkins_found": len(context.checkins),
-                "briefings_found": len(context.briefings),
-                "pending_tasks": len(context.pending_tasks),
-                "syllabus_week": context.syllabus.current_week if context.syllabus else 0,
-            },
-            status="completed",
-        )
+        # Determine context engine to use
+        self.use_intelligent = use_intelligent_context and INTELLIGENT_CONTEXT_AVAILABLE
+
+        if self.use_intelligent:
+            self.context_engine = IntelligentContextEngine(
+                lookback_days=7,  # Extended for better patterns
+                enable_memory=True,
+                enable_rag=True,
+                enable_reasoning=True,
+                enable_lateral=True,
+            )
+            logger.info("Using IntelligentContextEngine with full integration")
+        else:
+            self.aggregator = ContextAggregator()
+            logger.info(
+                "Using basic ContextAggregator (intelligent features unavailable)"
+            )
+
+    def gather_context(self) -> Union["IntelligentContext", AggregatedContext]:
+        """
+        Gather comprehensive context using the best available system.
+
+        Returns IntelligentContext if intelligent systems available,
+        otherwise falls back to basic AggregatedContext.
+        """
+        if self.use_intelligent:
+            context = self.context_engine.gather_intelligent_context()
+
+            self.logger.log(
+                action="gather_intelligent_context",
+                inputs={"date": self.today_str},
+                outputs={
+                    "checkins_found": len(context.checkins),
+                    "briefings_found": len(context.briefings),
+                    "pending_tasks": len(context.pending_tasks),
+                    "syllabus_week": (
+                        context.syllabus.current_week if context.syllabus else 0
+                    ),
+                    "memory_enabled": context.memory_enabled,
+                    "rag_enabled": context.rag_enabled,
+                    "reasoning_enabled": context.reasoning_enabled,
+                    "lateral_enabled": context.lateral_enabled,
+                    "similar_checkins": len(
+                        getattr(context, "similar_past_checkins", [])
+                    ),
+                    "reasoning_traces": len(getattr(context, "reasoning_traces", [])),
+                    "lateral_connections": len(
+                        getattr(context, "lateral_connections", [])
+                    ),
+                },
+                status="completed",
+            )
+        else:
+            context = self.aggregator.gather_full_context()
+
+            self.logger.log(
+                action="gather_context",
+                inputs={"date": self.today_str},
+                outputs={
+                    "checkins_found": len(context.checkins),
+                    "briefings_found": len(context.briefings),
+                    "pending_tasks": len(context.pending_tasks),
+                    "syllabus_week": (
+                        context.syllabus.current_week if context.syllabus else 0
+                    ),
+                },
+                status="completed",
+            )
 
         return context
 
-    def _generate_adhd_tip(self, context: AggregatedContext) -> str:
-        """Generate context-aware ADHD tip based on patterns"""
+    def _generate_adhd_tip(
+        self, context: Union["IntelligentContext", AggregatedContext]
+    ) -> str:
+        """Generate context-aware ADHD tip based on patterns and memory"""
         adhd = context.adhd
         am = context.today_am_checkin
-        
+
         # Get current energy
         energy = am.energy if am else 5
         adhd_state = am.adhd_state if am else "moderate"
-        
+
+        # Check for memory-based insights (if IntelligentContext)
+        memory_insight = None
+        reasoning_decision = None
+
+        if hasattr(context, "effective_strategies") and context.effective_strategies:
+            # Use insight from what worked before
+            memory_insight = context.effective_strategies[0]
+            logger.debug(f"Using memory insight from {memory_insight.source_date}")
+
+        if hasattr(context, "reasoning_traces") and context.reasoning_traces:
+            # Use reasoning trace if available
+            for trace in context.reasoning_traces:
+                if "ADHD" in trace.decision or "strategy" in trace.decision.lower():
+                    reasoning_decision = trace
+                    break
+
         # Tips organized by situation
         tips_by_situation = {
             "low_energy": [
@@ -148,7 +257,11 @@ class DailyBriefingGenerator:
                 "Your recommended focus block is {focus_length} minutes based on recent patterns. Set a timer.",
             ],
         }
-        
+
+        # If we have a high-confidence reasoning decision, use it
+        if reasoning_decision and reasoning_decision.confidence >= 0.8:
+            return reasoning_decision.decision
+
         # Select appropriate tip category
         if energy <= 3:
             category = "low_energy"
@@ -164,20 +277,30 @@ class DailyBriefingGenerator:
             category = "high_energy"
         else:
             category = "default"
-        
+
         tips = tips_by_situation[category]
         tip = random.choice(tips)
-        
+
         # Fill in template variables
-        strategies = ", ".join(adhd.working_strategies[:2]) if adhd and adhd.working_strategies else "body doubling and timers"
+        strategies = (
+            ", ".join(adhd.working_strategies[:2])
+            if adhd and adhd.working_strategies
+            else "body doubling and timers"
+        )
         focus_length = adhd.recommended_focus_block_length if adhd else 25
-        
+
         tip = tip.format(
             energy=energy,
             strategies=strategies,
             focus_length=focus_length,
         )
-        
+
+        # Enhance with memory insight if available
+        if memory_insight and memory_insight.content:
+            # Extract key insight from past success
+            past_success_hint = f"On a similar day ({memory_insight.source_date}), this approach worked."
+            tip = f"{tip} {past_success_hint}"
+
         return tip
 
     def _get_boundary_reminder(self, week: int) -> str:
@@ -204,35 +327,35 @@ class DailyBriefingGenerator:
 
     def generate_script(self, context: AggregatedContext) -> str:
         """Generate the 90-second briefing script with full context"""
-        
+
         # Extract key data with safe defaults
         am = context.today_am_checkin
         yesterday_pm = context.yesterday_pm_checkin
         syllabus = context.syllabus
         adhd = context.adhd
         progress = context.progress
-        
+
         # Core data
         energy = am.energy if am else 5
         priorities = am.priorities if am else context.pending_tasks[:3]
         priority_1 = priorities[0] if priorities else "your most important task"
         priority_2 = priorities[1] if len(priorities) > 1 else None
-        
+
         # Carryover awareness
         carryover = context.carryover_from_yesterday
-        
+
         script_parts = []
-        
+
         # ===== OPENING (10 sec) =====
         script_parts.append(
             f"Good morning. It's {context.day_name}, {context.date_formatted}. "
             f"Here's your 90-second focus briefing."
         )
-        
+
         # ===== ENERGY CHECK WITH TREND (15 sec) =====
         energy_trend = adhd.energy_trend if adhd else "stable"
         avg_energy = adhd.avg_energy_3day if adhd else energy
-        
+
         if energy <= 3:
             energy_section = (
                 f"Your energy is at {energy} today. "
@@ -254,29 +377,29 @@ class DailyBriefingGenerator:
                 f"You're at {energy} energy today—strong foundation. "
                 f"{"Capitalize on this uptrend by front-loading hard work." if energy_trend == "improving" else "Channel it into your top priority early."}"
             )
-        
+
         script_parts.append(energy_section)
-        
+
         # ===== CARRYOVER & PRIORITIES (20 sec) =====
         if carryover:
             script_parts.append(
                 f"Carried over from yesterday: {carryover[0]}. "
                 f"Consider whether this is still your top priority or can be delegated."
             )
-        
+
         script_parts.append(f"Your number one today: {priority_1}.")
-        
+
         if priority_2:
             script_parts.append(f"Second: {priority_2}.")
-        
+
         script_parts.append(
             "Block focused time for these. Everything else can wait or be delegated."
         )
-        
+
         # ===== ADHD STRATEGY (15 sec) =====
         adhd_tip = self._generate_adhd_tip(context)
         script_parts.append(adhd_tip)
-        
+
         # ===== COURSE UPDATE (15 sec) =====
         if syllabus:
             if syllabus.is_break_week:
@@ -301,18 +424,28 @@ class DailyBriefingGenerator:
                         f"On track with Week {syllabus.current_week}: {syllabus.week_topic}. "
                         f"{'Class in ' + str(syllabus.days_until_class) + ' days.' if syllabus.days_until_class <= 3 else 'Keep the momentum.'}"
                     )
-                
+
                 # Next deadline reminder
                 if syllabus.next_deadline and syllabus.next_deadline["days_until"] <= 7:
                     script_parts.append(
                         f"Reminder: {syllabus.next_deadline['name']} due in {syllabus.next_deadline['days_until']} days."
                     )
-        
+
+        # ===== LATERAL CONNECTIONS (optional - adds depth via IntelligentContext) =====
+        # If IntelligentContext is available, surface surprising thematic connections
+        if hasattr(context, "lateral_connections") and context.lateral_connections:
+            # Pick the highest-scoring lateral insight (avoid overwhelming)
+            best_connection = max(context.lateral_connections, key=lambda x: x.strength)
+            if best_connection.strength > 0.7:
+                insight = best_connection.insight
+                if insight and len(insight) < 100:  # Keep it brief
+                    script_parts.append(f"An insight from your past: {insight}")
+
         # ===== MEDITATION REMINDER (10 sec) =====
         meditation_done = am.meditation_completed if am else False
         meditation_type = am.meditation_type if am else ""
         meditation_streak = progress.meditation_sessions_this_week if progress else 0
-        
+
         if meditation_done:
             script_parts.append(
                 f"{'Your ' + meditation_type + ' practice' if meditation_type else 'Morning practice'} complete. "
@@ -323,19 +456,19 @@ class DailyBriefingGenerator:
                 "Remember your practice commitments. Even 10 minutes of sitting shifts the day. "
                 "Don't let 'not enough time' become 'no time.'"
             )
-        
+
         # ===== BOUNDARY REFLECTION (10 sec) =====
         week = syllabus.current_week if syllabus else 1
         boundary_reminder = self._get_boundary_reminder(week)
         script_parts.append(boundary_reminder)
-        
+
         # ===== CLOSING (5 sec) =====
         script_parts.append(
             "You've got this. Check in tonight to close the loop. Have a focused day."
         )
-        
+
         script = " ".join(script_parts)
-        
+
         self.logger.log(
             action="generate_script",
             inputs={
@@ -417,7 +550,7 @@ class DailyBriefingGenerator:
         # Gather comprehensive context
         print("[1/4] Gathering context...")
         context = self.gather_context()
-        
+
         print(f"      - Check-ins found: {len(context.checkins)}")
         print(f"      - Previous briefings: {len(context.briefings)}")
         print(f"      - Pending tasks: {len(context.pending_tasks)}")
@@ -449,7 +582,9 @@ class DailyBriefingGenerator:
                 "checkins_used": len(context.checkins),
                 "briefings_referenced": len(context.briefings),
                 "pending_tasks": len(context.pending_tasks),
-                "syllabus_week": context.syllabus.current_week if context.syllabus else 0,
+                "syllabus_week": (
+                    context.syllabus.current_week if context.syllabus else 0
+                ),
             },
         )
 
@@ -475,7 +610,9 @@ class DailyBriefingGenerator:
                 "checkins": len(context.checkins),
                 "briefings": len(context.briefings),
                 "pending_tasks": len(context.pending_tasks),
-                "syllabus_week": context.syllabus.current_week if context.syllabus else 0,
+                "syllabus_week": (
+                    context.syllabus.current_week if context.syllabus else 0
+                ),
             },
             "script_preview": script[:300] + "..." if len(script) > 300 else script,
         }

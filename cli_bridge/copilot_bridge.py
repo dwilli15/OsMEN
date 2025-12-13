@@ -64,19 +64,29 @@ class CopilotBridge:
             return self._fallback_suggest_command(description)
         
         try:
-            cmd = ['gh', 'copilot', 'suggest', description]
+            # Prefer non-interactive shell output.
+            cmd = ['gh', 'copilot', 'suggest', '--shell-out', description]
             
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
                 timeout=30
+                ,
+                env={
+                    **{k: v for k, v in os.environ.items() if k not in {"GITHUB_TOKEN", "GH_TOKEN"}},
+                    "GH_PROMPT": "disable",
+                }
             )
             
             if result.returncode == 0:
+                # gh-copilot can emit extra lines; return the last non-empty line.
+                stdout = (result.stdout or "").strip()
+                lines = [ln.strip() for ln in stdout.splitlines() if ln.strip()]
+                command = lines[-1] if lines else ""
                 return {
                     'success': True,
-                    'command': result.stdout.strip(),
+                    'command': command,
                     'description': description
                 }
             else:

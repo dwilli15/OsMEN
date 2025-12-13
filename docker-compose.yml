@@ -147,6 +147,16 @@ services:
     environment:
       - OBSIDIAN_VAULT_PATH=${OBSIDIAN_VAULT_PATH:-}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # Default to local embeddings for a local-first stack.
+      - EMBED_PROVIDER=${EMBED_PROVIDER:-ollama}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
+      - OPENAI_EMBED_MODEL=${OPENAI_EMBED_MODEL:-}
+      - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
+      - OLLAMA_HOST=${OLLAMA_HOST:-}
+      - OLLAMA_EMBED_MODEL=${OLLAMA_EMBED_MODEL:-nomic-embed-text}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-}
+      - CHROMA_URL=${CHROMA_URL:-http://chromadb:8000}
     volumes:
       - ${OBSIDIAN_VAULT_PATH:-./obsidian-vault}:/vault:ro
       - ./tools:/app/tools:ro
@@ -176,7 +186,9 @@ services:
 
   # Agent Gateway - Central API gateway for production LLM agents
   agent-gateway:
-    build: ./gateway
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
     container_name: osmen-agent-gateway
     ports:
       - "8080:8080"
@@ -212,8 +224,12 @@ services:
 
       # Gateway settings
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # External semester workspace (repo hygiene - semester artifacts MUST be outside repo)
+      - OSMEN_SEMESTER_WORKSPACE=${OSMEN_SEMESTER_WORKSPACE:-}
     volumes:
       - ./gateway/config:/app/config
+      # Bind-mount the external semester workspace so TTS/vault ops can write files
+      - ${OSMEN_SEMESTER_WORKSPACE:-./semester_workspace}:/workspace
     restart: unless-stopped
     networks:
       - osmen-network
@@ -235,7 +251,12 @@ services:
       - ANONYMIZED_TELEMETRY=FALSE
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      # chromadb/chroma image doesn't ship with curl/wget/python; use bash /dev/tcp.
+      test:
+        [
+          "CMD-SHELL",
+          "bash -lc \"exec 3<>/dev/tcp/127.0.0.1/8000 && printf 'GET /api/v2/heartbeat HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | head -n 1 | grep -q '200'\"",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

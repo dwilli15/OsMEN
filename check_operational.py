@@ -14,6 +14,11 @@ from pathlib import Path
 
 import requests
 
+# Force UTF-8 output on Windows to avoid charmap codec errors with checkmarks/crosses
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # Common subprocess exceptions
 SUBPROCESS_EXCEPTIONS = (
     subprocess.TimeoutExpired,
@@ -122,17 +127,23 @@ def check_docker_compose():
 
 
 def check_python():
-    """Check Python version"""
-    try:
-        result = subprocess.run(
-            ["python3", "--version"], capture_output=True, timeout=5
-        )
-        if result.returncode == 0:
-            version = result.stdout.decode().strip()
-            return True, version
-        return False, ""
-    except SUBPROCESS_EXCEPTIONS:
-        return False, ""
+    """Check Python version - handles Windows using 'python' and Unix using 'python3'"""
+    # Windows typically uses 'python' while Unix uses 'python3'
+    python_cmds = (
+        ["python3", "python"] if sys.platform != "win32" else ["python", "python3"]
+    )
+
+    for cmd in python_cmds:
+        try:
+            result = subprocess.run([cmd, "--version"], capture_output=True, timeout=5)
+            if result.returncode == 0:
+                version = result.stdout.decode().strip()
+                # Verify it's Python 3.x
+                if "Python 3" in version:
+                    return True, version
+        except SUBPROCESS_EXCEPTIONS:
+            continue
+    return False, ""
 
 
 def check_file_exists(filepath):
@@ -150,10 +161,14 @@ def check_agent_tests():
     try:
         # Use current working directory
         project_root = Path(__file__).parent
+
+        # Determine correct Python command based on platform
+        python_cmd = "python" if sys.platform == "win32" else "python3"
+
         result = subprocess.run(
-            ["python3", "test_agents.py"],
+            [python_cmd, "test_agents.py"],
             capture_output=True,
-            timeout=60,
+            timeout=300,  # 5 minute timeout for full test suite
             cwd=str(project_root),
         )
         return result.returncode == 0, result.stdout.decode()
@@ -336,7 +351,6 @@ def main():
     if run_all or args.services:
         print("\nChecking service health endpoints...\n")
         gateway_base = args.gateway_url.rstrip("/")
-        dashboard_base = args.dashboard_url.rstrip("/")
 
         gateway_ok, gateway_detail, gateway_payload = http_health_check(
             f"{gateway_base}/healthz"
@@ -350,21 +364,17 @@ def main():
                     data.get("detail", ""),
                 )
 
-        for dependent in ("postgres", "redis", "qdrant"):
+        # Check individual service health endpoints
+        for dependent in ("postgres", "redis", "chromadb"):
             dep_ok, dep_detail, _ = http_health_check(
                 f"{gateway_base}/healthz/{dependent}"
             )
             checker.add_check(f"Gateway /healthz/{dependent}", dep_ok, dep_detail)
 
-        dash_ready_ok, dash_ready_detail, _ = http_health_check(
-            f"{dashboard_base}/ready"
-        )
-        checker.add_check("Dashboard /ready", dash_ready_ok, dash_ready_detail)
-
-        dash_health_ok, dash_health_detail, _ = http_health_check(
-            f"{dashboard_base}/health"
-        )
-        checker.add_check("Dashboard /health", dash_health_ok, dash_health_detail)
+        # Note: Dashboard is optional and not always deployed
+        # If you need dashboard checks, uncomment and configure DASHBOARD_URL
+        # dash_ready_ok, dash_ready_detail, _ = http_health_check(f"{dashboard_base}/ready")
+        # checker.add_check("Dashboard /ready", dash_ready_ok, dash_ready_detail)
 
     print("\n")
     return checker.print_results()
