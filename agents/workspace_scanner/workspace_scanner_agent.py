@@ -427,69 +427,76 @@ def detect_capabilities(content: str, filename: str) -> List[str]:
     return list(capabilities)
 
 
+# Table-driven component type detection (PHOENIX Protocol: complexity 40 → ~5)
+# Maps directory names to component types (without slashes for flexible matching)
+_COMPONENT_TYPE_MAP: Dict[str, ComponentType] = {
+    "tools": ComponentType.TOOL,
+    "integrations": ComponentType.INTEGRATION,
+    "langflow": ComponentType.FLOW,
+    "n8n": ComponentType.WORKFLOW,
+    "parsers": ComponentType.PARSER,
+    "config": ComponentType.CONFIG,
+    "docs": ComponentType.DOCUMENTATION,
+    "tests": ComponentType.TEST,
+    "scripts": ComponentType.SCRIPT,
+    "infrastructure": ComponentType.INFRASTRUCTURE,
+    "gateway": ComponentType.GATEWAY,
+    "web": ComponentType.WEB,
+    "knowledge": ComponentType.KNOWLEDGE,
+    "workflows": ComponentType.PIPELINE,
+    "templates": ComponentType.TEMPLATE,
+    "data": ComponentType.DATA,
+}
+
+
+def _path_contains_dir(path_str: str, dir_name: str) -> bool:
+    """Check if path contains a directory name (cross-platform)."""
+    patterns = [
+        f"/{dir_name}/",
+        f"\\{dir_name}\\",
+        f"/{dir_name}\\",
+        f"\\{dir_name}/",
+        # Also match at start of relative paths
+        f"{dir_name}/",
+        f"{dir_name}\\",
+    ]
+    return any(p in path_str for p in patterns)
+
+
 def detect_component_type(path: Path, content: Optional[str] = None) -> ComponentType:
-    """Detect the type of component from path and content."""
+    """Detect the type of component from path and content.
+
+    Uses table-driven dispatch for path pattern matching.
+    Refactored from complexity 40 to ~8 (PHOENIX Protocol compliance).
+
+    Args:
+        path: Path to the file being analyzed
+        content: Optional file content for deeper analysis
+
+    Returns:
+        ComponentType enum value
+    """
     path_str = str(path).lower()
     name = path.name.lower()
 
-    # Check path patterns
-    if "/agents/" in path_str or "\\agents\\" in path_str:
+    # Special handling for agents directory (has sub-types)
+    if _path_contains_dir(path_str, "agents"):
         if "_agent.py" in name:
             return ComponentType.AGENT
         if ".agent.md" in name:
             return ComponentType.INSTRUCTION
         return ComponentType.AGENT
 
-    if "/tools/" in path_str or "\\tools\\" in path_str:
-        return ComponentType.TOOL
+    # Table-driven lookup for other directories
+    for dir_name, component_type in _COMPONENT_TYPE_MAP.items():
+        if _path_contains_dir(path_str, dir_name):
+            return component_type
 
-    if "/integrations/" in path_str or "\\integrations\\" in path_str:
-        return ComponentType.INTEGRATION
-
-    if "/langflow/" in path_str or "\\langflow\\" in path_str:
-        return ComponentType.FLOW
-
-    if "/n8n/" in path_str or "\\n8n\\" in path_str:
-        return ComponentType.WORKFLOW
-
-    if "/parsers/" in path_str or "\\parsers\\" in path_str:
-        return ComponentType.PARSER
-
-    if "/config/" in path_str or "\\config\\" in path_str:
-        return ComponentType.CONFIG
-
-    if "/docs/" in path_str or "\\docs\\" in path_str:
-        return ComponentType.DOCUMENTATION
-
-    if "/tests/" in path_str or "\\tests\\" in path_str or name.startswith("test_"):
+    # Filename-based fallbacks
+    if name.startswith("test_"):
         return ComponentType.TEST
-
-    if "/scripts/" in path_str or "\\scripts\\" in path_str:
-        return ComponentType.SCRIPT
-
-    if "/infrastructure/" in path_str or "\\infrastructure\\" in path_str:
-        return ComponentType.INFRASTRUCTURE
-
-    if "/gateway/" in path_str or "\\gateway\\" in path_str:
-        return ComponentType.GATEWAY
-
-    if "/web/" in path_str or "\\web\\" in path_str:
-        return ComponentType.WEB
-
-    if "/knowledge/" in path_str or "\\knowledge\\" in path_str:
-        return ComponentType.KNOWLEDGE
-
-    if "/workflows/" in path_str or "\\workflows\\" in path_str:
-        return ComponentType.PIPELINE
-
     if "instruction" in name or ".agent.md" in name:
         return ComponentType.INSTRUCTION
-
-    if "/templates/" in path_str or "\\templates\\" in path_str:
-        return ComponentType.TEMPLATE
-
-    if "/data/" in path_str or "\\data\\" in path_str:
-        return ComponentType.DATA
 
     return ComponentType.UNKNOWN
 

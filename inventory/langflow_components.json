@@ -1,0 +1,59 @@
+{
+  "flows": {
+    "langflow/flows/boot_hardening_specialist.json": {
+      "component_types": [
+        "ChatInput",
+        "ChatOllama",
+        "ChatOutput",
+        "ToolCallingAgent",
+        "VectorStoreRetriever"
+      ]
+    },
+    "langflow/flows/code_assistant_oauth.json": {
+      "component_types": [
+        "ChatInput",
+        "ChatOutput",
+        "ConditionalRouter",
+        "CustomComponent",
+        "VectorStoreRetriever"
+      ]
+    },
+    "langflow/flows/coordinator.json": {
+      "component_types": []
+    },
+    "langflow/flows/daily_brief_specialist.json": {
+      "component_types": []
+    },
+    "langflow/flows/focus_guardrails_specialist.json": {
+      "component_types": [
+        "ChatInput",
+        "ChatOllama",
+        "ChatOutput",
+        "ToolCallingAgent",
+        "VectorStoreRetriever"
+      ]
+    },
+    "langflow/flows/hb411_podcast_specialist.json": {
+      "component_types": []
+    },
+    "langflow/flows/knowledge_management_specialist.json": {
+      "component_types": [
+        "ChatInput",
+        "ChatOllama",
+        "ChatOutput",
+        "HTTPRequest",
+        "ToolCallingAgent",
+        "VectorStoreRetriever"
+      ]
+    },
+    "langflow/flows/knowledge_specialist.json": {
+      "component_types": []
+    },
+    "langflow/flows/langflow_yolo_coordinator.json": {
+      "component_types": []
+    },
+    "langflow/flows/workspace_scanner_specialist.json": {
+      "component_types": []
+    }
+  }
+}

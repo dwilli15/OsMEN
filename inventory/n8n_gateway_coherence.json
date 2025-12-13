@@ -1,0 +1,250 @@
+{
+  "gateway_matched": [
+    {
+      "method": "POST",
+      "node": "Generate Audio (TTS)",
+      "path": "/tts/generate",
+      "workflow": "n8n/workflows/checkin_triggered_briefing.json"
+    },
+    {
+      "method": "POST",
+      "node": "Import Syllabus",
+      "path": "/api/courses/import/confirm",
+      "workflow": "n8n/workflows/course_semester_setup.json"
+    },
+    {
+      "method": "POST",
+      "node": "Bulk Import",
+      "path": "/api/courses/import/bulk",
+      "workflow": "n8n/workflows/course_semester_setup.json"
+    },
+    {
+      "method": "GET",
+      "node": "Get Semester Overview",
+      "path": "/api/courses/semester",
+      "workflow": "n8n/workflows/course_semester_setup.json"
+    },
+    {
+      "method": "GET",
+      "node": "Get Weekly Overview",
+      "path": "/api/courses/semester",
+      "workflow": "n8n/workflows/course_semester_setup.json"
+    },
+    {
+      "method": "GET",
+      "node": "Get Today's Schedule",
+      "path": "/api/calendar/today",
+      "workflow": "n8n/workflows/daily_90sec_briefing.json"
+    },
+    {
+      "method": "GET",
+      "node": "Get Today's Tasks",
+      "path": "/api/tasks/today",
+      "workflow": "n8n/workflows/daily_90sec_briefing.json"
+    },
+    {
+      "method": "POST",
+      "node": "Generate Audio",
+      "path": "/api/tts/generate",
+      "workflow": "n8n/workflows/daily_90sec_briefing.json"
+    },
+    {
+      "method": "POST",
+      "node": "Generate Podcast Audio",
+      "path": "/api/tts/generate",
+      "workflow": "n8n/workflows/hb411_weekly_podcast.json"
+    },
+    {
+      "method": "POST",
+      "node": "Notify Gateway",
+      "path": "/api/workspace/map-updated",
+      "workflow": "n8n/workflows/workspace_map_updater.json"
+    }
+  ],
+  "gateway_missing": [],
+  "n8n_http_node_count": 29,
+  "non_gateway_calls": {
+    "chromadb": [
+      {
+        "host": "localhost",
+        "method": "POST",
+        "node": "Store in ChromaDB",
+        "path": "/api/v1/collections/osmen_security_logs/add",
+        "port": 8000,
+        "url": "http://localhost:8000/api/v1/collections/osmen_security_logs/add",
+        "workflow": "n8n/workflows/boot_hardening_trigger.json"
+      },
+      {
+        "host": "localhost",
+        "method": "POST",
+        "node": "Store in ChromaDB",
+        "path": "/api/v1/collections/osmen_knowledge/add",
+        "port": 8000,
+        "url": "http://localhost:8000/api/v1/collections/osmen_knowledge/add",
+        "workflow": "n8n/workflows/knowledge_capture_trigger.json"
+      }
+    ],
+    "convertx": [
+      {
+        "host": "osmen-convertx",
+        "method": "POST",
+        "node": "Upload to ConvertX",
+        "path": "/upload",
+        "port": 3000,
+        "url": "http://osmen-convertx:3000/upload",
+        "workflow": "n8n/workflows/convertx_file_converter.json"
+      },
+      {
+        "host": "osmen-convertx",
+        "method": "POST",
+        "node": "Request Conversion",
+        "path": "/convert",
+        "port": 3000,
+        "url": "http://osmen-convertx:3000/convert",
+        "workflow": "n8n/workflows/convertx_file_converter.json"
+      },
+      {
+        "host": "osmen-convertx",
+        "method": "POST",
+        "node": "Check Progress",
+        "path": "/progress/{{ $json.job_id }}",
+        "port": 3000,
+        "url": "=http://osmen-convertx:3000/progress/{{ $json.job_id }}",
+        "workflow": "n8n/workflows/convertx_file_converter.json"
+      },
+      {
+        "host": "osmen-convertx",
+        "method": "GET",
+        "node": "Download Converted File",
+        "path": "/download/1/{{ $json.job_id }}/{{ $json.output_filename }}",
+        "port": 3000,
+        "url": "=http://osmen-convertx:3000/download/1/{{ $json.job_id }}/{{ $json.output_filename }}",
+        "workflow": "n8n/workflows/convertx_file_converter.json"
+      }
+    ],
+    "langflow": [
+      {
+        "host": "localhost",
+        "method": "POST",
+        "node": "Call Boot Hardening Agent",
+        "path": "/api/v1/run/osmen-coordinator-v1",
+        "port": 7860,
+        "url": "http://localhost:7860/api/v1/run/osmen-coordinator-v1",
+        "workflow": "n8n/workflows/boot_hardening_trigger.json"
+      },
+      {
+        "host": "localhost",
+        "method": "POST",
+        "node": "Call Daily Brief Agent",
+        "path": "/api/v1/run/daily-brief-specialist-v1",
+        "port": 7860,
+        "url": "http://localhost:7860/api/v1/run/daily-brief-specialist-v1",
+        "workflow": "n8n/workflows/daily_brief_trigger.json"
+      },
+      {
+        "host": "langflow",
+        "method": "POST",
+        "node": "Call Focus Agent",
+        "path": "/api/v1/run/focus_guardrails_specialist",
+        "port": 7860,
+        "url": "http://langflow:7860/api/v1/run/focus_guardrails_specialist",
+        "workflow": "n8n/workflows/focus_guardrails_monitor.json"
+      },
+      {
+        "host": "localhost",
+        "method": "POST",
+        "node": "Generate Podcast Script",
+        "path": "/api/v1/run/hb411-podcast-specialist",
+        "port": 7860,
+        "url": "http://localhost:7860/api/v1/run/hb411-podcast-specialist",
+        "workflow": "n8n/workflows/hb411_weekly_podcast.json"
+      },
+      {
+        "host": "localhost",
+        "method": "POST",
+        "node": "Notify Knowledge Agent",
+        "path": "/api/v1/run/knowledge-management-specialist-v1",
+        "port": 7860,
+        "url": "http://localhost:7860/api/v1/run/knowledge-management-specialist-v1",
+        "workflow": "n8n/workflows/knowledge_capture_trigger.json"
+      },
+      {
+        "host": "langflow",
+        "method": "POST",
+        "node": "Langflow Execute",
+        "path": "/api/v1/run/{{ $json.flow_id }}",
+        "port": 7860,
+        "url": "http://langflow:7860/api/v1/run/{{ $json.flow_id }}",
+        "workflow": "n8n/workflows/n8n_yolo_workflow.json"
+      }
+    ],
+    "mcp": [
+      {
+        "host": "mcp-server",
+        "method": "POST",
+        "node": "Store in Memory",
+        "path": "/tools/memory_store",
+        "port": 8081,
+        "url": "http://mcp-server:8081/tools/memory_store",
+        "workflow": "n8n/workflows/course_semester_setup.json"
+      },
+      {
+        "host": "mcp-server",
+        "method": "POST",
+        "node": "MCP Tool Call",
+        "path": "/tools/{{ $json.tool_name }}",
+        "port": 8081,
+        "url": "http://mcp-server:8081/tools/{{ $json.tool_name }}",
+        "workflow": "n8n/workflows/n8n_yolo_workflow.json"
+      }
+    ],
+    "vector": [
+      {
+        "host": "localhost",
+        "method": "POST",
+        "node": "Query RAG for Week Content",
+        "path": "/search",
+        "port": 8200,
+        "url": "http://localhost:8200/search",
+        "workflow": "n8n/workflows/hb411_weekly_podcast.json"
+      },
+      {
+        "host": "librarian",
+        "method": "POST",
+        "node": "Librarian Ingest",
+        "path": "/ingest",
+        "port": 8200,
+        "url": "http://librarian:8200/ingest",
+        "workflow": "n8n/workflows/librarian_ingest_trigger.json"
+      },
+      {
+        "host": "librarian",
+        "method": "POST",
+        "node": "Librarian Query",
+        "path": "/query",
+        "port": 8200,
+        "url": "http://librarian:8200/query",
+        "workflow": "n8n/workflows/librarian_query_webhook.json"
+      },
+      {
+        "host": "librarian",
+        "method": "POST",
+        "node": "Librarian Search",
+        "path": "/search",
+        "port": 8200,
+        "url": "http://librarian:8200/search",
+        "workflow": "n8n/workflows/n8n_yolo_workflow.json"
+      },
+      {
+        "host": "qdrant",
+        "method": "POST",
+        "node": "Qdrant Search",
+        "path": "/collections/{{ $json.collection }}/points/search",
+        "port": 6333,
+        "url": "http://qdrant:6333/collections/{{ $json.collection }}/points/search",
+        "workflow": "n8n/workflows/n8n_yolo_workflow.json"
+      }
+    ]
+  },
+  "route_count": 49
+}
