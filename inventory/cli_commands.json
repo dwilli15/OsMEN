@@ -1,0 +1,10 @@
+{
+  "commands": [
+    "briefing",
+    "checkin",
+    "init",
+    "podcast",
+    "progress",
+    "status"
+  ]
+}

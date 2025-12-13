@@ -5,23 +5,38 @@ Unified API gateway for production LLM agents (OpenAI, GitHub Copilot, Amazon Q,
 """
 
 import asyncio
+import json
 import logging
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
 
 import asyncpg
 import httpx
 import redis.asyncio as redis
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from rate_limiter import RateLimiter
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
-from resilience import retryable_llm_call
+try:
+    from .rate_limiter import RateLimiter
+except ImportError:  # pragma: no cover
+    from rate_limiter import RateLimiter
+
+try:
+    from .resilience import retryable_llm_call
+except ImportError:  # pragma: no cover
+    from resilience import retryable_llm_call
+
+from integrations.paths import (
+    WorkspaceNotConfiguredError,
+    get_vault_root,
+    validate_external_workspace,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -77,6 +92,35 @@ class CompletionResponse(BaseModel):
     usage: Optional[Dict[str, int]] = None
 
 
+class TTSAudioRequest(BaseModel):
+    """Request model for generating TTS audio via the gateway."""
+
+    text: str = Field(..., description="Text to synthesize")
+    workspace_path: Optional[str] = Field(
+        None,
+        description="External semester workspace (must be outside repo). If provided, sets OSMEN_SEMESTER_WORKSPACE for this request.",
+    )
+    provider: Optional[str] = Field(
+        None,
+        description="TTS provider (e.g., edge_tts, pyttsx3, elevenlabs, kokoro_onnx)",
+    )
+    voice: Optional[str] = Field(None, description="Voice id (provider-specific)")
+    filename: Optional[str] = Field(
+        None,
+        description="Output filename (defaults to tts_<timestamp>.wav)",
+    )
+    subdir: str = Field(
+        default="audio/daily_briefings",
+        description="Subdirectory under vault/ to place output",
+    )
+
+
+class WorkspaceMapUpdatedRequest(BaseModel):
+    """Notify the gateway that the workspace map has been updated."""
+
+    workspace_path: str = Field(..., description="External semester workspace path")
+
+
 class ServiceHealthMonitor:
     """Perform health checks against core infrastructure services."""
 
@@ -94,7 +138,10 @@ class ServiceHealthMonitor:
             "port": int(os.getenv("REDIS_PORT", "6379")),
             "password": os.getenv("REDIS_PASSWORD"),
         }
-        self.qdrant_url = os.getenv("QDRANT_HOST", "http://qdrant:6333")
+        # ChromaDB replaces Qdrant as the vector database
+        self.chromadb_url = os.getenv("CHROMADB_HOST", "http://chromadb:8000")
+        # Legacy Qdrant support (optional, empty string disables)
+        self.qdrant_url = os.getenv("QDRANT_HOST", "")
         self.langflow_url = os.getenv(
             "LANGFLOW_INTERNAL_URL", os.getenv("LANGFLOW_HOST", "http://langflow:7860")
         )
@@ -142,13 +189,31 @@ class ServiceHealthMonitor:
             await client.close()
 
     async def check_qdrant(self) -> Tuple[bool, str]:
-        """Verify Qdrant REST API health endpoint."""
+        """Verify Qdrant REST API health endpoint (optional, legacy)."""
+        if not self.qdrant_url:
+            return True, "Qdrant disabled (using ChromaDB instead)"
         base_url = self.qdrant_url.rstrip("/")
         for path in ("/healthz", "/health"):
             ok, detail = await self._http_check(f"{base_url}{path}")
             if ok:
                 return True, "Qdrant health endpoint reachable"
         return False, f"Qdrant health check failed: {detail}"
+
+    async def check_chromadb(self) -> Tuple[bool, str]:
+        """Verify ChromaDB REST API health endpoint."""
+        if not self.chromadb_url:
+            return True, "ChromaDB disabled"
+        base_url = self.chromadb_url.rstrip("/")
+        # ChromaDB v2 API endpoints
+        for path in (
+            "/api/v2/heartbeat",
+            "/api/v2/pre-flight-checks",
+            "/api/v1/heartbeat",
+        ):
+            ok, detail = await self._http_check(f"{base_url}{path}")
+            if ok:
+                return True, "ChromaDB health endpoint reachable"
+        return False, f"ChromaDB health check failed: {detail}"
 
     async def check_langflow(self) -> Tuple[bool, str]:
         """Verify Langflow UI availability (optional)."""
@@ -187,7 +252,8 @@ class ServiceHealthMonitor:
         checks = {
             "postgres": self.check_postgres(),
             "redis": self.check_redis(),
-            "qdrant": self.check_qdrant(),
+            "chromadb": self.check_chromadb(),
+            "qdrant": self.check_qdrant(),  # Legacy, disabled by default
             "langflow": self.check_langflow(),
             "n8n": self.check_n8n(),
         }
@@ -666,7 +732,10 @@ if os.getenv("ENFORCE_HTTPS", "false").lower() == "true":
 
 # Include API routers
 try:
-    from courses_api import router as courses_router
+    try:
+        from .courses_api import router as courses_router
+    except ImportError:
+        from courses_api import router as courses_router
 
     app.include_router(courses_router)
     logger.info("Courses API router loaded")
@@ -698,6 +767,138 @@ async def list_agents(_: None = Depends(agents_guard)):
 async def completion(request: CompletionRequest, _: None = Depends(completion_guard)):
     """Generate completion using specified agent"""
     return await gateway.completion(request)
+
+
+def _set_external_workspace_for_request(
+    workspace_path: Optional[str],
+) -> Optional[Path]:
+    if not workspace_path:
+        return None
+    ws = validate_external_workspace(Path(workspace_path))
+    os.environ["OSMEN_SEMESTER_WORKSPACE"] = str(ws)
+    return ws
+
+
+@app.get("/api/calendar/today")
+async def calendar_today():
+    """Return a simple list of upcoming events for today.
+
+    Best-effort: if no calendar provider is configured, returns an empty list.
+    """
+    try:
+        from integrations.calendars.calendar_manager import CalendarManager
+
+        manager = CalendarManager()
+        events = manager.list_events(max_results=20)
+        return {"events": events, "total": len(events)}
+    except Exception as exc:
+        return {"events": [], "total": 0, "error": str(exc)}
+
+
+@app.get("/api/tasks/today")
+async def tasks_today():
+    """Return tasks due today (best-effort)."""
+    try:
+        from agents.personal_assistant.personal_assistant_agent import (
+            PersonalAssistantAgent,
+        )
+
+        agent = PersonalAssistantAgent()
+        tasks = agent.get_tasks(due_today=True)
+        return {"tasks": tasks, "total": len(tasks)}
+    except TypeError:
+        # Backward compatibility: agent.get_tasks signature may vary.
+        try:
+            from agents.personal_assistant.personal_assistant_agent import (
+                PersonalAssistantAgent,
+            )
+
+            agent = PersonalAssistantAgent()
+            tasks = agent.get_tasks()
+            return {"tasks": tasks, "total": len(tasks)}
+        except Exception as exc:
+            return {"tasks": [], "total": 0, "error": str(exc)}
+    except Exception as exc:
+        return {"tasks": [], "total": 0, "error": str(exc)}
+
+
+@app.post("/api/tts/generate")
+@app.post("/tts/generate")
+async def tts_generate(request: TTSAudioRequest):
+    """Generate TTS audio and write it under the external workspace vault.
+
+    This endpoint exists primarily to satisfy n8n workflows.
+    """
+    _set_external_workspace_for_request(request.workspace_path)
+
+    try:
+        from integrations.voice_audio import TTSProvider, get_voice
+
+        voice = get_voice()
+        provider = None
+        if request.provider:
+            provider = TTSProvider(request.provider)
+
+        vault_root = get_vault_root(required=True)
+        out_dir = (vault_root / request.subdir).resolve()
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        filename = request.filename
+        if not filename:
+            stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            filename = f"tts_{stamp}.wav"
+
+        output_path = (out_dir / filename).resolve()
+
+        # Guardrail: ensure we only write within the external vault.
+        vault_resolved = vault_root.resolve()
+        if vault_resolved not in output_path.parents and output_path != vault_resolved:
+            raise HTTPException(status_code=400, detail="Invalid output path")
+
+        result = await voice.speak(
+            request.text,
+            output_path=str(output_path),
+            provider=provider,
+            voice=request.voice,
+        )
+
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+
+        return {
+            "success": True,
+            "output_path": str(output_path),
+            "vault_path": str(output_path.relative_to(vault_root)),
+            "provider": (provider.value if provider else None),
+        }
+    except WorkspaceNotConfiguredError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post("/api/workspace/map-updated")
+async def workspace_map_updated(request: WorkspaceMapUpdatedRequest):
+    """Reload workspace map from disk for the specified external workspace."""
+    ws = _set_external_workspace_for_request(request.workspace_path)
+
+    try:
+        from agents.workspace_scanner.workspace_scanner_agent import (
+            WorkspaceScannerAgent,
+        )
+
+        scanner = WorkspaceScannerAgent(workspace_root=str(ws))
+        workspace_map = scanner.load_map()
+        return {
+            "success": True,
+            "workspace": str(ws),
+            "map_loaded": bool(workspace_map),
+            "map_path": str(scanner.map_path),
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 async def _health_response():

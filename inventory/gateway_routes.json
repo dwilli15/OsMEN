@@ -1,0 +1,264 @@
+{
+  "routes": [
+    {
+      "file": "gateway/courses_api.py",
+      "method": "POST",
+      "path": "/api/courses/upload"
+    },
+    {
+      "file": "gateway/courses_api.py",
+      "method": "POST",
+      "path": "/api/courses/import/confirm"
+    },
+    {
+      "file": "gateway/courses_api.py",
+      "method": "POST",
+      "path": "/api/courses/import/bulk"
+    },
+    {
+      "file": "gateway/courses_api.py",
+      "method": "GET",
+      "path": "/api/courses/"
+    },
+    {
+      "file": "gateway/courses_api.py",
+      "method": "GET",
+      "path": "/api/courses/semester"
+    },
+    {
+      "file": "gateway/courses_api.py",
+      "method": "GET",
+      "path": "/api/courses/{course_id}"
+    },
+    {
+      "file": "gateway/courses_api.py",
+      "method": "DELETE",
+      "path": "/api/courses/{course_id}"
+    },
+    {
+      "file": "gateway/courses_api.py",
+      "method": "GET",
+      "path": "/api/courses/{course_id}/events"
+    },
+    {
+      "file": "gateway/courses_api.py",
+      "method": "PATCH",
+      "path": "/api/courses/{course_id}/events/{event_id}/complete"
+    },
+    {
+      "file": "gateway/courses_api.py",
+      "method": "POST",
+      "path": "/api/courses/{course_id}/sync/calendar"
+    },
+    {
+      "file": "gateway/courses_api.py",
+      "method": "POST",
+      "path": "/api/courses/{course_id}/sync/obsidian"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "method": "GET",
+      "path": "/agents"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "method": "POST",
+      "path": "/completion"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "method": "GET",
+      "path": "/api/calendar/today"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "method": "GET",
+      "path": "/api/tasks/today"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "method": "POST",
+      "path": "/api/tts/generate"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "method": "POST",
+      "path": "/tts/generate"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "method": "POST",
+      "path": "/api/workspace/map-updated"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "method": "GET",
+      "path": "/healthz"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "method": "GET",
+      "path": "/healthz/{service_name}"
+    },
+    {
+      "file": "gateway/health.py",
+      "method": "GET",
+      "path": "/health/"
+    },
+    {
+      "file": "gateway/health.py",
+      "method": "GET",
+      "path": "/health/live"
+    },
+    {
+      "file": "gateway/health.py",
+      "method": "GET",
+      "path": "/health/ready"
+    },
+    {
+      "file": "gateway/health.py",
+      "method": "GET",
+      "path": "/health/startup"
+    },
+    {
+      "file": "gateway/health.py",
+      "method": "GET",
+      "path": "/health/metrics"
+    },
+    {
+      "file": "gateway/health.py",
+      "method": "GET",
+      "path": "/health/diagnostics"
+    },
+    {
+      "file": "gateway/runs_api.py",
+      "method": "GET",
+      "path": "/api/runs/stats"
+    },
+    {
+      "file": "gateway/runs_api.py",
+      "method": "GET",
+      "path": "/api/runs/{run_id}"
+    },
+    {
+      "file": "gateway/runs_api.py",
+      "method": "DELETE",
+      "path": "/api/runs/{run_id}"
+    },
+    {
+      "file": "gateway/runs_api.py",
+      "method": "GET",
+      "path": "/api/runs/{run_id}/steps"
+    },
+    {
+      "file": "gateway/runs_api.py",
+      "method": "GET",
+      "path": "/api/runs/{run_id}/tool-calls"
+    },
+    {
+      "file": "gateway/runs_api.py",
+      "method": "POST",
+      "path": "/api/runs/export"
+    },
+    {
+      "file": "gateway/runs_api.py",
+      "method": "GET",
+      "path": "/api/runs/workflows/list"
+    },
+    {
+      "file": "gateway/runs_api.py",
+      "method": "POST",
+      "path": "/api/runs/{run_id}/retry"
+    },
+    {
+      "file": "gateway/streaming.py",
+      "method": "GET",
+      "path": "/stream/runs/{run_id}"
+    },
+    {
+      "file": "gateway/streaming.py",
+      "method": "GET",
+      "path": "/runs"
+    },
+    {
+      "file": "gateway/streaming.py",
+      "method": "GET",
+      "path": "/runs/{run_id}"
+    },
+    {
+      "file": "gateway/streaming.py",
+      "method": "POST",
+      "path": "/runs/{run_id}/cancel"
+    },
+    {
+      "file": "gateway/streaming.py",
+      "method": "POST",
+      "path": "/runs/{run_id}/approve/{approval_id}"
+    },
+    {
+      "file": "gateway/validation.py",
+      "method": "POST",
+      "path": "/api/endpoint"
+    },
+    {
+      "file": "gateway/websocket.py",
+      "method": "GET",
+      "path": "/ws/stats"
+    },
+    {
+      "file": "gateway/websocket.py",
+      "method": "GET",
+      "path": "/ws/rooms"
+    },
+    {
+      "file": "gateway/mcp/server.py",
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "file": "gateway/mcp/server.py",
+      "method": "GET",
+      "path": "/tools"
+    },
+    {
+      "file": "gateway/mcp/server.py",
+      "method": "GET",
+      "path": "/tools/{tool_name}"
+    },
+    {
+      "file": "gateway/mcp/server.py",
+      "method": "POST",
+      "path": "/tools/call"
+    },
+    {
+      "file": "gateway/mcp/server.py",
+      "method": "POST",
+      "path": "/mcp"
+    },
+    {
+      "file": "gateway/mcp/server.py",
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "file": "gateway/mcp/server.py",
+      "method": "GET",
+      "path": "/healthz"
+    },
+    {
+      "file": "gateway/mcp/server.py",
+      "method": "GET",
+      "path": "/metrics"
+    }
+  ]
+}

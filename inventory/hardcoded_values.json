@@ -1,0 +1,2504 @@
+{
+  "hardcoded_paths": [
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 6,
+      "match": "s://github.com/steven2358/awesome-generative-ai"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 92,
+      "match": "s://platform.openai.com/docs/models/gpt-4"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 108,
+      "match": "s://www.anthropic.com/claude"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 123,
+      "match": "s://ai.google.dev/gemini-api"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 138,
+      "match": "s://llama.meta.com/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 153,
+      "match": "s://mistral.ai/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 168,
+      "match": "s://cohere.com/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 186,
+      "match": "s://openai.com/dall-e-3"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 202,
+      "match": "s://stability.ai/stable-diffusion"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 218,
+      "match": "s://www.midjourney.com/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 228,
+      "match": "s://blackforestlabs.ai/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 246,
+      "match": "s://platform.openai.com/docs/guides/text-to-speech"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 261,
+      "match": "s://elevenlabs.io/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 275,
+      "match": "s://github.com/coqui-ai/TTS"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 290,
+      "match": "s://github.com/openai/whisper"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 304,
+      "match": "s://www.suno.ai/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 318,
+      "match": "s://runwayml.com/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 328,
+      "match": "s://pika.art/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 338,
+      "match": "s://stability.ai/stable-video"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 352,
+      "match": "s://github.com/features/copilot"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 366,
+      "match": "s://platform.openai.com/docs/guides/code"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 380,
+      "match": "s://aws.amazon.com/codewhisperer/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 390,
+      "match": "s://github.com/bigcode-project/starcoder2"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 405,
+      "match": "s://github.com/deepseek-ai/DeepSeek-Coder"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 419,
+      "match": "s://platform.openai.com/docs/guides/vision"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 433,
+      "match": "s://www.anthropic.com/claude"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 447,
+      "match": "s://llava-vl.github.io/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 466,
+      "match": "s://www.langchain.com/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 481,
+      "match": "s://www.llamaindex.ai/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 495,
+      "match": "s://qdrant.tech/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 510,
+      "match": "s://www.pinecone.io/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 520,
+      "match": "s://www.trychroma.com/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 534,
+      "match": "s://cohere.com/rerank"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 548,
+      "match": "s://langchain-ai.github.io/langgraph/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 562,
+      "match": "s://github.com/langchain-ai/deepagents"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 576,
+      "match": "s://github.com/Significant-Gravitas/AutoGPT"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 586,
+      "match": "s://www.crewai.com/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 596,
+      "match": "s://github.com/langchain-ai/opengpts"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 610,
+      "match": "s://github.com/langchain-ai/open_deep_research"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 620,
+      "match": "s://github.com/langchain-ai/local-deep-researcher"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 634,
+      "match": "s://smith.langchain.com/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 648,
+      "match": "s://wandb.ai/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 658,
+      "match": "s://github.com/promptfoo/promptfoo"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 672,
+      "match": "s://ollama.ai/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 678,
+      "match": "p://localhost:11434"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 686,
+      "match": "s://vllm.ai/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 696,
+      "match": "s://lmstudio.ai/"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 702,
+      "match": "p://localhost:1234/v1"
+    },
+    {
+      "file": "integrations/awesome_generative_ai.py",
+      "line": 710,
+      "match": "s://github.com/huggingface/text-generation-inference"
+    },
+    {
+      "file": "integrations/creative_tools.py",
+      "line": 44,
+      "match": "p://localhost:9090"
+    },
+    {
+      "file": "integrations/creative_tools.py",
+      "line": 48,
+      "match": "p://localhost:8188"
+    },
+    {
+      "file": "integrations/creative_tools.py",
+      "line": 61,
+      "match": "p://localhost:9090"
+    },
+    {
+      "file": "integrations/creative_tools.py",
+      "line": 62,
+      "match": "p://localhost:8188"
+    },
+    {
+      "file": "integrations/deepagents_integration.py",
+      "line": 12,
+      "match": "s://github.com/langchain-ai/deepagents"
+    },
+    {
+      "file": "integrations/embedding_optimizer.py",
+      "line": 436,
+      "match": "s:\\n"
+    },
+    {
+      "file": "integrations/langchain_ecosystem.py",
+      "line": 15,
+      "match": "s://github.com/langchain-ai/deepagents"
+    },
+    {
+      "file": "integrations/langchain_ecosystem.py",
+      "line": 16,
+      "match": "s://github.com/langchain-ai/langgraph"
+    },
+    {
+      "file": "integrations/langchain_ecosystem.py",
+      "line": 17,
+      "match": "s://github.com/langchain-ai/langchainjs"
+    },
+    {
+      "file": "integrations/langchain_ecosystem.py",
+      "line": 18,
+      "match": "s://github.com/langchain-ai/open_deep_research"
+    },
+    {
+      "file": "integrations/langchain_ecosystem.py",
+      "line": 19,
+      "match": "s://github.com/langchain-ai/opengpts"
+    },
+    {
+      "file": "integrations/langchain_ecosystem.py",
+      "line": 20,
+      "match": "s://github.com/langchain-ai/local-deep-researcher"
+    },
+    {
+      "file": "integrations/langchain_ecosystem.py",
+      "line": 21,
+      "match": "s://github.com/langchain-ai/langchain-community"
+    },
+    {
+      "file": "integrations/langflow_enhanced.py",
+      "line": 38,
+      "match": "s://github.com/steven2358/awesome-generative-ai"
+    },
+    {
+      "file": "integrations/llm_providers.py",
+      "line": 124,
+      "match": "s://api.openai.com/v1"
+    },
+    {
+      "file": "integrations/llm_providers.py",
+      "line": 126,
+      "match": "s://api.anthropic.com"
+    },
+    {
+      "file": "integrations/llm_providers.py",
+      "line": 128,
+      "match": "p://localhost:11434"
+    },
+    {
+      "file": "integrations/llm_providers.py",
+      "line": 1106,
+      "match": "s:\\n\\n"
+    },
+    {
+      "file": "integrations/llm_providers.py",
+      "line": 1108,
+      "match": "t:\\n"
+    },
+    {
+      "file": "integrations/logging_system.py",
+      "line": 7,
+      "match": "D:/OsMEN/logs/"
+    },
+    {
+      "file": "integrations/media_entertainment.py",
+      "line": 49,
+      "match": "s://api.themoviedb.org/3"
+    },
+    {
+      "file": "integrations/media_entertainment.py",
+      "line": 50,
+      "match": "s://image.tmdb.org/t/p"
+    },
+    {
+      "file": "integrations/media_entertainment.py",
+      "line": 54,
+      "match": "s://api.opensubtitles.com/api/v1"
+    },
+    {
+      "file": "integrations/obsidian_enhanced.py",
+      "line": 65,
+      "match": "p://localhost:8000"
+    },
+    {
+      "file": "integrations/obsidian_enhanced.py",
+      "line": 66,
+      "match": "p://localhost:8200"
+    },
+    {
+      "file": "integrations/obsidian_enhanced.py",
+      "line": 108,
+      "match": "p://localhost:8000"
+    },
+    {
+      "file": "integrations/obsidian_enhanced.py",
+      "line": 109,
+      "match": "p://localhost:8200"
+    },
+    {
+      "file": "integrations/obsidian_enhanced.py",
+      "line": 1042,
+      "match": "\\\\|?*]"
+    },
+    {
+      "file": "integrations/orchestration.py",
+      "line": 270,
+      "match": "p://localhost:{self.port}"
+    },
+    {
+      "file": "integrations/paths.py",
+      "line": 80,
+      "match": "D:\\\\semester_start)."
+    },
+    {
+      "file": "integrations/system_monitor.py",
+      "line": 412,
+      "match": "\\\\{path}"
+    },
+    {
+      "file": "integrations/v3_integration_layer.py",
+      "line": 119,
+      "match": "p://localhost:8080/oauth/callback"
+    },
+    {
+      "file": "integrations/v3_integration_layer.py",
+      "line": 136,
+      "match": "s://www.googleapis.com/auth/calendar"
+    },
+    {
+      "file": "integrations/v3_integration_layer.py",
+      "line": 137,
+      "match": "s://www.googleapis.com/auth/gmail.modify"
+    },
+    {
+      "file": "integrations/v3_integration_layer.py",
+      "line": 138,
+      "match": "s://www.googleapis.com/auth/contacts"
+    },
+    {
+      "file": "integrations/v3_integration_layer.py",
+      "line": 207,
+      "match": "p://localhost:8080/oauth/callback"
+    },
+    {
+      "file": "integrations/calendars/google_calendar.py",
+      "line": 27,
+      "match": "s://www.googleapis.com/auth/calendar"
+    },
+    {
+      "file": "integrations/calendars/outlook_calendar.py",
+      "line": 19,
+      "match": "s://graph.microsoft.com/v1.0"
+    },
+    {
+      "file": "integrations/calibre/calibre_manager.py",
+      "line": 26,
+      "match": "C:\\Program Files\\Calibre2"
+    },
+    {
+      "file": "integrations/calibre/calibre_manager.py",
+      "line": 31,
+      "match": "D:/OsMEN/content/ebooks"
+    },
+    {
+      "file": "integrations/calibre/calibre_manager.py",
+      "line": 38,
+      "match": "C:\\Program Files\\Calibre2"
+    },
+    {
+      "file": "integrations/calibre/calibre_manager.py",
+      "line": 44,
+      "match": "D:/OsMEN/content/ebooks"
+    },
+    {
+      "file": "integrations/calibre/drm_automation.py",
+      "line": 71,
+      "match": "C:\\Program Files\\Calibre2"
+    },
+    {
+      "file": "integrations/calibre/drm_automation.py",
+      "line": 75,
+      "match": "C:\\Program Files (x86)\\Adobe\\Adobe Digital Editions 4.5"
+    },
+    {
+      "file": "integrations/calibre/drm_automation.py",
+      "line": 79,
+      "match": "D:/OsMEN/content/ebooks/drm_free"
+    },
+    {
+      "file": "integrations/calibre/drm_automation.py",
+      "line": 82,
+      "match": "D:/OsMEN/content/ebooks/text"
+    },
+    {
+      "file": "integrations/calibre/drm_automation.py",
+      "line": 100,
+      "match": "C:\\Program Files\\Calibre2"
+    },
+    {
+      "file": "integrations/calibre/drm_automation.py",
+      "line": 104,
+      "match": "C:\\Program Files (x86)\\Adobe\\Adobe Digital Editions 4.5"
+    },
+    {
+      "file": "integrations/calibre/drm_automation.py",
+      "line": 108,
+      "match": "D:/OsMEN/content/ebooks/drm_free"
+    },
+    {
+      "file": "integrations/calibre/drm_automation.py",
+      "line": 111,
+      "match": "D:/OsMEN/content/ebooks/text"
+    },
+    {
+      "file": "integrations/calibre/drm_automation.py",
+      "line": 674,
+      "match": "C:\\\\Users\\\\armad\\\\AppData\\\\Roaming\\\\calibre\\\\plugins\\\\DeDRM"
+    },
+    {
+      "file": "integrations/calibre/drm_automation.py",
+      "line": 679,
+      "match": "\\\\AppData\\\\Roaming\\\\calibre\\\\plugins\\\\DeDRM\\\\adobekey_extracted.der"
+    },
+    {
+      "file": "integrations/calibre/drm_automation.py",
+      "line": 709,
+      "match": "C:\\\\Users\\\\armad\\\\AppData\\\\Roaming\\\\calibre\\\\plugins\\\\DeDRM"
+    },
+    {
+      "file": "integrations/calibre/drm_automation.py",
+      "line": 714,
+      "match": "\\\\AppData\\\\Roaming\\\\calibre\\\\plugins\\\\DeDRM\\\\kindlekey_extracted.k4i"
+    },
+    {
+      "file": "integrations/calibre/drm_handler.py",
+      "line": 86,
+      "match": "C:\\Program Files\\Calibre2"
+    },
+    {
+      "file": "integrations/calibre/drm_handler.py",
+      "line": 90,
+      "match": "D:/OsMEN/content/ebooks/drm_free"
+    },
+    {
+      "file": "integrations/calibre/drm_handler.py",
+      "line": 192,
+      "match": "p://ns.adobe.com/adept"
+    },
+    {
+      "file": "integrations/calibre/ebook_converter.py",
+      "line": 128,
+      "match": "C:\\Program Files\\Calibre2"
+    },
+    {
+      "file": "integrations/calibre/ebook_converter.py",
+      "line": 129,
+      "match": "D:/OsMEN/content/ebooks/converted"
+    },
+    {
+      "file": "integrations/convertx/client.py",
+      "line": 22,
+      "match": "p://localhost:3000"
+    },
+    {
+      "file": "integrations/convertx/client.py",
+      "line": 61,
+      "match": "p://localhost:3000)"
+    },
+    {
+      "file": "integrations/convertx/__init__.py",
+      "line": 8,
+      "match": "p://localhost:3000"
+    },
+    {
+      "file": "integrations/memory/hybrid_memory.py",
+      "line": 92,
+      "match": "p://chromadb:8000"
+    },
+    {
+      "file": "integrations/memory/hybrid_memory.py",
+      "line": 93,
+      "match": "p://"
+    },
+    {
+      "file": "integrations/memory/hybrid_memory.py",
+      "line": 93,
+      "match": "s://"
+    },
+    {
+      "file": "integrations/oauth/github_oauth.py",
+      "line": 25,
+      "match": "s://github.com/login/oauth/authorize"
+    },
+    {
+      "file": "integrations/oauth/github_oauth.py",
+      "line": 26,
+      "match": "s://github.com/login/oauth/access_token"
+    },
+    {
+      "file": "integrations/oauth/github_oauth.py",
+      "line": 27,
+      "match": "s://api.github.com/user"
+    },
+    {
+      "file": "integrations/oauth/github_oauth.py",
+      "line": 28,
+      "match": "s://api.githubcopilot.com"
+    },
+    {
+      "file": "integrations/oauth/github_oauth.py",
+      "line": 52,
+      "match": "p://localhost:8000/oauth/github/callback"
+    },
+    {
+      "file": "integrations/oauth/github_oauth.py",
+      "line": 328,
+      "match": "s://github.com/settings/developers"
+    },
+    {
+      "file": "integrations/oauth/github_oauth.py",
+      "line": 330,
+      "match": "p://localhost:8000/oauth/github/callback"
+    },
+    {
+      "file": "integrations/oauth/google_oauth.py",
+      "line": 37,
+      "match": "s://accounts.google.com/o/oauth2/v2/auth"
+    },
+    {
+      "file": "integrations/oauth/google_oauth.py",
+      "line": 38,
+      "match": "s://oauth2.googleapis.com/token"
+    },
+    {
+      "file": "integrations/oauth/google_oauth.py",
+      "line": 39,
+      "match": "s://oauth2.googleapis.com/revoke"
+    },
+    {
+      "file": "integrations/oauth/google_oauth.py",
+      "line": 40,
+      "match": "s://oauth2.googleapis.com/tokeninfo"
+    },
+    {
+      "file": "integrations/oauth/microsoft_oauth.py",
+      "line": 36,
+      "match": "s://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize"
+    },
+    {
+      "file": "integrations/oauth/microsoft_oauth.py",
+      "line": 37,
+      "match": "s://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+    },
+    {
+      "file": "integrations/oauth/microsoft_oauth.py",
+      "line": 38,
+      "match": "s://login.microsoftonline.com/{tenant}/oauth2/v2.0/logout"
+    },
+    {
+      "file": "integrations/oauth/microsoft_oauth.py",
+      "line": 39,
+      "match": "s://login.microsoftonline.com/{tenant}/adminconsent"
+    },
+    {
+      "file": "integrations/oauth/microsoft_oauth.py",
+      "line": 42,
+      "match": "s://graph.microsoft.com/v1.0"
+    },
+    {
+      "file": "integrations/oauth/microsoft_oauth.py",
+      "line": 46,
+      "match": "s://graph.microsoft.com/User.Read"
+    },
+    {
+      "file": "integrations/oauth/microsoft_oauth.py",
+      "line": 47,
+      "match": "s://graph.microsoft.com/Calendars.ReadWrite"
+    },
+    {
+      "file": "integrations/oauth/microsoft_oauth.py",
+      "line": 48,
+      "match": "s://graph.microsoft.com/Mail.ReadWrite"
+    },
+    {
+      "file": "integrations/oauth/microsoft_oauth.py",
+      "line": 49,
+      "match": "s://graph.microsoft.com/Contacts.ReadWrite"
+    },
+    {
+      "file": "integrations/oauth/microsoft_oauth.py",
+      "line": 77,
+      "match": "p://localhost:8080/oauth/callback/microsoft"
+    },
+    {
+      "file": "integrations/oauth/microsoft_oauth.py",
+      "line": 536,
+      "match": "s://portal.azure.com"
+    },
+    {
+      "file": "integrations/oauth/microsoft_oauth.py",
+      "line": 539,
+      "match": "p://localhost:8080/oauth/callback/microsoft"
+    },
+    {
+      "file": "integrations/oauth/openai_oauth.py",
+      "line": 28,
+      "match": "s://api.openai.com/v1"
+    },
+    {
+      "file": "integrations/oauth/openai_oauth.py",
+      "line": 49,
+      "match": "p://localhost:8000/oauth/openai/callback"
+    },
+    {
+      "file": "integrations/oauth/openai_oauth.py",
+      "line": 118,
+      "match": "s://platform.openai.com/authorize"
+    },
+    {
+      "file": "integrations/security/credential_validator.py",
+      "line": 71,
+      "match": "p://"
+    },
+    {
+      "file": "integrations/security/credential_validator.py",
+      "line": 71,
+      "match": "s://"
+    },
+    {
+      "file": "integrations/yolo/yolo_tools.py",
+      "line": 25,
+      "match": "p://localhost:5678"
+    },
+    {
+      "file": "integrations/yolo/yolo_tools.py",
+      "line": 26,
+      "match": "p://localhost:7860"
+    },
+    {
+      "file": "integrations/yolo/yolo_tools.py",
+      "line": 27,
+      "match": "p://localhost:6333"
+    },
+    {
+      "file": "integrations/yolo/yolo_tools.py",
+      "line": 28,
+      "match": "p://localhost:8100"
+    },
+    {
+      "file": "integrations/yolo/yolo_tools.py",
+      "line": 29,
+      "match": "p://localhost:8200"
+    },
+    {
+      "file": "integrations/yolo/yolo_tools.py",
+      "line": 30,
+      "match": "p://localhost:8081"
+    },
+    {
+      "file": "integrations/yolo/yolo_tools.py",
+      "line": 31,
+      "match": "p://localhost:8080"
+    },
+    {
+      "file": "integrations/yolo/yolo_tools.py",
+      "line": 32,
+      "match": "p://localhost:3000"
+    },
+    {
+      "file": "integrations/google/wrappers/calendar_wrapper.py",
+      "line": 34,
+      "match": "s://www.googleapis.com/calendar/v3"
+    },
+    {
+      "file": "integrations/google/wrappers/calendar_wrapper.py",
+      "line": 64,
+      "match": "/users/me/calendarList"
+    },
+    {
+      "file": "integrations/google/wrappers/contacts_wrapper.py",
+      "line": 10,
+      "match": "s://people.googleapis.com/v1"
+    },
+    {
+      "file": "integrations/google/wrappers/gmail_wrapper.py",
+      "line": 10,
+      "match": "s://gmail.googleapis.com/gmail/v1"
+    },
+    {
+      "file": "integrations/google/wrappers/gmail_wrapper.py",
+      "line": 31,
+      "match": "/users/me/messages/send"
+    },
+    {
+      "file": "integrations/google/wrappers/gmail_wrapper.py",
+      "line": 41,
+      "match": "/users/me/messages"
+    },
+    {
+      "file": "integrations/microsoft/wrappers/calendar_wrapper.py",
+      "line": 28,
+      "match": "s://graph.microsoft.com/v1.0"
+    },
+    {
+      "file": "integrations/microsoft/wrappers/contacts_wrapper.py",
+      "line": 26,
+      "match": "s://graph.microsoft.com/v1.0"
+    },
+    {
+      "file": "integrations/microsoft/wrappers/mail_wrapper.py",
+      "line": 27,
+      "match": "s://graph.microsoft.com/v1.0"
+    },
+    {
+      "file": "agents/boot_hardening/boot_hardening_agent.py",
+      "line": 78,
+      "match": "\\\\local\\\\temp"
+    },
+    {
+      "file": "agents/boot_hardening/boot_hardening_agent.py",
+      "line": 83,
+      "match": "C:\\\\Tools\\\\Sysinternals"
+    },
+    {
+      "file": "agents/boot_hardening/boot_hardening_agent.py",
+      "line": 84,
+      "match": "C:\\\\Program Files\\\\simplewall"
+    },
+    {
+      "file": "agents/boot_hardening/boot_hardening_agent.py",
+      "line": 215,
+      "match": "C:\\\\Windows\\\\System32\\\\drivers"
+    },
+    {
+      "file": "agents/boot_hardening/boot_hardening_agent.py",
+      "line": 394,
+      "match": "\\\\{path}"
+    },
+    {
+      "file": "agents/boot_hardening/boot_hardening_agent.py",
+      "line": 415,
+      "match": "\\\\Windows\\\\Start Menu\\\\Programs\\\\Startup"
+    },
+    {
+      "file": "agents/boot_hardening/boot_hardening_agent.py",
+      "line": 416,
+      "match": "\\\\Windows\\\\Start Menu\\\\Programs\\\\Startup"
+    },
+    {
+      "file": "agents/drm_liberation/drm_liberation_agent.py",
+      "line": 122,
+      "match": "D:/OsMEN/content/ebooks/drm_free"
+    },
+    {
+      "file": "agents/drm_liberation/drm_liberation_agent.py",
+      "line": 127,
+      "match": "C:/Program Files/Calibre2"
+    },
+    {
+      "file": "agents/drm_liberation/drm_liberation_agent.py",
+      "line": 177,
+      "match": "p://ns.adobe.com/adept"
+    },
+    {
+      "file": "agents/drm_liberation/drm_liberation_agent.py",
+      "line": 331,
+      "match": "C:/Program Files (x86)/Adobe/Adobe Digital Editions 4.5/DigitalEditions.exe"
+    },
+    {
+      "file": "agents/drm_liberation/drm_liberation_agent.py",
+      "line": 395,
+      "match": "p://ns.adobe.com/adept"
+    },
+    {
+      "file": "agents/drm_liberation/drm_liberation_agent.py",
+      "line": 749,
+      "match": "s://github.com/noDRM/DeDRM_tools)"
+    },
+    {
+      "file": "agents/drm_liberation/drm_liberation_agent.py",
+      "line": 750,
+      "match": "s://github.com/Leseratte10/acsm-calibre-plugin)"
+    },
+    {
+      "file": "agents/focus_guardrails/focus_guardrails_agent.py",
+      "line": 78,
+      "match": "\\\\System32\\\\drivers\\\\etc\\\\hosts)"
+    },
+    {
+      "file": "agents/focus_guardrails/focus_guardrails_agent.py",
+      "line": 145,
+      "match": "C:\\\\Windows"
+    },
+    {
+      "file": "agents/focus_guardrails/focus_guardrails_agent.py",
+      "line": 146,
+      "match": "\\\\drivers\\\\etc\\\\hosts"
+    },
+    {
+      "file": "agents/focus_guardrails/focus_guardrails_agent.py",
+      "line": 149,
+      "match": "/etc/hosts"
+    },
+    {
+      "file": "agents/intake_agent/intake_agent.py",
+      "line": 68,
+      "match": "s://api.openai.com/v1"
+    },
+    {
+      "file": "agents/intake_agent/intake_agent.py",
+      "line": 602,
+      "match": "p://localhost:7860"
+    },
+    {
+      "file": "agents/intake_agent/intake_agent.py",
+      "line": 602,
+      "match": "p://localhost:7860</a><br>"
+    },
+    {
+      "file": "agents/intake_agent/intake_agent.py",
+      "line": 603,
+      "match": "p://localhost:5678"
+    },
+    {
+      "file": "agents/intake_agent/intake_agent.py",
+      "line": 603,
+      "match": "p://localhost:5678</a><br>"
+    },
+    {
+      "file": "agents/intake_agent/intake_agent.py",
+      "line": 1042,
+      "match": "p://ollama:11434"
+    },
+    {
+      "file": "agents/intake_agent/intake_agent.py",
+      "line": 1053,
+      "match": "p://chromadb:8000"
+    },
+    {
+      "file": "agents/intake_agent/intake_agent.py",
+      "line": 1298,
+      "match": "p://langflow:7860/api/v1/run/{agent_name_slug}"
+    },
+    {
+      "file": "agents/knowledge_management/obsidian_sync.py",
+      "line": 62,
+      "match": "p://localhost:8000"
+    },
+    {
+      "file": "agents/librarian/librarian_agent.py",
+      "line": 16,
+      "match": "s://github.com/dwilli15/osmen-librarian (git submodule)"
+    },
+    {
+      "file": "agents/orchestration_agent/orchestration_agent.py",
+      "line": 31,
+      "match": "/tmp/osmen_messages"
+    },
+    {
+      "file": "agents/os_optimizer/os_optimizer_agent.py",
+      "line": 326,
+      "match": "C:/Windows/Temp"
+    },
+    {
+      "file": "agents/os_optimizer/os_optimizer_agent.py",
+      "line": 333,
+      "match": "C:/Windows/Logs"
+    },
+    {
+      "file": "agents/os_optimizer/os_optimizer_agent.py",
+      "line": 333,
+      "match": "/var/log"
+    },
+    {
+      "file": "agents/research_intel/research_intel_agent.py",
+      "line": 505,
+      "match": "t:\\n\\n{findings_text}"
+    },
+    {
+      "file": "agents/team1_oauth_agent/team1_oauth_agent.py",
+      "line": 29,
+      "match": "/tmp/osmen_messages"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 436,
+      "match": "\\\\agents\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 443,
+      "match": "\\\\tools\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 446,
+      "match": "\\\\integrations\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 449,
+      "match": "\\\\langflow\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 452,
+      "match": "\\\\n8n\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 455,
+      "match": "\\\\parsers\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 458,
+      "match": "\\\\config\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 461,
+      "match": "\\\\docs\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 464,
+      "match": "\\\\tests\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 467,
+      "match": "\\\\scripts\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 470,
+      "match": "\\\\infrastructure\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 473,
+      "match": "\\\\gateway\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 476,
+      "match": "\\\\web\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 479,
+      "match": "\\\\knowledge\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 482,
+      "match": "\\\\workflows\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 488,
+      "match": "\\\\templates\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 491,
+      "match": "\\\\data\\\\"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 828,
+      "match": "e:\\s*([^\\n]+)"
+    },
+    {
+      "file": "agents/workspace_scanner/workspace_scanner_agent.py",
+      "line": 837,
+      "match": "n:\\s*[|>]?\\s*([^\\n]+(?:\\n\\s+[^\\n]+)*)"
+    },
+    {
+      "file": "agents/librarian/osmen-librarian/src/convert_docx_to_md.py",
+      "line": 23,
+      "match": "p://schemas.openxmlformats.org/wordprocessingml/2006/main"
+    },
+    {
+      "file": "agents/librarian/osmen-librarian/src/convert_epub_to_md.py",
+      "line": 30,
+      "match": "p://www.idpf.org/2007/opf"
+    },
+    {
+      "file": "agents/librarian/osmen-librarian/src/convert_epub_to_md.py",
+      "line": 31,
+      "match": "p://purl.org/dc/elements/1.1/"
+    },
+    {
+      "file": "agents/librarian/osmen-librarian/src/store.py",
+      "line": 6,
+      "match": "/tmp/*, etc.)"
+    },
+    {
+      "file": "agents/librarian/osmen-librarian/src/store.py",
+      "line": 268,
+      "match": "/tmp/* \u2192 Ephemeral store (session-only)"
+    },
+    {
+      "file": "agents/librarian/osmen-librarian/src/store.py",
+      "line": 506,
+      "match": "/tmp/*"
+    },
+    {
+      "file": "agents/librarian/osmen-librarian/clients/notion/notion_sync.py",
+      "line": 19,
+      "match": "s://api.notion.com/v1/pages/{page_id}"
+    },
+    {
+      "file": "agents/librarian/osmen-librarian/clients/notion/notion_sync.py",
+      "line": 30,
+      "match": "s://api.notion.com/v1/blocks/{block_id}/children"
+    },
+    {
+      "file": "agents/librarian/osmen-librarian/src/subagents/executor.py",
+      "line": 31,
+      "match": "e:\\n{task}\\n\\nResult:\\n{result}"
+    },
+    {
+      "file": "agents/librarian/osmen-librarian/src/tests/test_middleware.py",
+      "line": 92,
+      "match": "/etc/passwd"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "line": 134,
+      "match": "p://qdrant:6333"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "line": 136,
+      "match": "p://langflow:7860"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "line": 140,
+      "match": "p://{os.getenv("
+    },
+    {
+      "file": "gateway/gateway.py",
+      "line": 276,
+      "match": "s://api.openai.com/v1"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "line": 281,
+      "match": "p://host.docker.internal:1234/v1"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "line": 283,
+      "match": "p://ollama:11434"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "line": 361,
+      "match": "s://cli.github.com/"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "line": 440,
+      "match": "s://cli.github.com/"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "line": 462,
+      "match": "s://aws.amazon.com/cli/"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "line": 547,
+      "match": "s://aws.amazon.com/cli/"
+    },
+    {
+      "file": "gateway/gateway.py",
+      "line": 576,
+      "match": "s://api.anthropic.com/v1/messages"
+    },
+    {
+      "file": "gateway/health.py",
+      "line": 96,
+      "match": "p://localhost:6333"
+    },
+    {
+      "file": "gateway/streaming.py",
+      "line": 12,
+      "match": "p://localhost:8085/stream/runs/{run_id}"
+    },
+    {
+      "file": "gateway/validation.py",
+      "line": 706,
+      "match": "s://google.com/search"
+    },
+    {
+      "file": "gateway/validation.py",
+      "line": 707,
+      "match": "p://evil-site.com/malware"
+    },
+    {
+      "file": "gateway/validation.py",
+      "line": 709,
+      "match": "s://github.com/repo"
+    },
+    {
+      "file": "gateway/validation.py",
+      "line": 720,
+      "match": "/etc/passwd"
+    },
+    {
+      "file": "gateway/mcp/server.py",
+      "line": 121,
+      "match": "p://localhost:5678"
+    },
+    {
+      "file": "gateway/mcp/server.py",
+      "line": 122,
+      "match": "p://localhost:7860"
+    },
+    {
+      "file": "gateway/mcp/server.py",
+      "line": 123,
+      "match": "p://localhost:6333"
+    },
+    {
+      "file": "gateway/mcp/server.py",
+      "line": 124,
+      "match": "p://localhost:8200"
+    },
+    {
+      "file": "gateway/mcp/server.py",
+      "line": 125,
+      "match": "p://localhost:8080"
+    },
+    {
+      "file": "gateway/mcp/stdio_server.py",
+      "line": 301,
+      "match": "p://localhost:5678"
+    },
+    {
+      "file": "gateway/mcp/stdio_server.py",
+      "line": 302,
+      "match": "p://localhost:7860"
+    },
+    {
+      "file": "gateway/mcp/stdio_server.py",
+      "line": 303,
+      "match": "p://localhost:8000"
+    },
+    {
+      "file": "gateway/mcp/stdio_server.py",
+      "line": 304,
+      "match": "p://localhost:8080"
+    },
+    {
+      "file": "gateway/mcp/stdio_server.py",
+      "line": 305,
+      "match": "p://localhost:8200"
+    },
+    {
+      "file": "gateway/mcp/stdio_server.py",
+      "line": 335,
+      "match": "C:\\\\"
+    },
+    {
+      "file": "gateway/mcp/stdio_server.py",
+      "line": 413,
+      "match": "p://localhost:8000"
+    },
+    {
+      "file": "gateway/mcp/stdio_server.py",
+      "line": 476,
+      "match": "p://localhost:8000"
+    },
+    {
+      "file": "gateway/mcp/stdio_server.py",
+      "line": 659,
+      "match": "p://localhost:8000"
+    },
+    {
+      "file": "gateway/mcp/stdio_server.py",
+      "line": 720,
+      "match": "p://localhost:5678"
+    },
+    {
+      "file": "gateway/mcp/stdio_server.py",
+      "line": 762,
+      "match": "p://localhost:7860"
+    },
+    {
+      "file": "gateway/mcp/tracing.py",
+      "line": 57,
+      "match": "p://localhost:4317"
+    },
+    {
+      "file": "gateway/memory/hybrid_memory.py",
+      "line": 430,
+      "match": "p://localhost:8000"
+    },
+    {
+      "file": "cli_bridge/codex_bridge.py",
+      "line": 148,
+      "match": "e:\\n\\n{code}"
+    },
+    {
+      "file": "cli_bridge/codex_bridge.py",
+      "line": 326,
+      "match": "e:\\n{result["
+    },
+    {
+      "file": "cli_bridge/oauth_setup.py",
+      "line": 83,
+      "match": "s://console.cloud.google.com/"
+    },
+    {
+      "file": "cli_bridge/oauth_setup.py",
+      "line": 87,
+      "match": "p://localhost:8080/oauth/callback"
+    },
+    {
+      "file": "cli_bridge/oauth_setup.py",
+      "line": 126,
+      "match": "p://localhost:8080/oauth/callback"
+    },
+    {
+      "file": "cli_bridge/oauth_setup.py",
+      "line": 128,
+      "match": "s://www.googleapis.com/auth/calendar"
+    },
+    {
+      "file": "cli_bridge/oauth_setup.py",
+      "line": 129,
+      "match": "s://www.googleapis.com/auth/gmail.modify"
+    },
+    {
+      "file": "cli_bridge/oauth_setup.py",
+      "line": 130,
+      "match": "s://www.googleapis.com/auth/contacts"
+    },
+    {
+      "file": "cli_bridge/oauth_setup.py",
+      "line": 131,
+      "match": "s://www.googleapis.com/auth/userinfo.email"
+    },
+    {
+      "file": "cli_bridge/oauth_setup.py",
+      "line": 284,
+      "match": "s://portal.azure.com/"
+    },
+    {
+      "file": "cli_bridge/oauth_setup.py",
+      "line": 287,
+      "match": "p://localhost:8080/oauth/callback"
+    },
+    {
+      "file": "cli_bridge/oauth_setup.py",
+      "line": 345,
+      "match": "p://localhost:8080/oauth/callback"
+    },
+    {
+      "file": "cli_bridge/oauth_setup.py",
+      "line": 348,
+      "match": "s://graph.microsoft.com/Calendars.ReadWrite"
+    },
+    {
+      "file": "cli_bridge/oauth_setup.py",
+      "line": 349,
+      "match": "s://graph.microsoft.com/Mail.ReadWrite"
+    },
+    {
+      "file": "cli_bridge/oauth_setup.py",
+      "line": 350,
+      "match": "s://graph.microsoft.com/Contacts.ReadWrite"
+    },
+    {
+      "file": "cli_bridge/oauth_setup.py",
+      "line": 351,
+      "match": "s://graph.microsoft.com/User.Read"
+    },
+    {
+      "file": "cli_bridge/osmen_cli.py",
+      "line": 137,
+      "match": "\\\\vault\\\\templates or repo templates/."
+    },
+    {
+      "file": "cli_bridge/osmen_cli.py",
+      "line": 190,
+      "match": "\\\\vault\\\\templates or repo templates/."
+    },
+    {
+      "file": "tools/obsidian/obsidian_integration.py",
+      "line": 276,
+      "match": "\\\\|?*]"
+    },
+    {
+      "file": "tools/obsidian/obsidian_sync_watcher.py",
+      "line": 230,
+      "match": "s:\\s*\\[(.*?)\\]"
+    },
+    {
+      "file": "tools/simplewall/simplewall_integration.py",
+      "line": 34,
+      "match": "C:\\\\Program Files\\\\simplewall"
+    },
+    {
+      "file": "tools/simplewall/simplewall_integration.py",
+      "line": 40,
+      "match": "C:/Windows/System32/drivers/etc/hosts"
+    },
+    {
+      "file": "tools/simplewall/simplewall_integration.py",
+      "line": 244,
+      "match": "p://"
+    },
+    {
+      "file": "tools/simplewall/simplewall_integration.py",
+      "line": 244,
+      "match": "s://"
+    },
+    {
+      "file": "tools/sysinternals/sysinternals_integration.py",
+      "line": 23,
+      "match": "C:\\\\Tools\\\\Sysinternals"
+    },
+    {
+      "file": "scripts/acquire_voice_samples.py",
+      "line": 126,
+      "match": "s://github.com/myshell-ai/OpenVoice"
+    },
+    {
+      "file": "scripts/acquire_voice_samples.py",
+      "line": 132,
+      "match": "s://github.com/myshell-ai/OpenVoice.git {output_dir}/openvoice"
+    },
+    {
+      "file": "scripts/batch_acsm_processor.py",
+      "line": 17,
+      "match": "C:\\Users\\armad\\AppData\\Local\\Temp\\DeACSM_extract"
+    },
+    {
+      "file": "scripts/batch_acsm_processor.py",
+      "line": 18,
+      "match": "C:\\Users\\armad\\AppData\\Local\\Temp\\DeDRM_work"
+    },
+    {
+      "file": "scripts/batch_acsm_processor.py",
+      "line": 24,
+      "match": "D:\\OsMEN\\content\\ebooks\\drm_free"
+    },
+    {
+      "file": "scripts/batch_acsm_processor.py",
+      "line": 26,
+      "match": "C:\\Users\\armad\\OneDrive\\Documents\\Professional\\MLTS\\Timeline\\Spiring 2026"
+    },
+    {
+      "file": "scripts/batch_acsm_processor.py",
+      "line": 28,
+      "match": "C:\\Program Files\\Calibre2\\ebook-convert.exe"
+    },
+    {
+      "file": "scripts/batch_acsm_processor.py",
+      "line": 29,
+      "match": "C:\\Users\\armad\\AppData\\Local\\Pandoc\\pandoc.exe"
+    },
+    {
+      "file": "scripts/batch_acsm_processor.py",
+      "line": 35,
+      "match": "C:\\Users\\armad\\AppData\\Roaming\\calibre\\plugins\\DeACSM\\account\\activation.xml"
+    },
+    {
+      "file": "scripts/batch_acsm_processor.py",
+      "line": 69,
+      "match": "p://ns.adobe.com/adept"
+    },
+    {
+      "file": "scripts/create_rights_xml.py",
+      "line": 32,
+      "match": "p://ns.adobe.com/adept"
+    },
+    {
+      "file": "scripts/create_rights_xml.py",
+      "line": 47,
+      "match": "D:\\OsMEN\\content\\ebooks\\drm_free\\fulfillment_response.xml"
+    },
+    {
+      "file": "scripts/create_rights_xml.py",
+      "line": 48,
+      "match": "D:\\OsMEN\\content\\ebooks\\drm_free\\rights.xml"
+    },
+    {
+      "file": "scripts/decrypt_epub.py",
+      "line": 22,
+      "match": "D:\\OsMEN\\content\\ebooks\\drm_free\\The_Resilient_Practitioner.epub"
+    },
+    {
+      "file": "scripts/decrypt_epub.py",
+      "line": 23,
+      "match": "D:\\OsMEN\\content\\ebooks\\drm_free\\The_Resilient_Practitioner_DECRYPTED.epub"
+    },
+    {
+      "file": "scripts/extract_ALL_textbooks.py",
+      "line": 207,
+      "match": "D:\\semester_start"
+    },
+    {
+      "file": "scripts/extract_ALL_textbooks.py",
+      "line": 208,
+      "match": "D:\\OsMEN\\content\\courses\\M483INT_Pastoral_Ministry\\raw"
+    },
+    {
+      "file": "scripts/extract_ALL_textbooks.py",
+      "line": 209,
+      "match": "D:\\OsMEN\\content\\courses\\M483INT_Pastoral_Ministry\\downloads"
+    },
+    {
+      "file": "scripts/extract_ALL_textbooks.py",
+      "line": 210,
+      "match": "D:\\OsMEN\\content\\courses\\M483INT_Pastoral_Ministry\\processed"
+    },
+    {
+      "file": "scripts/extract_ALL_textbooks.py",
+      "line": 213,
+      "match": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries\\readings\\raw"
+    },
+    {
+      "file": "scripts/extract_textbooks.py",
+      "line": 228,
+      "match": "D:\\semester_start\\setboundariesfindpeace.epub"
+    },
+    {
+      "file": "scripts/extract_textbooks.py",
+      "line": 230,
+      "match": "D:\\semester_start\\Set Boundaries, Find Peace - Nedra Glover Tawwab.pdf"
+    },
+    {
+      "file": "scripts/extract_textbooks.py",
+      "line": 239,
+      "match": "D:\\semester_start\\What It Takes to Heal - Prentis Hemphill.epub"
+    },
+    {
+      "file": "scripts/extract_textbooks.py",
+      "line": 242,
+      "match": "D:\\semester_start\\Prentis Hemphill - What It Takes to Heal.epub"
+    },
+    {
+      "file": "scripts/extract_textbooks.py",
+      "line": 250,
+      "match": "D:\\semester_start\\Sacred Wounds - Teresa B. Pasquale.epub"
+    },
+    {
+      "file": "scripts/extract_textbooks.py",
+      "line": 257,
+      "match": "D:\\semester_start\\saynotosayyes.epub"
+    },
+    {
+      "file": "scripts/extract_textbooks.py",
+      "line": 258,
+      "match": "D:\\semester_start\\Saying No to Say Yes - David C. Olsen.pdf"
+    },
+    {
+      "file": "scripts/extract_textbooks.py",
+      "line": 266,
+      "match": "D:\\semester_start\\The Anxious Generation_ How the - Jonathan Haidt.epub"
+    },
+    {
+      "file": "scripts/extract_textbooks.py",
+      "line": 275,
+      "match": "D:\\semester_start\\FaithTrust-HealthyBoundaries201-English-2012.pdf"
+    },
+    {
+      "file": "scripts/extract_textbooks.py",
+      "line": 284,
+      "match": "D:\\semester_start\\Responding to Spiritual Leader Misconduct Handbook_FINAL_Digital_9_29_22.pdf"
+    },
+    {
+      "file": "scripts/extract_textbooks.py",
+      "line": 290,
+      "match": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries\\readings\\raw"
+    },
+    {
+      "file": "scripts/fix_n8n_workflows.py",
+      "line": 80,
+      "match": "/tmp/osmen-workflows-fixed/"
+    },
+    {
+      "file": "scripts/generate_ALL_audiobooks.py",
+      "line": 284,
+      "match": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries\\readings\\raw"
+    },
+    {
+      "file": "scripts/generate_ALL_audiobooks.py",
+      "line": 286,
+      "match": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries\\audiobooks"
+    },
+    {
+      "file": "scripts/generate_audiobooks.py",
+      "line": 457,
+      "match": "D:\\semester_start\\setboundariesfindpeace.epub"
+    },
+    {
+      "file": "scripts/generate_audiobooks.py",
+      "line": 458,
+      "match": "D:\\semester_start\\Set Boundaries, Find Peace - Nedra Glover Tawwab.pdf"
+    },
+    {
+      "file": "scripts/generate_audiobooks.py",
+      "line": 464,
+      "match": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries\\audiobooks"
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 36,
+      "match": "\\\\\\\\"
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 37,
+      "match": "\\\\,"
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 38,
+      "match": "\\\\;"
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 39,
+      "match": "\\\\n"
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 220,
+      "match": "y:\\n"
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 226,
+      "match": "n:\\n"
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 232,
+      "match": "s:\\n\\n{readings_list}{supplementary}{watch}"
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 243,
+      "match": "e:\\n{readings_list}"
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 261,
+      "match": "d:\\n\u2022 Aug 21: Boundary Image prompt\\n\\nPlus 4 of your choice from prompts in course."
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 353,
+      "match": "s:\\n\u2022 Grounding Values\\n\u2022 Ethical Commitments\\n\u2022 Flourishing\\n\\nHeavy reading load - complete all readings beforehand."
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 364,
+      "match": "t:\\n\u2713 Complete all readings\\n\u2713 Watch required videos\\n\u2713 Prepare snacks/lunch\\n\u2713 Clear schedule 9:30 AM - 4:30 PM"
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 383,
+      "match": "r:\\n\u2022 Group presentation planning\\n\u2022 Final project preparation\\n\u2022 Catching up on readings"
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 392,
+      "match": "e:\\n\u2713 Reviewed syllabus\\n\u2713 Checked Populi\\n\u2713 Zoom working"
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 424,
+      "match": "t:\\n\u2022 Paper topics\\n\u2022 Course content\\n\u2022 Final project planning"
+    },
+    {
+      "file": "scripts/generate_course_calendars.py",
+      "line": 466,
+      "match": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries"
+    },
+    {
+      "file": "scripts/generate_hb411_audiobooks.py",
+      "line": 26,
+      "match": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries"
+    },
+    {
+      "file": "scripts/generate_hb411_audiobooks.py",
+      "line": 35,
+      "match": "D:\\semester_start\\setboundariesfindpeace.epub"
+    },
+    {
+      "file": "scripts/generate_hb411_audiobooks.py",
+      "line": 42,
+      "match": "D:\\semester_start\\What It Takes to Heal - Prentis Hemphill.epub"
+    },
+    {
+      "file": "scripts/generate_hb411_audiobooks.py",
+      "line": 49,
+      "match": "D:\\semester_start\\Sacred Wounds - Teresa B. Pasquale.epub"
+    },
+    {
+      "file": "scripts/generate_hb411_audiobooks.py",
+      "line": 56,
+      "match": "D:\\semester_start\\The Anxious Generation_ How the - Jonathan Haidt.epub"
+    },
+    {
+      "file": "scripts/generate_hb411_audiobooks.py",
+      "line": 166,
+      "match": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries"
+    },
+    {
+      "file": "scripts/ingest_course_embeddings.py",
+      "line": 186,
+      "match": "D:\\OsMEN\\content\\courses\\HB411_HealthyBoundaries"
+    },
+    {
+      "file": "scripts/ingest_hb411_texts.py",
+      "line": 23,
+      "match": "D:/OsMEN/content/courses/HB411_HealthyBoundaries/readings/raw"
+    },
+    {
+      "file": "scripts/init_copilot_session.py",
+      "line": 63,
+      "match": "p://localhost:8080/health"
+    },
+    {
+      "file": "scripts/init_copilot_session.py",
+      "line": 64,
+      "match": "p://localhost:7860"
+    },
+    {
+      "file": "scripts/init_copilot_session.py",
+      "line": 65,
+      "match": "p://localhost:5678"
+    },
+    {
+      "file": "scripts/init_copilot_session.py",
+      "line": 66,
+      "match": "p://localhost:8000/api/v2/heartbeat"
+    },
+    {
+      "file": "scripts/oauth_webhook.py",
+      "line": 160,
+      "match": "p://localhost:{self.port}/oauth/callback"
+    },
+    {
+      "file": "scripts/post_upgrade_check.py",
+      "line": 173,
+      "match": "y:\\n"
+    },
+    {
+      "file": "scripts/secrets_rotation.py",
+      "line": 170,
+      "match": "s://platform.openai.com/api-keys"
+    },
+    {
+      "file": "scripts/secrets_rotation.py",
+      "line": 175,
+      "match": "s://platform.openai.com/api-keys"
+    },
+    {
+      "file": "scripts/secrets_rotation.py",
+      "line": 187,
+      "match": "s://console.anthropic.com/keys"
+    },
+    {
+      "file": "scripts/secrets_rotation.py",
+      "line": 192,
+      "match": "s://console.anthropic.com/keys"
+    },
+    {
+      "file": "scripts/setup_full_stack.py",
+      "line": 31,
+      "match": "p://localhost:7860"
+    },
+    {
+      "file": "scripts/setup_full_stack.py",
+      "line": 32,
+      "match": "p://localhost:5678"
+    },
+    {
+      "file": "scripts/setup_full_stack.py",
+      "line": 33,
+      "match": "p://localhost:8081"
+    },
+    {
+      "file": "scripts/setup_full_stack.py",
+      "line": 34,
+      "match": "p://localhost:8200"
+    },
+    {
+      "file": "scripts/setup_full_stack.py",
+      "line": 35,
+      "match": "p://localhost:8000"
+    },
+    {
+      "file": "scripts/setup_full_stack.py",
+      "line": 36,
+      "match": "p://localhost:6333"
+    },
+    {
+      "file": "scripts/setup_full_stack.py",
+      "line": 37,
+      "match": "p://localhost:8080"
+    },
+    {
+      "file": "scripts/setup_full_stack.py",
+      "line": 38,
+      "match": "p://localhost:1234/v1"
+    },
+    {
+      "file": "scripts/setup_full_stack.py",
+      "line": 39,
+      "match": "p://localhost:11434"
+    },
+    {
+      "file": "scripts/setup_full_stack.py",
+      "line": 666,
+      "match": "p://localhost:7860"
+    },
+    {
+      "file": "scripts/setup_full_stack.py",
+      "line": 667,
+      "match": "p://localhost:5678"
+    },
+    {
+      "file": "scripts/setup_langflow.py",
+      "line": 12,
+      "match": "p://127.0.0.1:7860"
+    },
+    {
+      "file": "scripts/setup_n8n.py",
+      "line": 13,
+      "match": "p://127.0.0.1:5678"
+    },
+    {
+      "file": "scripts/setup_n8n.py",
+      "line": 110,
+      "match": "p://localhost:5678 first"
+    },
+    {
+      "file": "scripts/setup_oauth.py",
+      "line": 48,
+      "match": "s://developers.google.com/identity/protocols/oauth2"
+    },
+    {
+      "file": "scripts/setup_oauth.py",
+      "line": 64,
+      "match": "p://localhost:8080/oauth/callback"
+    },
+    {
+      "file": "scripts/setup_oauth.py",
+      "line": 80,
+      "match": "s://www.googleapis.com/auth/calendar"
+    },
+    {
+      "file": "scripts/setup_oauth.py",
+      "line": 81,
+      "match": "s://www.googleapis.com/auth/gmail.modify"
+    },
+    {
+      "file": "scripts/setup_oauth.py",
+      "line": 83,
+      "match": "s://www.googleapis.com/auth/calendar"
+    },
+    {
+      "file": "scripts/setup_oauth.py",
+      "line": 84,
+      "match": "s://www.googleapis.com/auth/gmail.modify"
+    },
+    {
+      "file": "scripts/setup_oauth.py",
+      "line": 87,
+      "match": "s://www.googleapis.com/auth/calendar"
+    },
+    {
+      "file": "scripts/setup_oauth.py",
+      "line": 88,
+      "match": "s://www.googleapis.com/auth/gmail.modify"
+    },
+    {
+      "file": "scripts/setup_oauth.py",
+      "line": 89,
+      "match": "s://www.googleapis.com/auth/contacts"
+    },
+    {
+      "file": "scripts/setup_oauth.py",
+      "line": 157,
+      "match": "s://docs.microsoft.com/en-us/graph/auth-register-app-v2"
+    },
+    {
+      "file": "scripts/setup_oauth.py",
+      "line": 179,
+      "match": "p://localhost:8080/oauth/callback"
+    },
+    {
+      "file": "scripts/test_obsidian.py",
+      "line": 7,
+      "match": "D:/OsMEN"
+    },
+    {
+      "file": "scripts/test_obsidian.py",
+      "line": 21,
+      "match": "D:/OsMEN/obsidian-vault"
+    },
+    {
+      "file": "scripts/test_obsidian.py",
+      "line": 60,
+      "match": "D:/OsMEN/obsidian-vault"
+    },
+    {
+      "file": "scripts/test_obsidian_enhanced.py",
+      "line": 6,
+      "match": "D:/OsMEN"
+    },
+    {
+      "file": "scripts/test_obsidian_enhanced.py",
+      "line": 15,
+      "match": "D:/OsMEN/obsidian-vault"
+    },
+    {
+      "file": "scripts/validate_integrations.py",
+      "line": 244,
+      "match": "p://localhost:11434"
+    },
+    {
+      "file": "scripts/yolo_initiate.py",
+      "line": 96,
+      "match": "p://localhost:8080/health"
+    },
+    {
+      "file": "scripts/yolo_initiate.py",
+      "line": 97,
+      "match": "p://localhost:7860"
+    },
+    {
+      "file": "scripts/yolo_initiate.py",
+      "line": 98,
+      "match": "p://localhost:5678"
+    },
+    {
+      "file": "scripts/yolo_initiate.py",
+      "line": 99,
+      "match": "p://localhost:8000/api/v2/heartbeat"
+    },
+    {
+      "file": "scripts/yolo_initiate.py",
+      "line": 100,
+      "match": "p://localhost:8200/health"
+    },
+    {
+      "file": "scripts/automation/extract_course_materials.py",
+      "line": 16,
+      "match": "C:\\Program Files\\Tesseract-OCR"
+    },
+    {
+      "file": "scripts/automation/extract_course_materials.py",
+      "line": 147,
+      "match": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+    },
+    {
+      "file": "scripts/automation/install_llm_tools.py",
+      "line": 27,
+      "match": "s://lmstudio.ai/"
+    },
+    {
+      "file": "scripts/automation/install_llm_tools.py",
+      "line": 41,
+      "match": "p://localhost:1234)"
+    },
+    {
+      "file": "scripts/automation/install_llm_tools.py",
+      "line": 49,
+      "match": "C:\\\\Program Files\\\\LM Studio"
+    },
+    {
+      "file": "scripts/automation/install_llm_tools.py",
+      "line": 75,
+      "match": "s://ollama.com/install.sh | sh"
+    },
+    {
+      "file": "scripts/automation/install_llm_tools.py",
+      "line": 81,
+      "match": "s://ollama.com/download/windows"
+    },
+    {
+      "file": "scripts/automation/install_llm_tools.py",
+      "line": 119,
+      "match": "s://github.com/ggerganov/llama.cpp.git"
+    },
+    {
+      "file": "scripts/automation/install_llm_tools.py",
+      "line": 148,
+      "match": "C:\\\\Program Files\\\\LM Studio"
+    },
+    {
+      "file": "scripts/automation/ocr_pdf.py",
+      "line": 17,
+      "match": "C:\\Program Files\\Tesseract-OCR"
+    },
+    {
+      "file": "scripts/automation/ocr_pdf.py",
+      "line": 18,
+      "match": "C:\\Program Files\\Poppler\\Library\\bin"
+    },
+    {
+      "file": "scripts/automation/ocr_pdf.py",
+      "line": 25,
+      "match": "C:\\Program Files\\Poppler\\Library\\bin"
+    },
+    {
+      "file": "scripts/automation/ocr_pdf.py",
+      "line": 26,
+      "match": "C:\\Program Files\\poppler-25.07.0\\Library\\bin"
+    },
+    {
+      "file": "scripts/automation/ocr_pdf.py",
+      "line": 27,
+      "match": "C:\\tools\\poppler\\Library\\bin"
+    },
+    {
+      "file": "scripts/automation/ocr_pdf.py",
+      "line": 44,
+      "match": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+    },
+    {
+      "file": "scripts/automation/ocr_pdf.py",
+      "line": 45,
+      "match": "C:\\Program Files (x86)\\Tesseract-OCR\\tesseract.exe"
+    },
+    {
+      "file": "scripts/automation/production_demo_runner.py",
+      "line": 30,
+      "match": "D:\\semester_start"
+    },
+    {
+      "file": "scripts/automation/production_demo_runner.py",
+      "line": 32,
+      "match": "D:\\OsMEN"
+    },
+    {
+      "file": "scripts/automation/setup_first_team.py",
+      "line": 169,
+      "match": "p://localhost:7860"
+    },
+    {
+      "file": "scripts/automation/setup_first_team.py",
+      "line": 170,
+      "match": "p://localhost:5678"
+    },
+    {
+      "file": "scripts/automation/setup_wizard.py",
+      "line": 143,
+      "match": "p://localhost:5678)"
+    },
+    {
+      "file": "scripts/automation/setup_wizard.py",
+      "line": 302,
+      "match": "p://localhost:7860"
+    },
+    {
+      "file": "scripts/automation/setup_wizard.py",
+      "line": 303,
+      "match": "p://localhost:5678 (admin/[your-password])"
+    },
+    {
+      "file": "scripts/automation/setup_wizard.py",
+      "line": 304,
+      "match": "p://localhost:6333/dashboard\\n"
+    },
+    {
+      "file": "scripts/automation/setup_wizard.py",
+      "line": 317,
+      "match": "s://github.com/dwilli15/OsMEN/issues"
+    },
+    {
+      "file": "scripts/automation/setup_wizard.py",
+      "line": 318,
+      "match": "s://github.com/dwilli15/OsMEN/discussions\\n"
+    },
+    {
+      "file": "scripts/automation/syllabus_analyzer.py",
+      "line": 20,
+      "match": "D:\\semester_start"
+    },
+    {
+      "file": "scripts/automation/test_llm_providers.py",
+      "line": 45,
+      "match": "s://api.openai.com/v1"
+    },
+    {
+      "file": "scripts/automation/test_llm_providers.py",
+      "line": 92,
+      "match": "s://api.anthropic.com/v1/messages"
+    },
+    {
+      "file": "scripts/automation/test_llm_providers.py",
+      "line": 128,
+      "match": "p://localhost:1234/v1"
+    },
+    {
+      "file": "scripts/automation/test_llm_providers.py",
+      "line": 172,
+      "match": "p://localhost:11434"
+    },
+    {
+      "file": "scripts/automation/validate_security.py",
+      "line": 301,
+      "match": "s:\\n{result.stdout or result.stderr}"
+    },
+    {
+      "file": "scripts/innovation/monitor_feeds.py",
+      "line": 30,
+      "match": "s://github.com/langchain-ai/langchain/releases.atom"
+    },
+    {
+      "file": "scripts/innovation/monitor_feeds.py",
+      "line": 31,
+      "match": "s://github.com/microsoft/autogen/releases.atom"
+    },
+    {
+      "file": "scripts/innovation/monitor_feeds.py",
+      "line": 32,
+      "match": "s://github.com/joaomdmoura/crewAI/releases.atom"
+    },
+    {
+      "file": "scripts/innovation/monitor_feeds.py",
+      "line": 33,
+      "match": "s://github.com/microsoft/semantic-kernel/releases.atom"
+    },
+    {
+      "file": "scripts/innovation/monitor_feeds.py",
+      "line": 34,
+      "match": "s://github.com/run-llama/llama_index/releases.atom"
+    },
+    {
+      "file": "scripts/innovation/monitor_feeds.py",
+      "line": 35,
+      "match": "p://export.arxiv.org/rss/cs.AI"
+    },
+    {
+      "file": "scripts/innovation/monitor_feeds.py",
+      "line": 36,
+      "match": "p://export.arxiv.org/rss/cs.CL"
+    },
+    {
+      "file": "scripts/innovation/notifications.py",
+      "line": 112,
+      "match": "w:\\n\\n"
+    },
+    {
+      "file": "scripts/innovation/notifications.py",
+      "line": 165,
+      "match": "d:\\n\\n"
+    },
+    {
+      "file": "scripts/innovation/notifications.py",
+      "line": 230,
+      "match": "s://example.com/1"
+    },
+    {
+      "file": "scripts/innovation/notifications.py",
+      "line": 235,
+      "match": "s://example.com/2"
+    },
+    {
+      "file": "scripts/innovation/validation.py",
+      "line": 242,
+      "match": "s://example.com"
+    },
+    {
+      "file": "scripts/inventory/check_workflow_coherence.py",
+      "line": 33,
+      "match": "p://..."
+    },
+    {
+      "file": "scripts/inventory/generate_inventory.py",
+      "line": 234,
+      "match": "\\\\|\\\\\\\\)[^\\n\\r"
+    },
+    {
+      "file": "scripts/qdrant/seed_collections.py",
+      "line": 44,
+      "match": "p://localhost:6333"
+    },
+    {
+      "file": "tests/conftest.py",
+      "line": 81,
+      "match": "p://localhost:8080/callback"
+    },
+    {
+      "file": "tests/production_validation.py",
+      "line": 89,
+      "match": "s:\\n"
+    },
+    {
+      "file": "tests/production_validation.py",
+      "line": 100,
+      "match": "D:/OsMEN/n8n/workflows"
+    },
+    {
+      "file": "tests/production_validation.py",
+      "line": 108,
+      "match": "D:/OsMEN/langflow/flows"
+    },
+    {
+      "file": "tests/production_validation.py",
+      "line": 130,
+      "match": "s:\\n"
+    },
+    {
+      "file": "tests/production_validation.py",
+      "line": 160,
+      "match": "D:/OsMEN"
+    },
+    {
+      "file": "tests/production_validation.py",
+      "line": 181,
+      "match": "d:\\n"
+    },
+    {
+      "file": "tests/production_validation.py",
+      "line": 209,
+      "match": "s:\\n"
+    },
+    {
+      "file": "tests/production_validation.py",
+      "line": 243,
+      "match": "s:\\n"
+    },
+    {
+      "file": "tests/production_validation.py",
+      "line": 265,
+      "match": "D:/OsMEN/.github/copilot-instructions.md"
+    },
+    {
+      "file": "tests/production_validation.py",
+      "line": 266,
+      "match": "D:/OsMEN/.github/agents/yolo-ops.agent.md"
+    },
+    {
+      "file": "tests/production_validation.py",
+      "line": 267,
+      "match": "D:/OsMEN/.github/agents/osmen-dev.agent.md"
+    },
+    {
+      "file": "tests/production_validation.py",
+      "line": 269,
+      "match": "D:/OsMEN/content/courses/HB411_HealthyBoundaries/obsidian/.obsidian/VAULT_INSTRUCTIONS.md"
+    },
+    {
+      "file": "tests/test_calendar_integration.py",
+      "line": 237,
+      "match": "s://auth.test/google"
+    },
+    {
+      "file": "tests/test_calendar_integration.py",
+      "line": 244,
+      "match": "s://auth.test/google"
+    },
+    {
+      "file": "tests/test_calendar_integration.py",
+      "line": 294,
+      "match": "s://auth.test/outlook"
+    },
+    {
+      "file": "tests/test_calendar_integration.py",
+      "line": 300,
+      "match": "s://auth.test/outlook"
+    },
+    {
+      "file": "tests/test_calendar_integration.py",
+      "line": 307,
+      "match": "s://auth.test/outlook"
+    },
+    {
+      "file": "tests/test_infrastructure.py",
+      "line": 54,
+      "match": "p://localhost:8080"
+    },
+    {
+      "file": "tests/fixtures/oauth_fixtures.py",
+      "line": 17,
+      "match": "p://localhost:8080/oauth/callback"
+    },
+    {
+      "file": "tests/fixtures/oauth_fixtures.py",
+      "line": 19,
+      "match": "s://www.googleapis.com/auth/calendar"
+    },
+    {
+      "file": "tests/fixtures/oauth_fixtures.py",
+      "line": 20,
+      "match": "s://www.googleapis.com/auth/gmail.modify"
+    },
+    {
+      "file": "tests/fixtures/oauth_fixtures.py",
+      "line": 21,
+      "match": "s://www.googleapis.com/auth/contacts.readonly"
+    },
+    {
+      "file": "tests/fixtures/oauth_fixtures.py",
+      "line": 35,
+      "match": "p://localhost:8080/oauth/callback"
+    },
+    {
+      "file": "tests/fixtures/oauth_fixtures.py",
+      "line": 38,
+      "match": "s://graph.microsoft.com/Calendars.ReadWrite"
+    },
+    {
+      "file": "tests/fixtures/oauth_fixtures.py",
+      "line": 39,
+      "match": "s://graph.microsoft.com/Mail.ReadWrite"
+    },
+    {
+      "file": "tests/fixtures/oauth_fixtures.py",
+      "line": 40,
+      "match": "s://graph.microsoft.com/Contacts.ReadWrite"
+    },
+    {
+      "file": "tests/fixtures/oauth_fixtures.py",
+      "line": 53,
+      "match": "s://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.modify"
+    },
+    {
+      "file": "tests/mocks/mock_oauth_server.py",
+      "line": 60,
+      "match": "s://accounts.google.com/o/oauth2/v2/auth"
+    },
+    {
+      "file": "tests/mocks/mock_oauth_server.py",
+      "line": 89,
+      "match": "s://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize"
+    },
+    {
+      "file": "tests/smoke/test_live.py",
+      "line": 256,
+      "match": "p://localhost:8085/runs"
+    },
+    {
+      "file": "tests/smoke/test_live.py",
+      "line": 271,
+      "match": "p://localhost:8080/health"
+    },
+    {
+      "file": "tests/unit/api_clients/test_google_wrappers_complete.py",
+      "line": 32,
+      "match": "s://www.googleapis.com/calendar/v3"
+    },
+    {
+      "file": "tests/unit/api_clients/test_google_wrappers_complete.py",
+      "line": 150,
+      "match": "s://gmail.googleapis.com/gmail/v1"
+    },
+    {
+      "file": "tests/unit/api_clients/test_google_wrappers_complete.py",
+      "line": 226,
+      "match": "s://people.googleapis.com/v1"
+    },
+    {
+      "file": "tests/unit/oauth/test_google_oauth.py",
+      "line": 25,
+      "match": "p://localhost:8080/callback"
+    },
+    {
+      "file": "tests/unit/oauth/test_google_oauth.py",
+      "line": 27,
+      "match": "s://www.googleapis.com/auth/calendar"
+    },
+    {
+      "file": "tests/unit/oauth/test_google_oauth.py",
+      "line": 28,
+      "match": "s://www.googleapis.com/auth/gmail.modify"
+    },
+    {
+      "file": "tests/unit/oauth/test_google_oauth.py",
+      "line": 52,
+      "match": "s://accounts.google.com/o/oauth2/v2/auth?"
+    },
+    {
+      "file": "tests/unit/oauth/test_google_oauth.py",
+      "line": 65,
+      "match": "p://localhost:8080/callback"
+    },
+    {
+      "file": "tests/unit/oauth/test_google_oauth.py",
+      "line": 250,
+      "match": "s://custom.auth.endpoint"
+    },
+    {
+      "file": "tests/unit/oauth/test_google_oauth.py",
+      "line": 251,
+      "match": "s://custom.token.endpoint"
+    },
+    {
+      "file": "tests/unit/oauth/test_google_oauth.py",
+      "line": 255,
+      "match": "s://custom.auth.endpoint"
+    },
+    {
+      "file": "tests/unit/oauth/test_google_oauth.py",
+      "line": 256,
+      "match": "s://custom.token.endpoint"
+    },
+    {
+      "file": "tests/unit/oauth/test_google_oauth.py",
+      "line": 318,
+      "match": "p://localhost:8080/callback"
+    },
+    {
+      "file": "tests/unit/oauth/test_microsoft_oauth.py",
+      "line": 34,
+      "match": "p://localhost:8080/callback"
+    },
+    {
+      "file": "tests/unit/oauth/test_microsoft_oauth.py",
+      "line": 66,
+      "match": "p://localhost:8080/callback"
+    },
+    {
+      "file": "tests/unit/oauth/test_oauth_handler.py",
+      "line": 36,
+      "match": "p://localhost"
+    },
+    {
+      "file": "tests/unit/oauth/test_oauth_registry.py",
+      "line": 26,
+      "match": "p://localhost:8080/callback"
+    },
+    {
+      "file": "tests/unit/oauth/test_oauth_registry.py",
+      "line": 33,
+      "match": "p://localhost:8080/callback"
+    },
+    {
+      "file": "tests/unit/oauth/test_oauth_registry.py",
+      "line": 56,
+      "match": "p://localhost"
+    },
+    {
+      "file": "tests/unit/oauth/test_oauth_registry.py",
+      "line": 76,
+      "match": "p://localhost"
+    },
+    {
+      "file": "tests/unit/oauth/test_oauth_registry.py",
+      "line": 107,
+      "match": "p://localhost:9000/callback"
+    },
+    {
+      "file": "tests/unit/oauth/test_oauth_registry.py",
+      "line": 178,
+      "match": "p://localhost"
+    },
+    {
+      "file": "tests/unit/oauth/test_oauth_registry.py",
+      "line": 197,
+      "match": "p://localhost"
+    },
+    {
+      "file": "tests/unit/oauth/test_oauth_registry.py",
+      "line": 214,
+      "match": "p://localhost"
+    },
+    {
+      "file": "tests/unit/security/test_credential_validator.py",
+      "line": 65,
+      "match": "p://localhost:8000/callback"
+    },
+    {
+      "file": "tests/unit/security/test_credential_validator.py",
+      "line": 66,
+      "match": "s://example.com/oauth/callback"
+    },
+    {
+      "file": "tests/unit/security/test_credential_validator.py",
+      "line": 69,
+      "match": "p://example.com"
+    },
+    {
+      "file": "tests/unit/security/test_credential_validator.py",
+      "line": 70,
+      "match": "p://example.com#fragment"
+    },
+    {
+      "file": "tests/unit/utils/test_helpers.py",
+      "line": 153,
+      "match": "s://example.com"
+    },
+    {
+      "file": "tests/unit/utils/test_helpers.py",
+      "line": 154,
+      "match": "p://test.org/path"
+    },
+    {
+      "file": "tests/unit/utils/test_helpers.py",
+      "line": 155,
+      "match": "s://api.service.com/v1/endpoint"
+    },
+    {
+      "file": "tests/unit/utils/test_helpers.py",
+      "line": 159,
+      "match": "p://"
+    },
+    {
+      "file": "tests/unit/utils/test_helpers.py",
+      "line": 159,
+      "match": "s://"
+    }
+  ]
+}

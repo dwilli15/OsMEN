@@ -268,6 +268,8 @@ class EnhancedRAGPipeline:
         """
         Execute full RAG retrieval pipeline.
 
+        Refactored from complexity 29 to ~10 (PHOENIX Protocol compliance).
+
         Args:
             query: Search query
             k: Number of results (default: config.final_k)
@@ -279,12 +281,41 @@ class EnhancedRAGPipeline:
         initial_k = self.config.initial_k
 
         # Stage 1: Query expansion
+        queries = self._expand_queries(query)
+
+        # Stage 2: Semantic search
+        semantic_results = self._semantic_search(queries, initial_k)
+
+        # Stage 3: BM25 search
+        bm25_scores = self._bm25_search(queries, initial_k)
+
+        # Stage 4: Hybrid scoring
+        results = self._hybrid_scoring(semantic_results, bm25_scores, initial_k)
+
+        # Stage 5: Re-ranking
+        results = self._apply_reranking(query, results)
+
+        # Stage 6: Deduplication
+        results = self._deduplicate(results)
+
+        # Stage 7: Context windowing
+        for r in results:
+            r.content = self._extract_context(r.content, query)
+
+        return results[:k]
+
+    def _expand_queries(self, query: str) -> List[str]:
+        """Stage 1: Expand query into multiple queries."""
         queries = [query]
         if self.expander:
             queries = self.expander.expand(query)
             logger.debug(f"Expanded to {len(queries)} queries")
+        return queries
 
-        # Stage 2: Semantic search
+    def _semantic_search(
+        self, queries: List[str], initial_k: int
+    ) -> List[RetrievalResult]:
+        """Stage 2: Execute semantic search across all queries."""
         semantic_results = []
         if self.search_fn:
             for q in queries:
@@ -298,9 +329,11 @@ class EnhancedRAGPipeline:
                         source="semantic",
                     )
                     semantic_results.append(result)
+        return semantic_results
 
-        # Stage 3: BM25 search
-        bm25_scores = {}
+    def _bm25_search(self, queries: List[str], initial_k: int) -> Dict[str, float]:
+        """Stage 3: Execute BM25 search if available."""
+        bm25_scores: Dict[str, float] = {}
         if BM25_AVAILABLE and self._documents:
             for q in queries:
                 for doc_id, score in self.bm25.search(q, initial_k):
@@ -308,8 +341,15 @@ class EnhancedRAGPipeline:
                         bm25_scores[doc_id] = max(bm25_scores[doc_id], score)
                     else:
                         bm25_scores[doc_id] = score
+        return bm25_scores
 
-        # Stage 4: Hybrid scoring
+    def _hybrid_scoring(
+        self,
+        semantic_results: List[RetrievalResult],
+        bm25_scores: Dict[str, float],
+        initial_k: int,
+    ) -> List[RetrievalResult]:
+        """Stage 4: Combine semantic and BM25 scores."""
         results_map: Dict[str, RetrievalResult] = {}
 
         # Add semantic results
@@ -317,7 +357,6 @@ class EnhancedRAGPipeline:
             if r.id not in results_map:
                 results_map[r.id] = r
             else:
-                # Keep higher semantic score
                 if r.semantic_score > results_map[r.id].semantic_score:
                     results_map[r.id].semantic_score = r.semantic_score
 
@@ -345,30 +384,27 @@ class EnhancedRAGPipeline:
                 r.semantic_score / max_semantic
             ) + self.config.bm25_weight * (r.bm25_score / max_bm25)
 
-        # Sort by hybrid score
-        results = sorted(results, key=lambda x: x.score, reverse=True)[:initial_k]
+        return sorted(results, key=lambda x: x.score, reverse=True)[:initial_k]
 
-        # Stage 5: Re-ranking
-        if self.reranker and self.config.use_reranking and CROSS_ENCODER_AVAILABLE:
-            results = self.reranker.rerank(query, results)
+    def _apply_reranking(
+        self, query: str, results: List[RetrievalResult]
+    ) -> List[RetrievalResult]:
+        """Stage 5: Apply re-ranking if enabled."""
+        if not (
+            self.reranker and self.config.use_reranking and CROSS_ENCODER_AVAILABLE
+        ):
+            return results
 
-            # Update final scores with rerank
-            max_rerank = max((r.rerank_score for r in results), default=1) or 1
-            for r in results:
-                r.score = (
-                    1 - self.config.rerank_weight
-                ) * r.score + self.config.rerank_weight * (r.rerank_score / max_rerank)
+        results = self.reranker.rerank(query, results)
 
-            results = sorted(results, key=lambda x: x.score, reverse=True)
-
-        # Stage 6: Deduplication
-        results = self._deduplicate(results)
-
-        # Stage 7: Context windowing
+        # Update final scores with rerank
+        max_rerank = max((r.rerank_score for r in results), default=1) or 1
         for r in results:
-            r.content = self._extract_context(r.content, query)
+            r.score = (
+                1 - self.config.rerank_weight
+            ) * r.score + self.config.rerank_weight * (r.rerank_score / max_rerank)
 
-        return results[:k]
+        return sorted(results, key=lambda x: x.score, reverse=True)
 
     def _deduplicate(self, results: List[RetrievalResult]) -> List[RetrievalResult]:
         """Remove near-duplicate results"""

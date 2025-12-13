@@ -35,7 +35,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Dict, List, Optional
 
 # Import base paths from shared module to avoid circular imports
 from integrations.paths import (
@@ -54,6 +54,7 @@ from integrations.paths import (
     LOGS_ROOT,
     N8N_WORKFLOWS,
     OSMEN_ROOT,
+    PRODUCT_TEMPLATES_ROOT,
     TEMPLATE_AM_CHECKIN,
     TEMPLATE_BRIEFING,
     TEMPLATE_DAILY_NOTE,
@@ -70,6 +71,9 @@ from integrations.paths import (
     VAULT_ROOT,
     VAULT_TEMPLATES,
     VAULT_WEEKLY,
+    get_semester_workspace,
+    get_vault_root,
+    validate_external_workspace,
 )
 
 # =============================================================================
@@ -90,11 +94,14 @@ class Paths:
     CONTENT_ROOT = CONTENT_ROOT
     LOGS_ROOT = LOGS_ROOT
     AGENTS_ROOT = AGENTS_ROOT
+    PRODUCT_TEMPLATES_ROOT = PRODUCT_TEMPLATES_ROOT
 
     # Course-specific (HB411)
     HB411_ROOT = HB411_ROOT
     HB411_OBSIDIAN = HB411_OBSIDIAN
     HB411_AUDIOBOOKS = HB411_AUDIOBOOKS
+    HB411_RAG = HB411_RAG
+    HB411_SCRIPTS = HB411_SCRIPTS
     HB411_PODCASTS = HB411_ROOT / "podcasts"
     HB411_PODCAST_SCRIPTS = HB411_ROOT / "podcast_scripts"
     HB411_BRIEFINGS = HB411_ROOT / "daily_briefings"
@@ -104,12 +111,14 @@ class Paths:
 
     # Obsidian vault structure
     VAULT_TEMPLATES = VAULT_TEMPLATES
+    VAULT_CHAPTERS = VAULT_CHAPTERS
     VAULT_JOURNAL = VAULT_ROOT / "journal"
     VAULT_GOALS = VAULT_ROOT / "goals"
     VAULT_WEEKLY = VAULT_WEEKLY
     VAULT_DAILY = VAULT_DAILY
     VAULT_PROGRESS = VAULT_PROGRESS
     VAULT_READINGS = VAULT_ROOT / "readings"
+    VAULT_RESOURCES = VAULT_RESOURCES
     VAULT_INSTRUCTIONS = VAULT_ROOT / ".obsidian/VAULT_INSTRUCTIONS.md"
 
     # Agent directories
@@ -151,22 +160,86 @@ class Paths:
 
     @classmethod
     def ensure_all(cls):
-        """Create all directories if they don't exist"""
+        """Create repo-internal directories that OsMEN always owns.
+
+        Per repo hygiene rules, this MUST NOT create semester/vault directories.
+        Semester artifacts live in the external semester workspace.
+        """
         dirs = [
             cls.LOGS_ROOT,
             cls.LOG_SESSIONS,
             cls.LOG_CHECKINS,
             cls.LOG_AUDIO,
             cls.LOG_EVENTS,
-            cls.HB411_BRIEFINGS,
-            cls.HB411_BRIEFING_SCRIPTS,
-            cls.VAULT_JOURNAL / "daily",
-            cls.VAULT_JOURNAL / "weekly",
-            cls.VAULT_GOALS,
-            cls.VAULT_READINGS,
+            cls.PRODUCT_TEMPLATES_ROOT,
         ]
         for d in dirs:
             d.mkdir(parents=True, exist_ok=True)
+
+    # --- External workspace helpers -----------------------------------------------
+
+    @classmethod
+    def get_semester_workspace(cls, required: bool = False) -> Optional[Path]:
+        return get_semester_workspace(required=required)
+
+    @classmethod
+    def get_vault_root(cls, required: bool = False) -> Path:
+        return get_vault_root(required=required)
+
+    @classmethod
+    def ensure_workspace_dirs(cls, workspace_path: Optional[str] = None) -> Path:
+        """Initialize the external semester workspace directory structure.
+
+        This is the sanctioned way to create semester artifacts.
+        """
+        if workspace_path:
+            ws = validate_external_workspace(Path(workspace_path))
+        else:
+            ws = get_semester_workspace(required=True)
+
+        vault_root = (ws / "vault").resolve()
+
+        # Core external layout (matches temp_spec + semester_start demo)
+        dirs = [
+            ws / "audiobooks",
+            ws / "transcripts",
+            ws / "notes",
+            vault_root / "audio" / "daily_briefings",
+            vault_root / "audio" / "weekly_scripts",
+            vault_root / "journal" / "daily",
+            vault_root / "journal" / "weekly",
+            vault_root / "readings" / "annotations",
+            vault_root / "readings" / "summaries",
+            vault_root / "courses",
+            vault_root / "templates",
+        ]
+
+        for d in dirs:
+            d.mkdir(parents=True, exist_ok=True)
+
+        # Seed templates into workspace if missing
+        for template_file in [
+            "AM Check-In.md",
+            "PM Check-In.md",
+            "Daily Briefing Script.md",
+            "TTS_WORKFLOW.md",
+            "Weekly Review.md",
+            "Daily Note.md",
+            "Weekly Podcast Script.md",
+        ]:
+            src = cls.PRODUCT_TEMPLATES_ROOT / template_file
+            dst = vault_root / "templates" / template_file
+            if src.exists() and not dst.exists():
+                try:
+                    dst.write_text(
+                        src.read_text(encoding="utf-8"),
+                        encoding="utf-8",
+                    )
+                except OSError:
+                    # Template seeding should not block workspace creation.
+                    pass
+
+        return ws
 
 
 # =============================================================================
@@ -1159,7 +1232,7 @@ class OsMEN:
         Execute a pipeline by name.
         This is the unified entry point for all pipeline executions.
         """
-        from integrations.logging_system import AgentLogger, SystemEventLog
+        from integrations.logging_system import AgentLogger
 
         pipeline = cls.get_pipeline(pipeline_name)
         if not pipeline:

@@ -86,11 +86,34 @@ class MemoryConfig:
     @classmethod
     def from_env(cls) -> "MemoryConfig":
         """Load config from environment variables."""
+        # Parse ChromaDB host - handle both URL format and plain hostname
+        chromadb_raw = os.getenv("CHROMADB_HOST", "localhost")
+
+        # Extract hostname if it's a URL (e.g., "http://chromadb:8000" -> "localhost" for local dev)
+        if chromadb_raw.startswith(("http://", "https://")):
+            from urllib.parse import urlparse
+
+            parsed = urlparse(chromadb_raw)
+            # Docker internal hostnames like "chromadb" won't work outside Docker
+            # Map them to localhost for local development
+            host = parsed.hostname or "localhost"
+            if host in ("chromadb", "chroma"):
+                host = "localhost"
+            # Use port from URL if specified, otherwise use env var or default
+            port = parsed.port or int(os.getenv("CHROMADB_PORT", "8000"))
+        else:
+            host = (
+                chromadb_raw
+                if chromadb_raw not in ("chromadb", "chroma")
+                else "localhost"
+            )
+            port = int(os.getenv("CHROMADB_PORT", "8000"))
+
         return cls(
             sqlite_path=os.getenv("OSMEN_MEMORY_SQLITE", "data/memory/short_term.db"),
             archive_path=os.getenv("OSMEN_MEMORY_ARCHIVE", "data/memory/archive.db"),
-            chromadb_host=os.getenv("CHROMADB_HOST", "localhost"),
-            chromadb_port=int(os.getenv("CHROMADB_PORT", "8000")),
+            chromadb_host=host,
+            chromadb_port=port,
             chromadb_collection=os.getenv("CHROMADB_COLLECTION", "osmen_long_term"),
             short_term_ttl=int(os.getenv("MEMORY_SHORT_TTL", "24")),
             long_term_ttl=int(os.getenv("MEMORY_LONG_TTL", "720")),
@@ -372,6 +395,10 @@ class ShortTermMemory:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
 
+            # Escape FTS special characters and wrap in quotes for phrase search
+            # SQLite FTS5 treats certain words (AND, OR, NOT, NEAR, IN) as operators
+            escaped_query = '"' + query.replace('"', '""') + '"'
+
             # FTS search
             if tier:
                 cursor.execute(
@@ -382,7 +409,7 @@ class ShortTermMemory:
                     ORDER BY rank
                     LIMIT ?
                 """,
-                    (query, tier.value, limit),
+                    (escaped_query, tier.value, limit),
                 )
             else:
                 cursor.execute(
@@ -393,7 +420,7 @@ class ShortTermMemory:
                     ORDER BY rank
                     LIMIT ?
                 """,
-                    (query, limit),
+                    (escaped_query, limit),
                 )
 
             rows = cursor.fetchall()

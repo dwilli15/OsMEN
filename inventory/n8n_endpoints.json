@@ -1,0 +1,230 @@
+{
+  "workflows": {
+    "n8n/workflows/boot_hardening_trigger.json": {
+      "http_nodes": [
+        {
+          "method": "POST",
+          "name": "Call Boot Hardening Agent",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://localhost:7860/api/v1/run/osmen-coordinator-v1"
+        },
+        {
+          "method": "POST",
+          "name": "Store in ChromaDB",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://localhost:8000/api/v1/collections/osmen_security_logs/add"
+        }
+      ]
+    },
+    "n8n/workflows/checkin_triggered_briefing.json": {
+      "http_nodes": [
+        {
+          "method": "POST",
+          "name": "Generate Audio (TTS)",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://host.docker.internal:8080/tts/generate"
+        }
+      ]
+    },
+    "n8n/workflows/convertx_file_converter.json": {
+      "http_nodes": [
+        {
+          "method": "POST",
+          "name": "Upload to ConvertX",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://osmen-convertx:3000/upload"
+        },
+        {
+          "method": "POST",
+          "name": "Request Conversion",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://osmen-convertx:3000/convert"
+        },
+        {
+          "method": "POST",
+          "name": "Check Progress",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "=http://osmen-convertx:3000/progress/{{ $json.job_id }}"
+        },
+        {
+          "method": null,
+          "name": "Download Converted File",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "=http://osmen-convertx:3000/download/1/{{ $json.job_id }}/{{ $json.output_filename }}"
+        }
+      ]
+    },
+    "n8n/workflows/course_semester_setup.json": {
+      "http_nodes": [
+        {
+          "method": "POST",
+          "name": "Import Syllabus",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://gateway:8080/api/courses/import/confirm"
+        },
+        {
+          "method": "POST",
+          "name": "Bulk Import",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://gateway:8080/api/courses/import/bulk"
+        },
+        {
+          "method": "GET",
+          "name": "Get Semester Overview",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://gateway:8080/api/courses/semester"
+        },
+        {
+          "method": "GET",
+          "name": "Get Weekly Overview",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://gateway:8080/api/courses/semester"
+        },
+        {
+          "method": "POST",
+          "name": "Store in Memory",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://mcp-server:8081/tools/memory_store"
+        }
+      ]
+    },
+    "n8n/workflows/daily_90sec_briefing.json": {
+      "http_nodes": [
+        {
+          "method": "GET",
+          "name": "Get Today's Schedule",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://localhost:8080/api/calendar/today"
+        },
+        {
+          "method": "GET",
+          "name": "Get Today's Tasks",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://localhost:8080/api/tasks/today"
+        },
+        {
+          "method": "POST",
+          "name": "Generate Audio",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://localhost:8080/api/tts/generate"
+        }
+      ]
+    },
+    "n8n/workflows/daily_brief_trigger.json": {
+      "http_nodes": [
+        {
+          "method": "POST",
+          "name": "Call Daily Brief Agent",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://localhost:7860/api/v1/run/daily-brief-specialist-v1"
+        }
+      ]
+    },
+    "n8n/workflows/focus_guardrails_monitor.json": {
+      "http_nodes": [
+        {
+          "method": "POST",
+          "name": "Call Focus Agent",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://langflow:7860/api/v1/run/focus_guardrails_specialist"
+        }
+      ]
+    },
+    "n8n/workflows/hb411_weekly_podcast.json": {
+      "http_nodes": [
+        {
+          "method": "POST",
+          "name": "Query RAG for Week Content",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://localhost:8200/search"
+        },
+        {
+          "method": "POST",
+          "name": "Generate Podcast Script",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://localhost:7860/api/v1/run/hb411-podcast-specialist"
+        },
+        {
+          "method": "POST",
+          "name": "Generate Podcast Audio",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://localhost:8080/api/tts/generate"
+        }
+      ]
+    },
+    "n8n/workflows/knowledge_capture_trigger.json": {
+      "http_nodes": [
+        {
+          "method": "POST",
+          "name": "Store in ChromaDB",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://localhost:8000/api/v1/collections/osmen_knowledge/add"
+        },
+        {
+          "method": "POST",
+          "name": "Notify Knowledge Agent",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://localhost:7860/api/v1/run/knowledge-management-specialist-v1"
+        }
+      ]
+    },
+    "n8n/workflows/librarian_ingest_trigger.json": {
+      "http_nodes": [
+        {
+          "method": "POST",
+          "name": "Librarian Ingest",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://librarian:8200/ingest"
+        }
+      ]
+    },
+    "n8n/workflows/librarian_query_webhook.json": {
+      "http_nodes": [
+        {
+          "method": "POST",
+          "name": "Librarian Query",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://librarian:8200/query"
+        }
+      ]
+    },
+    "n8n/workflows/n8n_yolo_workflow.json": {
+      "http_nodes": [
+        {
+          "method": "POST",
+          "name": "Librarian Search",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://librarian:8200/search"
+        },
+        {
+          "method": "POST",
+          "name": "Qdrant Search",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://qdrant:6333/collections/{{ $json.collection }}/points/search"
+        },
+        {
+          "method": "POST",
+          "name": "Langflow Execute",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://langflow:7860/api/v1/run/{{ $json.flow_id }}"
+        },
+        {
+          "method": "POST",
+          "name": "MCP Tool Call",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://mcp-server:8081/tools/{{ $json.tool_name }}"
+        }
+      ]
+    },
+    "n8n/workflows/workspace_map_updater.json": {
+      "http_nodes": [
+        {
+          "method": "POST",
+          "name": "Notify Gateway",
+          "type": "n8n-nodes-base.httpRequest",
+          "url": "http://localhost:8080/api/workspace/map-updated"
+        }
+      ]
+    }
+  }
+}

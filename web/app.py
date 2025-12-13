@@ -547,98 +547,141 @@ async def admin_flows_page(request: Request):
 
 @app.get("/api/admin/flows")
 async def get_flows_and_workflows():
-    """Get all Langflow flows and n8n workflows"""
-    langflow_flows = []
-    n8n_workflows = []
+    """Get all Langflow flows and n8n workflows.
 
+    Refactored from complexity 23 to ~10 (PHOENIX Protocol compliance).
+    """
     # Scan Langflow flows
-    langflow_dir = PROJECT_DIR / "langflow" / "flows"
-    if langflow_dir.exists():
-        for flow_file in langflow_dir.glob("*.json"):
-            try:
-                with open(flow_file, "r") as f:
-                    flow_data = json.load(f)
-
-                # Extract flow info
-                name = flow_file.stem
-                display_name = name.replace("_", " ").title()
-
-                # Count nodes if structure allows
-                node_count = 0
-                if isinstance(flow_data, dict):
-                    if "nodes" in flow_data:
-                        node_count = len(flow_data.get("nodes", []))
-                    elif "data" in flow_data and "nodes" in flow_data.get("data", {}):
-                        node_count = len(flow_data.get("data", {}).get("nodes", []))
-
-                # Determine type
-                flow_type = "specialist"
-                if "coordinator" in name:
-                    flow_type = "coordinator"
-                elif "assistant" in name:
-                    flow_type = "assistant"
-
-                langflow_flows.append(
-                    {
-                        "name": name,
-                        "display_name": display_name,
-                        "description": flow_data.get("description", ""),
-                        "node_count": node_count,
-                        "type": flow_type,
-                        "file": str(flow_file.relative_to(PROJECT_DIR)),
-                    }
-                )
-            except Exception as e:
-                logger.warning(f"Failed to parse flow {flow_file}: {e}")
+    langflow_flows = await _scan_langflow_flows()
 
     # Scan n8n workflows
+    n8n_workflows = await _scan_n8n_workflows()
+
+    # Get pipeline registry info
+    pipeline_registry = await _get_pipeline_registry(langflow_flows, n8n_workflows)
+
+    return {
+        "langflow": langflow_flows,
+        "n8n": n8n_workflows,
+        "registry": pipeline_registry,
+    }
+
+
+async def _scan_langflow_flows() -> List[Dict[str, Any]]:
+    """Scan Langflow flows directory."""
+    langflow_flows = []
+    langflow_dir = PROJECT_DIR / "langflow" / "flows"
+
+    if not langflow_dir.exists():
+        return langflow_flows
+
+    for flow_file in langflow_dir.glob("*.json"):
+        try:
+            flow_info = _parse_langflow_flow(flow_file)
+            if flow_info:
+                langflow_flows.append(flow_info)
+        except Exception as e:
+            logger.warning(f"Failed to parse flow {flow_file}: {e}")
+
+    return langflow_flows
+
+
+def _parse_langflow_flow(flow_file: Path) -> Optional[Dict[str, Any]]:
+    """Parse a single Langflow flow file."""
+    with open(flow_file, "r") as f:
+        flow_data = json.load(f)
+
+    name = flow_file.stem
+    display_name = name.replace("_", " ").title()
+
+    # Count nodes if structure allows
+    node_count = 0
+    if isinstance(flow_data, dict):
+        if "nodes" in flow_data:
+            node_count = len(flow_data.get("nodes", []))
+        elif "data" in flow_data and "nodes" in flow_data.get("data", {}):
+            node_count = len(flow_data.get("data", {}).get("nodes", []))
+
+    # Determine type
+    flow_type = "specialist"
+    if "coordinator" in name:
+        flow_type = "coordinator"
+    elif "assistant" in name:
+        flow_type = "assistant"
+
+    return {
+        "name": name,
+        "display_name": display_name,
+        "description": flow_data.get("description", ""),
+        "node_count": node_count,
+        "type": flow_type,
+        "file": str(flow_file.relative_to(PROJECT_DIR)),
+    }
+
+
+async def _scan_n8n_workflows() -> List[Dict[str, Any]]:
+    """Scan n8n workflows directory."""
+    n8n_workflows = []
     n8n_dir = PROJECT_DIR / "n8n" / "workflows"
-    if n8n_dir.exists():
-        for workflow_file in n8n_dir.glob("*.json"):
-            try:
-                with open(workflow_file, "r") as f:
-                    workflow_data = json.load(f)
 
-                name = workflow_file.stem
-                display_name = name.replace("_", " ").title()
+    if not n8n_dir.exists():
+        return n8n_workflows
 
-                # Count nodes
-                nodes = workflow_data.get("nodes", [])
-                node_count = len(nodes)
+    for workflow_file in n8n_dir.glob("*.json"):
+        try:
+            workflow_info = _parse_n8n_workflow(workflow_file)
+            if workflow_info:
+                n8n_workflows.append(workflow_info)
+        except Exception as e:
+            logger.warning(f"Failed to parse workflow {workflow_file}: {e}")
 
-                # Determine trigger type
-                trigger_type = "manual"
-                for node in nodes:
-                    node_type = node.get("type", "").lower()
-                    if "cron" in node_type or "schedule" in node_type:
-                        trigger_type = "scheduled"
-                        break
-                    elif "webhook" in node_type:
-                        trigger_type = "webhook"
-                        break
+    return n8n_workflows
 
-                n8n_workflows.append(
-                    {
-                        "name": name,
-                        "display_name": display_name,
-                        "description": workflow_data.get("description", ""),
-                        "node_count": node_count,
-                        "trigger_type": trigger_type,
-                        "file": str(workflow_file.relative_to(PROJECT_DIR)),
-                    }
-                )
-            except Exception as e:
-                logger.warning(f"Failed to parse workflow {workflow_file}: {e}")
 
-    # Get pipeline registry info from Infrastructure Agent
+def _parse_n8n_workflow(workflow_file: Path) -> Optional[Dict[str, Any]]:
+    """Parse a single n8n workflow file."""
+    with open(workflow_file, "r") as f:
+        workflow_data = json.load(f)
+
+    name = workflow_file.stem
+    display_name = name.replace("_", " ").title()
+
+    nodes = workflow_data.get("nodes", [])
+    node_count = len(nodes)
+
+    # Determine trigger type
+    trigger_type = "manual"
+    for node in nodes:
+        node_type = node.get("type", "").lower()
+        if "cron" in node_type or "schedule" in node_type:
+            trigger_type = "scheduled"
+            break
+        elif "webhook" in node_type:
+            trigger_type = "webhook"
+            break
+
+    return {
+        "name": name,
+        "display_name": display_name,
+        "description": workflow_data.get("description", ""),
+        "node_count": node_count,
+        "trigger_type": trigger_type,
+        "file": str(workflow_file.relative_to(PROJECT_DIR)),
+    }
+
+
+async def _get_pipeline_registry(
+    langflow_flows: List[Dict[str, Any]], n8n_workflows: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """Get pipeline registry info and mark registered flows/workflows."""
     pipeline_registry = {}
+
     try:
         from agents.infrastructure.infrastructure_agent import InfrastructureAgent
 
         agent = InfrastructureAgent()
-
-        # Get pipeline summary with registered pipelines
         summary = agent.get_pipeline_summary()
+
         pipeline_registry = {
             "total": summary["total"],
             "native_count": summary["native"]["count"],
@@ -664,11 +707,7 @@ async def get_flows_and_workflows():
     except Exception as e:
         logger.warning(f"Error getting pipeline registry: {e}")
 
-    return {
-        "langflow": langflow_flows,
-        "n8n": n8n_workflows,
-        "registry": pipeline_registry,
-    }
+    return pipeline_registry
 
 
 @app.get("/api/admin/infrastructure/status")
@@ -1489,6 +1528,11 @@ async def shutdown_event():
 if __name__ == "__main__":
     import uvicorn
 
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
     uvicorn.run(app, host="0.0.0.0", port=8000)
 if __name__ == "__main__":
     import uvicorn

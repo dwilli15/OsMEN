@@ -26,6 +26,11 @@ from pydantic import BaseModel, Field
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from agents.knowledge_management.course_manager import CourseManager
+from integrations.paths import (
+    WorkspaceNotConfiguredError,
+    get_semester_workspace,
+    validate_external_workspace,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +95,10 @@ class ImportConfirmRequest(BaseModel):
     """Request to confirm and finalize import"""
 
     file_path: str
+    workspace_path: Optional[str] = Field(
+        None,
+        description="External semester workspace path (must be outside the repo)",
+    )
     semester: Optional[str] = None
     year: Optional[int] = None
     sync_calendar: bool = True
@@ -100,6 +109,10 @@ class BulkImportRequest(BaseModel):
     """Request to import multiple syllabi"""
 
     file_paths: List[str]
+    workspace_path: Optional[str] = Field(
+        None,
+        description="External semester workspace path (must be outside the repo)",
+    )
     semester: Optional[str] = None
     year: Optional[int] = None
 
@@ -128,6 +141,10 @@ async def upload_syllabus(
     file: UploadFile = File(...),
     semester: Optional[str] = Form(None),
     year: Optional[int] = Form(None),
+    workspace_path: Optional[str] = Form(
+        None,
+        description="External semester workspace path (must be outside the repo)",
+    ),
 ):
     """
     Upload a syllabus file (PDF/DOCX) and get a preview of parsed content.
@@ -156,6 +173,15 @@ async def upload_syllabus(
     file_path = upload_dir / safe_filename
 
     try:
+        # Enforce workspace isolation for semester artifacts (e.g., Obsidian notes).
+        if workspace_path:
+            ws = validate_external_workspace(Path(workspace_path))
+            os.environ["OSMEN_SEMESTER_WORKSPACE"] = str(ws)
+        else:
+            # For this endpoint, we require a workspace to avoid writing artifacts
+            # into repo-internal legacy paths.
+            get_semester_workspace(required=True)
+
         # Save file
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
@@ -221,6 +247,18 @@ async def confirm_import(request: ImportConfirmRequest):
     - Create Obsidian notes structure (if enabled)
     - Finalize the course in the knowledge base
     """
+    # Enforce workspace isolation
+    try:
+        if request.workspace_path:
+            ws = validate_external_workspace(Path(request.workspace_path))
+            os.environ["OSMEN_SEMESTER_WORKSPACE"] = str(ws)
+        else:
+            get_semester_workspace(required=True)
+    except WorkspaceNotConfiguredError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     manager = get_course_manager()
 
     result = manager.import_syllabus(
@@ -246,6 +284,18 @@ async def bulk_import(request: BulkImportRequest):
 
     This is ideal for beginning-of-semester course load setup.
     """
+    # Enforce workspace isolation
+    try:
+        if request.workspace_path:
+            ws = validate_external_workspace(Path(request.workspace_path))
+            os.environ["OSMEN_SEMESTER_WORKSPACE"] = str(ws)
+        else:
+            get_semester_workspace(required=True)
+    except WorkspaceNotConfiguredError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     manager = get_course_manager()
 
     result = manager.bulk_import(
